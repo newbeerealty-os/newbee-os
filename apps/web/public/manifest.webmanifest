@@ -1,0 +1,9 @@
+{
+  "name": "NewBee OS",
+  "short_name": "NewBee",
+  "start_url": "/today",
+  "display": "standalone",
+  "background_color": "#fafafa",
+  "theme_color": "#1f5f8b",
+  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}

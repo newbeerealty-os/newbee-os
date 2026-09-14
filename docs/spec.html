@@ -1,0 +1,537 @@
+<title>NewBee OS 产品规格</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&display=swap">
+<style>
+:root{
+  --bg:#F3F5F2; --surface:#FFFFFF; --surface-2:#E9EDE8; --line:#D3D9D2; --line-strong:#AEB7AD;
+  --ink:#171C1F; --ink-2:#3C464C; --muted:#66727A;
+  --accent:#0E5A86; --accent-ink:#FFFFFF; --accent-soft:#DCE9F2;
+  --ai:#B84E17; --ai-soft:#F7E4D8;
+  --bad:#A8322B; --bad-soft:#F5DEDC; --ok:#2C6E49; --ok-soft:#DCEBE1; --warn:#8A6A0F; --warn-soft:#F3EAC8;
+  --code-bg:#EEF1EC;
+  --shadow:0 1px 2px rgba(20,30,35,.06),0 8px 24px -16px rgba(20,30,35,.25);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#121618; --surface:#1A2023; --surface-2:#222A2E; --line:#2E383D; --line-strong:#45525A;
+    --ink:#E9ECE8; --ink-2:#C2CAC7; --muted:#8E9AA0;
+    --accent:#6FB2DD; --accent-ink:#0B1A24; --accent-soft:#1B3140;
+    --ai:#F0915A; --ai-soft:#3A2418;
+    --bad:#F08A80; --bad-soft:#3A1F1D; --ok:#7FC79B; --ok-soft:#1B3325; --warn:#E3C35A; --warn-soft:#3A3014;
+    --code-bg:#22292C;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -16px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121618; --surface:#1A2023; --surface-2:#222A2E; --line:#2E383D; --line-strong:#45525A;
+  --ink:#E9ECE8; --ink-2:#C2CAC7; --muted:#8E9AA0;
+  --accent:#6FB2DD; --accent-ink:#0B1A24; --accent-soft:#1B3140;
+  --ai:#F0915A; --ai-soft:#3A2418;
+  --bad:#F08A80; --bad-soft:#3A1F1D; --ok:#7FC79B; --ok-soft:#1B3325; --warn:#E3C35A; --warn-soft:#3A3014;
+  --code-bg:#22292C;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -16px rgba(0,0,0,.6);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans","Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;font-size:15.5px;line-height:1.7;padding-inline:16px;padding-block:0 80px;-webkit-font-smoothing:antialiased}
+a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+code,pre,.mono{font-family:"IBM Plex Mono","SFMono-Regular",Menlo,Consolas,monospace}
+code{background:var(--code-bg);padding:.1em .4em;border-radius:4px;font-size:.88em;color:var(--ink-2)}
+h1,h2,h3,h4{line-height:1.25;text-wrap:balance;margin:0}
+h1{font-size:clamp(28px,4vw,40px);font-weight:700;letter-spacing:-.01em}
+h2{font-size:24px;font-weight:700;margin-top:64px;padding-top:24px;border-top:2px solid var(--ink);display:flex;align-items:baseline;gap:14px}
+h2 .no{font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:500;color:var(--muted);letter-spacing:.08em}
+h3{font-size:18px;font-weight:600;margin-top:36px}
+h4{font-size:15px;font-weight:600;margin-top:20px;color:var(--ink-2)}
+p{margin:12px 0;max-width:72ch}
+ul,ol{margin:10px 0;padding-left:1.3em;max-width:78ch}li{margin:4px 0}
+.wrap{max-width:1160px;margin:0 auto;display:grid;grid-template-columns:220px minmax(0,1fr);gap:48px}
+@media (max-width:900px){.wrap{grid-template-columns:minmax(0,1fr)}nav.toc{position:static;max-height:none;border-right:0;border-bottom:1px solid var(--line);padding-bottom:16px}}
+nav.toc{position:sticky;top:0;align-self:start;max-height:100vh;overflow:auto;padding-top:40px;padding-right:16px;border-right:1px solid var(--line);font-size:13px}
+nav.toc .k{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin-bottom:10px}
+nav.toc a{display:block;color:var(--ink-2);padding:4px 0;border-left:2px solid transparent;padding-left:10px;margin-left:-11px}
+nav.toc a:hover{color:var(--accent);border-left-color:var(--accent);text-decoration:none}
+nav.toc a.sub{padding-left:22px;color:var(--muted);font-size:12.5px}
+main{min-width:0}
+header.masthead{padding-top:48px;padding-bottom:28px;border-bottom:1px solid var(--line)}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;display:flex;gap:16px;flex-wrap:wrap}
+.lede{font-size:17px;color:var(--ink-2);max-width:66ch;margin-top:16px}
+.verdict{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent);padding:20px 24px;margin-top:28px;box-shadow:var(--shadow)}
+.verdict h3{margin-top:0;font-size:16px}
+.verdict ol{margin:8px 0 0}
+table{border-collapse:collapse;width:100%;font-size:14px;background:var(--surface);border:1px solid var(--line)}
+th,td{padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top;text-align:left}
+th{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;background:var(--surface-2)}
+tr:last-child td{border-bottom:0}
+.tbl{overflow-x:auto;margin:14px 0}
+.tbl table{min-width:680px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin:16px 0}
+.card{background:var(--surface);border:1px solid var(--line);padding:16px 18px}
+.card h4{margin-top:0}
+.card ul{margin-bottom:0;font-size:14px}
+.pill{display:inline-block;font-size:11.5px;font-weight:600;letter-spacing:.04em;padding:1px 8px;border-radius:999px;vertical-align:2px;white-space:nowrap}
+.pill.bad{background:var(--bad-soft);color:var(--bad)}.pill.warn{background:var(--warn-soft);color:var(--warn)}.pill.ok{background:var(--ok-soft);color:var(--ok)}.pill.ai{background:var(--ai-soft);color:var(--ai)}.pill.acc{background:var(--accent-soft);color:var(--accent)}.pill.mut{background:var(--surface-2);color:var(--muted)}
+.obs{border-left:3px solid var(--accent);padding:8px 14px;margin:14px 0;background:var(--surface);font-size:14px}
+.obs.ai{border-left-color:var(--ai)}.obs.warn{border-left-color:var(--warn)}
+pre.mermaid{background:var(--surface);border:1px solid var(--line);padding:16px;overflow-x:auto;margin:16px 0;font-size:14px}
+.note{font-size:13px;color:var(--muted)}
+.mod{border:1px solid var(--line);background:var(--surface);margin:18px 0}
+.mod .mh{padding:12px 18px;border-bottom:1px solid var(--line);background:var(--surface-2);display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.mod .mh b{font-size:16px}
+.mod .mb{padding:6px 18px 16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:6px 28px}
+.mod .mb>div>b{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:12px 0 2px}
+.mod .mb ul{margin:0;padding-left:1.1em;font-size:14px}
+.mtx td:not(:first-child){text-align:center;font-family:"IBM Plex Mono",monospace;font-size:12.5px}
+.f{color:var(--ok);font-weight:600}.h{color:var(--warn);font-weight:600}.v{color:var(--muted)}
+.roadmap{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;margin:16px 0}
+.roadmap .card{border-top:4px solid var(--line-strong)}
+.roadmap .card.p1{border-top-color:var(--accent)}.roadmap .card.p2{border-top-color:var(--ai)}.roadmap .card.p3{border-top-color:var(--ok)}.roadmap .card.p4{border-top-color:var(--line-strong)}
+.roadmap .k{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.1em;color:var(--muted)}
+footer{margin-top:64px;padding-top:16px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted)}
+footer ul{font-size:12.5px}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+</style>
+
+<div class="wrap">
+<nav class="toc" aria-label="目录">
+  <div class="k">目录</div>
+  <a href="#verdict">0 · 结论</a>
+  <a href="#bench">1 · 市场对标</a>
+  <a href="#kv">2 · 合同即数据：Key-Value Schema</a>
+  <a href="#modules">3 · 模块规格（按优先级）</a>
+  <a class="sub" href="#m1">M1 交易管理</a>
+  <a class="sub" href="#m2">M2 联系人管理</a>
+  <a class="sub" href="#m3">M3 房子管理</a>
+  <a class="sub" href="#m4">M4 日程管理</a>
+  <a class="sub" href="#m5">M5 合同管理</a>
+  <a class="sub" href="#m6">M6 To-do · M7 Checklist</a>
+  <a class="sub" href="#later">后续模块</a>
+  <a href="#surfaces">4 · 四端功能矩阵</a>
+  <a href="#flows">5 · 核心 Workflow</a>
+  <a href="#data">6 · 数据模型增量</a>
+  <a href="#build">7 · 实现路线与架构</a>
+  <a href="#open">8 · 待你拍板</a>
+</nav>
+<main>
+<header class="masthead">
+  <div class="eyebrow"><span>Product Spec · v1</span><span>NewBee OS（占位名）</span><span>2026-09-10</span></div>
+  <h1>NewBee OS 产品规格</h1>
+  <p class="lede">把你说的那段话整理成可以直接开工的规格：一个核心思想（合同即数据），七个优先模块（交易管理为轴心），四个端（经纪人 App / 经纪人网站 / 客户 App / 客户网站），对标了 2026 年市面上做得最好的 CRM 与交易管理产品。配套的 workflow 与 wireframe 画布已经按这份规格重画。</p>
+</header>
+
+<section id="verdict">
+<h2><span class="no">00</span>结论</h2>
+<div class="verdict">
+<h3>一句话：你要做的不是"又一个 CRM"，是一个以合同为数据源的交易操作系统——合同上传一次，其余全部派生。</h3>
+<ol>
+<li><b>核心思想 = 合同即数据（Contract-as-Data）。</b>每份合同 / addendum / amendment 上传后，AI 抽成结构化 key-value（价格、贷款额、Option 费、Earnest Money、各类 contingency 天数、closing date …）写进 Deal。日期引擎、checklist、日程、佣金、买卖费用清单、客户端进度、推送提醒全部从这组 key-value 派生，没有第二次录入。市面上只有 DocJacket / Nekst / ListedKit 这一代新工具在做这件事，而且它们都只做 TC 那一段，没有 CRM、没有客户 App、没有中文。</li>
+<li><b>第一步做交易管理，但要带上三样最小依赖：</b>联系人（各方角色）、房子（地址主记录）、合同管理（上传 + 抽取 + 确认）。没有这三样，Deal 就是空壳。</li>
+<li><b>四端共用一个后端、一套领域模型。</b>经纪人 App 和网站是同一套数据的两种密度；客户 App 和网站是同一套 Deal 数据的"只读 + 少量动作"投影（签字、上传、确认、留言）。客户端不是另一个产品，是权限视图。</li>
+<li><b>交易进度图形化 + 走向判断是你的差异化。</b>里程碑时间线（今天在哪、下一个节点、逾期风险）加上"这笔交易会继续还是会黄"的规则判断（Option 期内 / 贷款审批 / 估价缺口 / 检查谈判 / 各 contingency 的终止条件与 Earnest Money 归属），市面上没有一家把这个做成产品功能。</li>
+<li><b>后续模块（小区、市场报告、CMA、Listing 报告、营销、Lead capture、小工具）都挂在 Property 和 Deal 两个对象上。</b>先把这两个对象做扎实，后面每个模块都是"读数据 + 套模板"。</li>
+</ol>
+</div>
+</section>
+
+<section id="bench">
+<h2><span class="no">01</span>市场对标：2026 年谁做到了什么</h2>
+<p>只列对你有参考价值的能力，每家取它最强的一点。结论在表后。</p>
+<div class="tbl"><table>
+<tr><th style="width:170px">产品</th><th>它做得最好的</th><th style="width:220px">对你的启发</th></tr>
+<tr><td><b>DocJacket</b></td><td>AI 读合同（buyer/seller、关键日期、价格、contingencies），自动算 inspection / appraisal / loan commitment 日期；closing date 变了整条时间线自动重算；品牌化客户门户显示 "Under Contract → Closing" 里程碑；AI 起草状态邮件 / 缺件提醒；同步 Google Calendar；提供 MCP Server 和 API。</td><td>这就是你 M5 + M1 的最小闭环，照这个标准做，再加中文和 CRM。</td></tr>
+<tr><td><b>Nekst · ListedKit</b></td><td>同样是上传合同自动建交易、自动 timeline、smart checklist、邮件草稿；ListedKit 已改为按笔收费（$14.99/笔）。</td><td>验证了"按交易收费"的市场，以后产品化可参考。</td></tr>
+<tr><td><b>Follow Up Boss</b></td><td>Smart Summaries（通话摘要 + 全历史回顾）、Smart Messages（按活动建议短信/邮件）、Suggested Tasks（一键采纳）、预测性 lead 优先级；Pipelines + Action Plans + Smart Lists + 统一 Inbox；支持 MCP。</td><td>M2 联系人的 AI 标准：摘要、建议消息、建议任务、优先级。</td></tr>
+<tr><td><b>Lofty（原 Chime）</b></td><td>AI Sales Agent 自动通过聊天 / 短信 / 邮件筛 lead；IDX 网站 + 房源提醒；品牌化客户 App；Smart Plans 按行为触发的 drip。</td><td>客户 App 的"房源提醒 + 品牌化"思路；Lead 自动应答（P3）。</td></tr>
+<tr><td><b>BoldTrail（原 kvCORE）</b></td><td>行为触发自动化（看了哪套房、存了什么搜索）；BackOffice（原 Brokermint）自动算佣金、合规 checklist、生成 disbursement、ACH 打款；数据从 CRM 流到交易不重复录入。</td><td>M1 佣金 / 合规部分的标准：从合同自动算，CDA 自动生成。</td></tr>
+<tr><td><b>Sisu</b></td><td>交易 pipeline 分析、找瓶颈、预测成交；目标进度直接绑定真实交易数据；Client Portal 2.0（进度、文档、沟通）；原生 iOS/Android。</td><td>Reports 的样子：pipeline 预测 + 目标绑定交易。</td></tr>
+<tr><td><b>Dotloop · SkySlope</b></td><td>表单库 + 电子签名 + 合规审计，190+ MLS 集成，客户门户。</td><td>电子签先集成不自建；表单库按 TREC 版本管理。</td></tr>
+<tr><td><b>Cloze · Homebot</b></td><td>Cloze 自动归档邮件 / 电话 / 短信到联系人时间线；Homebot 给过往客户每月推房屋净值报告，靠这个留住客户。</td><td>M2 时间线自动化；后续"客户维护"用房屋价值月报做抓手。</td></tr>
+</table></div>
+<div class="obs"><b>对标结论：</b>没有一家同时具备 ① 合同抽取驱动全流程 ② 完整 CRM ③ 客户 App ④ 中文 ⑤ Texas 本地流程 ⑥ 交易走向判断。你自用阶段只要做到 ①③⑥ + 你自己的 SOP，就已经比你现在的组合（Wise Agent + 手动）强一个量级。</div>
+</section>
+
+<section id="kv">
+<h2><span class="no">02</span>合同即数据：Deal Key-Value Schema</h2>
+<p>这是整个系统的"宪法"。每个字段记录三件事：<b>值</b>、<b>来源</b>（哪份文件第几页、AI 置信度、你是否已确认）、<b>用途</b>（谁在用它）。Amendment 进来只新增一个版本，旧值保留，时间线上能看到"价格从 A 改到 B，原因：repair credit"。下表按 Texas TREC 1-4 Family 合同 + 常用 addendum 整理，租赁合同另有一组（租金、押金、租期、宠物、续约条款）。</p>
+<div class="tbl"><table>
+<tr><th style="width:110px">分组</th><th>字段（key）</th><th style="width:170px">来源文件 / 段落</th><th style="width:230px">派生用途</th></tr>
+<tr><td rowspan="2"><b>各方 Parties</b></td><td>buyer_names · seller_names · entity（个人 / LLC / trust）· 婚姻状态提示</td><td>合同首页 Para 1</td><td>Contact 自动匹配或新建；客户端账号邀请</td></tr>
+<tr><td>listing_agent / buyer_agent（姓名、brokerage、license #、电话邮箱）· lender · title_company · escrow_officer</td><td>Broker Information 页；Third Party Financing；Para 6</td><td>Vendor 自动匹配；Deal 各方卡；沟通对象</td></tr>
+<tr><td rowspan="3"><b>价格与资金</b></td><td>sales_price · cash_portion · loan_amount · loan_type（Conventional / FHA / VA / Cash）· seller_concessions（Para 12）</td><td>Para 3 · Para 12 · Financing Addendum</td><td>佣金计算；净收益 / 买方费用清单；估价缺口判断</td></tr>
+<tr><td>earnest_money · additional_earnest_money · earnest_money_due_days · option_fee · option_period_days</td><td>Para 5</td><td>关键日期；提醒 Title 收款；终止时退款归属</td></tr>
+<tr><td>appraisal_gap_amount · buyer_approval_days（贷款审批期）· appraisal_waiver</td><td>Third Party Financing Addendum</td><td>Finance contingency 到期日；走向判断</td></tr>
+<tr><td rowspan="3"><b>日期 Dates</b></td><td>effective_date · closing_date · possession（closing 当日 / 临时租约）</td><td>合同末页 · Para 9 · Para 10</td><td>整条时间线的锚点；变更即全局重算</td></tr>
+<tr><td>option_period_end · financing_contingency_end · survey_delivery_days · title_commitment_days · objection_days · hoa_docs_delivery_days · hoa_termination_days · lead_paint_days</td><td>Para 5 / 6 · HOA Addendum · Lead Paint Addendum</td><td>Checklist 任务到期日；日程；客户端"下一步"；推送</td></tr>
+<tr><td>inspection_scheduled · appraisal_ordered · loan_commitment · final_walkthrough · funding</td><td>非合同字段，手动或从邮件 / 短信抽取</td><td>里程碑状态；走向判断输入</td></tr>
+<tr><td><b>房屋 Property</b></td><td>address · legal_description · exclusions · non_realty_items · hoa_yes_no · survey_new_or_existing（T-47）· seller_disclosure_received</td><td>Para 2 · Para 6C · Para 7 · Non-Realty Addendum</td><td>Property 主记录；披露 checklist；卖方费用</td></tr>
+<tr><td><b>附加协议</b></td><td>addenda[]（HOA · Third Party Financing · Lead Paint · Seller Temporary Lease · Buyer Temporary Lease · Non-Realty · Backup · Appraisal · Short Sale …）· amendments[]（日期、变更项、原因）</td><td>Para 22 勾选项；每份 Amendment</td><td>决定启用哪些日期规则；变更日志；价格变化图</td></tr>
+<tr><td><b>佣金 Commission</b></td><td>listing_commission_pct · buyer_commission_pct（或固定额）· broker_fee_table · referral_fee · transaction_fee · cda_generated</td><td>Listing Agreement · Buyer Rep Agreement · 你的 broker 费率表</td><td>GCI / NCI 自动算；CDA 生成；Reports 预测</td></tr>
+<tr><td><b>租赁 Lease</b></td><td>rent · deposit · pet_deposit · lease_start / end · notice_days · renewal_terms · landlord_agent_fee · tenant_screening_status</td><td>TAR Residential Lease · 申请表</td><td>Lease Listing / Property Management 模板；续约提醒</td></tr>
+</table></div>
+<div class="obs ai"><b>抽取的实现原则：</b>AI 先抽（多模态读 PDF / 照片），每个字段带来源片段和置信度；置信度低于阈值或数值型字段（价格、天数、日期）默认进入"待确认"队列，你在手机上滑一遍确认；确认后才触发派生（日期、任务、推送、客户端）。这样既快又不会把错的日期推给客户。</div>
+</section>
+
+<section id="modules">
+<h2><span class="no">03</span>模块规格（按你定的优先级）</h2>
+<p>每个模块分"必须有 / 应该有 / AI 增强"三层。必须有 = 第一版就要能用；应该有 = 第一版后两个迭代内；AI 增强 = 有数据后加。</p>
+
+<div class="mod" id="m1"><div class="mh"><b>M1 · 交易管理 Transactions</b><span class="pill acc">轴心模块</span><span class="pill bad">第一步</span><span class="note">牵扯所有子模块：联系人、房子、日程、合同、To-do、Checklist、佣金、客户端</span></div><div class="mb">
+<div><b>必须有</b><ul>
+<li><b>Pipeline 看板：</b>列 = 阶段（Lead → Pre-Listing / Pre-Approval → Active / Searching → Offer → Under Contract → Closing → Closed ｜ Terminated），卡片显示下一个关键日期倒计时、风险色、金额；支持 Seller / Buyer / Lease Listing / Tenant / Property Management 五种类型</li>
+<li><b>图形化进度：</b>里程碑时间线（横向）：Effective → Option 期 → 贷款审批 → 估价 → Title/Survey → 最终看房 → Closing → Funding；标出今天、每个节点日期、完成 / 逾期 / 风险</li>
+<li><b>Key-Value 面板：</b>第 2 节全部字段，带来源和确认状态；价格变化 / 日期变化历史</li>
+<li><b>日期引擎：</b>从 key-value 算所有 deadline（含 Texas 规则：天数按日历天、截止日落在周末假日顺延的规则可配置）；任一锚点变化 → 重算 → 通知受影响任务与客户端</li>
+<li><b>Checklist：</b>按 Playbook（你的 5 套模板）实例化；任务锚定日期；阶段折叠；必备文件清单</li>
+<li><b>各方 Parties：</b>买卖双方、对方 agent、lender、title、inspector、contractor；一键电话 / 短信 / 邮件；每方的沟通历史</li>
+<li><b>文档：</b>上传 / 拍照 / 邮件转发进入；类型标注；版本；抽取状态</li>
+<li><b>佣金：</b>从合同价 + 协议比例 + broker 费率表自动算 GCI / 费用 / NCI；状态随阶段变（Pending → Closed）</li>
+<li><b>交易时间线：</b>沟通、变更、文档、任务完成的统一日志</li>
+<li><b>客户端同步开关：</b>哪些字段 / 文件 / 日期对客户可见</li>
+</ul></div>
+<div><b>应该有</b><ul>
+<li><b>走向判断（Deal Health）：</b>规则引擎：Option 期是否已过、贷款审批状态、估价结果 vs 合同价（gap）、检查谈判是否达成、Title 是否 clear、HOA 文件是否送达；输出 继续 / 风险 / 可能终止 三档 + 触发条件 + 若终止 Earnest Money / Option Fee 归属</li>
+<li><b>买卖费用清单（Net Sheet）：</b>点开一套房或一笔交易，自动生成卖方净收益 / 买方总花费：佣金、title policy（Texas 费率表）、escrow fee、survey、HOA transfer / resale cert、税费 proration、贷款费用、home warranty、预付款；可导出给客户</li>
+<li><b>Amendment 助手：</b>从谈判结果生成 amendment 草稿（价格 / 日期 / repair credit）</li>
+<li><b>价格变化图：</b>Listing 价格 → 降价 → offer → counter → 合同价 → 成交价</li>
+<li><b>Hot List / 置顶、模板版本化、并行多笔（同一客户先租后买）</b></li>
+</ul></div>
+<div><b>AI 增强 <span class="pill ai">AI</span></b><ul>
+<li>合同 / 检查报告 / 估价报告摘要与问题项抽取</li>
+<li>"这笔交易现在什么情况、下一步干嘛"一句话问答</li>
+<li>对方 agent 画像（历史合作、回复速度、谈判风格备注）</li>
+<li>风险预警推送（72h / 24h / 当天）</li>
+<li>从历史交易学习你的实际节奏（例如 inspection 通常在 effective 后第 3 天）</li>
+</ul></div>
+</div></div>
+
+<div class="mod" id="m2"><div class="mh"><b>M2 · 联系人管理 Contacts</b><span class="pill acc">M1 前置</span><span class="note">客户、Vendor、Title 公司、对方 agent 都是联系人，靠"角色"区分</span></div><div class="mb">
+<div><b>必须有</b><ul>
+<li>联系人主记录：多电话 / 邮箱 / 微信名、地址、配偶家人、生日纪念日、语言偏好（中 / 英）</li>
+<li>角色标签：客户（买 / 卖 / 租客 / 房东 / 投资）· Vendor（title · lender · inspector · contractor · staging · photographer）· Agent（对方经纪）· 推荐人</li>
+<li>分层（A/B/C/D）、状态、来源、自定义标签；搜索按名字 / 电话 / 地址 / 微信名</li>
+<li>关联视图：这个人的所有交易、房子、文档、待办</li>
+<li>导入 Wise Agent CSV（含配偶、分类、来源）；去重合并；Google Contacts 同步</li>
+<li>沟通时间线：电话 / 短信 / 邮件 / 微信归档 / 备注（语音转文字）</li>
+</ul></div>
+<div><b>应该有</b><ul>
+<li>Vendor 评价与费用记录（哪家 inspector 多少钱、哪家 title 效率高）</li>
+<li>推荐关系图（谁介绍了谁，成交多少）</li>
+<li>客户端账号邀请（生成登录链接 → 客户 App / 网站）</li>
+<li>生日 / 购房周年自动祝福（中英模板）</li>
+</ul></div>
+<div><b>AI 增强 <span class="pill ai">AI</span></b><ul>
+<li>关系摘要（对标 FUB Smart Summaries）；自动分层建议；下一步跟进建议与消息草稿</li>
+<li>名片 / 微信资料截图建档；通话录音转写摘要</li>
+</ul></div>
+</div></div>
+
+<div class="mod" id="m3"><div class="mh"><b>M3 · 房子管理 Properties</b><span class="pill acc">M1 前置（最小版）</span><span class="note">一个地址一条主记录，所有交易、租约、文档、报告都挂在它下面</span></div><div class="mb">
+<div><b>必须有</b><ul>
+<li>地址标准化（USPS 格式）+ 去重；地图定位</li>
+<li>基础字段：户型、面积、年份、地块、税、HOA、学区、小区；自动补全（公开数据 / MLS 导出 / 你现有的地址查询流程）</li>
+<li>关系：业主（联系人）、当前交易、历史交易（先租后卖）、租约</li>
+<li>照片 / 文档（survey、T-47、披露、HOA 文件可复用到下一笔交易）</li>
+</ul></div>
+<div><b>应该有</b><ul>
+<li>Listing 信息：MLS #、挂牌价与降价历史、带看记录与反馈、DOM</li>
+<li>出租管理：租约、租金、押金、到期提醒、维修记录（你的 Property Management 模板）</li>
+<li>小区关联 → 为"小区管理"模块预留（小区信息、房屋数量、出租限制、人口比例）</li>
+</ul></div>
+<div><b>AI 增强 <span class="pill ai">AI</span></b><ul>
+<li>从 MLS sheet / 税单 PDF 抽取房屋字段</li>
+<li>一键"想买 / 想卖这套房要花多少钱"（调用 Net Sheet）</li>
+<li>为后续 CMA / Listing 报告提供数据源</li>
+</ul></div>
+</div></div>
+
+<div class="mod" id="m4"><div class="mh"><b>M4 · 日程管理 Calendar</b><span class="note">关键日期自动上日历，To-do 有日期的也上；Google 双向同步但分层</span></div><div class="mb">
+<div><b>必须有</b><ul>
+<li>统一日历：交易关键日期（自动，只读，来自日期引擎）· 任务到期 · 约会（带看、inspection、closing）· 生日</li>
+<li>Google Calendar 双向同步：业务日历 ⇄ 一个专用 calendar；交易日期写入另一个 calendar；私人日历只读显示可隐藏</li>
+<li>日 / 周 / 月 / 议程视图；事件绑定联系人和交易；推送提醒（可按类型设提前量）</li>
+</ul></div>
+<div><b>应该有</b><ul>
+<li>日期变更联动：closing date 改了 → 相关任务和事件重排 → 通知客户端</li>
+<li>带看排程（多套房路线、时间窗口）；冲突检测</li>
+</ul></div>
+<div><b>AI 增强 <span class="pill ai">AI</span></b><ul>
+<li>语音 / 一句话建事件（"周六 10 点带客户 B 看 56 Example"）并起草确认短信</li>
+<li>智能建议时间（结合客户偏好与你的空档）</li>
+</ul></div>
+</div></div>
+
+<div class="mod" id="m5"><div class="mh"><b>M5 · 合同管理 Contracts &amp; Documents</b><span class="pill acc">M1 数据源</span><span class="note">上传 → 识别类型 → 抽取 → 确认 → 写入 Deal → 派生</span></div><div class="mb">
+<div><b>必须有</b><ul>
+<li>入口：App 拍照（多页自动裁边）、文件上传、邮件转发到交易专属邮箱、从 Google Drive 选</li>
+<li>文档类型库：TREC 1-4 Family、各 Addendum、Amendment、Listing Agreement、Buyer Rep、Seller Disclosure、TAR Lease、Inspection Report、Appraisal、Title Commitment、Survey、HOA Docs、CDA、Closing Disclosure</li>
+<li>抽取（第 2 节 schema）+ 确认界面：字段 · 值 · 来源片段 · 置信度 · 确认 / 修改</li>
+<li>版本与生效：Amendment 生成新版本，标记覆盖了哪些字段</li>
+<li>存储与权限：按交易归档；哪些文件对客户可见 / 可下载</li>
+</ul></div>
+<div><b>应该有</b><ul>
+<li>表单自动填充：用 Contact + Property + Deal 字段填 TREC 可填写 PDF（pdf-lib），生成待签版本</li>
+<li>电子签集成：DocuSign / dotloop 发起与状态回传（先集成，不自建）</li>
+<li>缺件检查：按阶段必备文件清单提示"还差什么"</li>
+</ul></div>
+<div><b>AI 增强 <span class="pill ai">AI</span></b><ul>
+<li>检查报告 → 问题项清单 + 估算修理费；估价报告 → gap 计算；Title commitment → 例外项提醒</li>
+<li>合同条款中英解释（给客户端用，带免责）</li>
+</ul></div>
+</div></div>
+
+<div class="mod" id="m6"><div class="mh"><b>M6 · To-do List</b> <span class="note">&amp;</span> <b>M7 · 交易 Checklist / Playbook</b></div><div class="mb">
+<div><b>To-do 必须有</b><ul>
+<li>两类任务：交易任务（Playbook 生成，带阶段和锚定日期）· 个人任务</li>
+<li>Today 视图：按风险 / 到期排序；完成 / 推迟 / 委派；批量勾选</li>
+<li>提醒推送；任务绑定联系人 / 交易 / 文档</li>
+</ul></div>
+<div><b>Checklist / Playbook 必须有</b><ul>
+<li>模板 = 阶段 × 任务 × 规则（N 天 before/after 某锚点）× 负责角色 × 必备文件 × 触发动作</li>
+<li>你的 5 套模板迁移：Seller · Buyer · Lease Listing · Lease Tenant · Property Management（保留 Wise Agent 的日期锚定机制）</li>
+<li>实例化时按合同勾选的 addendum 启用 / 禁用对应任务（没有 HOA 就不生成 HOA 任务）</li>
+<li>模板版本化；可选择应用到进行中交易</li>
+</ul></div>
+<div><b>AI 增强 <span class="pill ai">AI</span></b><ul>
+<li>建议任务（对标 FUB Suggested Tasks）：从消息和文档里发现该做的事</li>
+<li>从历史交易学习任务实际完成时间，优化模板偏移天数</li>
+</ul></div>
+</div></div>
+
+<h3 id="later">后续模块（挂在 Property / Deal 上）</h3>
+<div class="tbl"><table>
+<tr><th style="width:160px">模块</th><th>做什么</th><th style="width:200px">依赖</th></tr>
+<tr><td>小区管理</td><td>小区主记录：位置、房屋数量、建成年代、HOA 费与出租限制、学区、人口比例、成交 / 租金统计；Property 关联小区；客户端可看小区页</td><td>Property · 外部数据源</td></tr>
+<tr><td>市场报告</td><td>按城市 / zip / 小区自动生成（你现有 NTREIS 流程产品化）：模板、页眉页脚、图表；定时生成、群发、客户端推送</td><td>Property · 市场数据 · 内容模板</td></tr>
+<tr><td>房屋分析 / CMA</td><td>出售或出租 CMA：可比选取规则、调整表、推荐价区间、净收益；一键生成客户版报告（你现有 flyer pipeline 产品化）</td><td>Property · MLS 导出 · Net Sheet</td></tr>
+<tr><td>Listing 报告</td><td>卖家每周报告：带看次数与反馈、线上浏览、同区新上市 / 成交、价格调整建议；客户端可看</td><td>Property · 带看记录 · 市场数据</td></tr>
+<tr><td>客户维护 / 自动邮件</td><td>分组群发（市场更新、活动、节日）、房屋价值月报（Homebot 思路）、购房周年</td><td>Contacts · 报告模块</td></tr>
+<tr><td>Lead capture</td><td>网站表单、Zillow / Realtor.com / 小红书私信转入、专属 lead 邮箱、Zapier；自动回复 + 路由规则</td><td>Contacts · Inbox</td></tr>
+<tr><td>小工具</td><td>房贷计算器（含 PMI、税、保险）、买方 / 卖方费用清单、交易流程图解（中英）、Option / Earnest Money 规则速查</td><td>Net Sheet 引擎</td></tr>
+</table></div>
+</section>
+
+<section id="surfaces">
+<h2><span class="no">04</span>四端功能矩阵</h2>
+<p><span class="f">●</span> 完整功能　<span class="h">◐</span> 简化 / 部分　<span class="v">○</span> 只读或通知　— 不提供。原则：经纪人 App 管"今天和现场"，经纪人网站管"模板、批量、报表"；客户 App 管"进度、下一步、签字上传、提醒"，客户网站管"完整文档、报告、费用清单"。</p>
+<div class="tbl"><table class="mtx">
+<tr><th>能力</th><th>经纪人 App</th><th>经纪人网站</th><th>客户 App</th><th>客户网站</th></tr>
+<tr><td>Today / 今日待办 + AI 简报</td><td class="f">●</td><td class="f">●</td><td class="h">◐ 我的下一步</td><td class="h">◐</td></tr>
+<tr><td>交易 Pipeline 看板</td><td class="h">◐ 列表</td><td class="f">●</td><td>—</td><td>—</td></tr>
+<tr><td>交易详情：里程碑进度图</td><td class="f">●</td><td class="f">●</td><td class="v">○ 客户版</td><td class="v">○ 客户版</td></tr>
+<tr><td>Key-Value 面板 + 变更历史</td><td class="h">◐</td><td class="f">●</td><td class="v">○ 部分字段</td><td class="v">○ 部分字段</td></tr>
+<tr><td>关键日期 + 推送提醒</td><td class="f">●</td><td class="f">●</td><td class="f">● 推送</td><td class="v">○</td></tr>
+<tr><td>Checklist / 任务</td><td class="f">●</td><td class="f">●</td><td class="h">◐ 客户任务（上传、签字、确认）</td><td class="h">◐</td></tr>
+<tr><td>合同拍照 / 上传 + 抽取确认</td><td class="f">● 拍照</td><td class="f">● 上传</td><td class="h">◐ 上传</td><td class="h">◐ 上传</td></tr>
+<tr><td>文档库 / 电子签</td><td class="h">◐</td><td class="f">●</td><td class="h">◐ 签字 / 查看</td><td class="f">● 查看下载</td></tr>
+<tr><td>走向判断 Deal Health</td><td class="f">●</td><td class="f">●</td><td>—</td><td>—</td></tr>
+<tr><td>买卖费用清单 Net Sheet</td><td class="h">◐</td><td class="f">●</td><td class="v">○ 客户版</td><td class="f">● 客户版</td></tr>
+<tr><td>佣金 / CDA</td><td class="v">○</td><td class="f">●</td><td>—</td><td>—</td></tr>
+<tr><td>联系人 + 沟通时间线</td><td class="f">●</td><td class="f">●</td><td>—</td><td>—</td></tr>
+<tr><td>消息（短信 / 邮件 / 微信归档）</td><td class="f">●</td><td class="f">●</td><td class="h">◐ 站内消息</td><td class="h">◐</td></tr>
+<tr><td>日历</td><td class="f">●</td><td class="f">●</td><td class="v">○ 我的约会 / 日期</td><td class="v">○</td></tr>
+<tr><td>房子 / 小区页</td><td class="h">◐</td><td class="f">●</td><td class="v">○</td><td class="f">●</td></tr>
+<tr><td>带看反馈（卖家）/ 看房清单（买家）</td><td class="f">● 录入</td><td class="f">●</td><td class="f">● 查看 / 打分</td><td class="f">●</td></tr>
+<tr><td>Listing 报告 / 市场报告 / CMA</td><td class="v">○</td><td class="f">● 生成</td><td class="v">○ 推送</td><td class="f">● 阅读</td></tr>
+<tr><td>Playbook 模板编辑</td><td>—</td><td class="f">●</td><td>—</td><td>—</td></tr>
+<tr><td>报表 / 目标</td><td class="h">◐</td><td class="f">●</td><td>—</td><td>—</td></tr>
+<tr><td>小工具（房贷计算、费用清单、流程图解）</td><td class="f">●</td><td class="f">●</td><td class="f">●</td><td class="f">●</td></tr>
+<tr><td>语言</td><td>中 / 英</td><td>中 / 英</td><td>中 / 英 可切</td><td>中 / 英 可切</td></tr>
+</table></div>
+<div class="grid2">
+<div class="card"><h4>客户 App 到底给谁看什么</h4><ul>
+<li><b>买家：</b>我的交易进度（里程碑）、下一步要做的事（打款、签字、选保险）、关键日期倒计时、要花多少钱（总费用清单）、文档、看房清单与打分、房贷计算</li>
+<li><b>卖家：</b>进度、带看记录与反馈、市场更新、价格调整建议、净收益、文档、closing 准备清单</li>
+<li><b>租客 / 房东：</b>租约状态、付款与到期、维修请求 / 处理进度、续约</li>
+<li><b>共同：</b>推送提醒（中文）、站内消息、找 Jason 一键电话 / 微信、Vendor 推荐名单、小区页</li>
+</ul></div>
+<div class="card"><h4>客户端权限原则</h4><ul>
+<li>客户只看到"你勾选公开"的字段和文件，默认公开：进度、日期、下一步、费用清单；默认不公开：佣金、对方信息、内部备注、走向判断</li>
+<li>客户动作有限：上传、签字（跳转 e-sign）、确认、留言、打分、预约时间段</li>
+<li>登录：手机号 / 邮箱魔法链接，无密码；一个客户可有多笔交易</li>
+<li>网站与 App 同一账号同一数据；App 多推送，网站多文档</li>
+</ul></div>
+</div>
+</section>
+
+<section id="flows">
+<h2><span class="no">05</span>核心 Workflow（重画）</h2>
+<h3>W1 · 合同即数据：一次上传，全部派生</h3>
+<pre class="mermaid">
+flowchart LR
+  A["入口<br/>App 拍照 / 上传 / 邮件转发 / Drive"] --> B["识别文档类型<br/>TREC 1-4 · Addendum · Amendment · Lease …"]
+  B --> C["AI 抽取 Key-Value<br/>价格 · 贷款 · Option · EM · 各 contingency 天数 · 日期 · 各方"]
+  C --> D{"置信度 / 数值字段<br/>需要确认?"}
+  D -->|"是"| E["待确认队列<br/>手机上逐条看来源片段 · 确认或改"]
+  D -->|"否"| F["写入 Deal（新版本）"]
+  E --> F
+  F --> G["日期引擎<br/>算出全部 deadline"]
+  G --> H["Checklist 任务重排"]
+  G --> I["日历事件（Google 同步）"]
+  G --> J["推送提醒（经纪人 + 客户）"]
+  F --> K["佣金 / Net Sheet 重算"]
+  F --> L["客户端进度 & 下一步 更新"]
+  F --> M["Deal Health 重新判断"]
+</pre>
+<h3>W2 · 交易生命周期与走向判断（Under Contract 段）</h3>
+<pre class="mermaid">
+flowchart TD
+  S["Effective Date<br/>合同生效"] --> O["Option 期<br/>Inspection · 谈判"]
+  O -->|"谈成 / 无异议"| F1["贷款审批期<br/>Buyer approval days"]
+  O -->|"买方在 Option 期内终止"| T1["终止<br/>EM 退买方 · Option Fee 归卖方"]
+  O -->|"Amendment：价格 / credit / 修理"| S2["Deal 新版本 → 重算"] --> F1
+  F1 -->|"审批通过"| AP["估价"]
+  F1 -->|"审批未过且在期限内通知"| T2["终止<br/>EM 退买方"]
+  AP -->|"估价 ≥ 合同价"| TI["Title / Survey / HOA<br/>objection 期"]
+  AP -->|"估价 < 合同价"| GAP{"Gap 怎么补?"}
+  GAP -->|"买方补差 / 卖方降价 / 各让一步 → Amendment"| S3["Deal 新版本"] --> TI
+  GAP -->|"谈不拢 · 有 Appraisal Addendum"| T3["终止"]
+  TI -->|"clear"| W["最终看房 → Closing → Funding"]
+  TI -->|"objection 未解决"| T4["终止"]
+  W --> C["Closed<br/>佣金 Closed · After Closing 任务 · 客户维护"]
+  classDef risk fill:#F5DEDC,stroke:#A8322B,color:#5a1a15;
+  class T1,T2,T3,T4 risk;
+</pre>
+<p class="note">Deal Health 就是在这张图上判断"现在在哪个节点、离最近的终止条件还有几天、缺什么动作"。规则先写死（Texas 常规），再用你的历史交易校准。</p>
+<h3>W3 · 四端数据流</h3>
+<pre class="mermaid">
+flowchart LR
+  subgraph BE["一个后端 · 一套领域模型"]
+    DB[("Deal · Contact · Property<br/>Document · KeyValue · Task · Event")]
+    ENG["日期引擎 · Playbook · Deal Health · Net Sheet · 通知"]
+    DB <--> ENG
+  end
+  AA["经纪人 App<br/>今天 · 现场 · 拍合同 · 确认抽取"] <--> DB
+  AW["经纪人网站<br/>Pipeline · 模板 · 批量 · 报表 · 文档"] <--> DB
+  ENG --> CA["客户 App<br/>进度 · 下一步 · 推送 · 上传 · 签字"]
+  ENG --> CW["客户网站<br/>文档 · 费用清单 · 报告 · 小区页"]
+  CA -->|"上传 / 确认 / 留言 / 打分"| DB
+  CW -->|"上传 / 留言"| DB
+</pre>
+<h3>W4 · Listing 侧（卖家）</h3>
+<pre class="mermaid">
+flowchart LR
+  P["Property 主记录"] --> CMA["CMA / 定价<br/>推荐价区间 + 净收益"]
+  CMA --> LA["Listing Agreement 上传<br/>抽取佣金 % · 期限 · 挂牌价"]
+  LA --> ACT["Active<br/>带看记录 · 反馈 · 线上数据"]
+  ACT --> LR["Listing 报告（每周）<br/>客户端可看"]
+  LR --> ADJ{"价格调整?"}
+  ADJ -->|"降价"| AM["价格变化记录 → 群发 flyer"] --> ACT
+  ADJ -->|"收到 offer"| OF["Offer 对比表<br/>净收益 / 条件 / 贷款类型"] --> UC["Under Contract → W2"]
+</pre>
+<h3>W5 · 客户旅程（买家视角）</h3>
+<pre class="mermaid">
+flowchart LR
+  I["收到邀请链接<br/>手机号登录"] --> H["首页：我的交易进度<br/>今天要做的 1 件事"]
+  H --> N["推送：Option 期还剩 2 天<br/>点开看说明（中文）"]
+  N --> D["下一步：上传保险报价 / 签 amendment（跳转 e-sign）"]
+  D --> M["费用清单：总共要带多少钱去 closing"]
+  M --> Q["留言 / 一键联系 Jason"]
+  Q --> C["Closing 当天：清单 · 地址 · 带什么"]
+  C --> A["成交后：房屋价值月报 · 维修 Vendor 名单 · 推荐朋友"]
+</pre>
+</section>
+
+<section id="data">
+<h2><span class="no">06</span>数据模型增量（在拆解手册第 3 节之上）</h2>
+<pre class="mermaid">
+erDiagram
+  DEAL ||--o{ DEAL_VERSION : "每份新文件一个版本"
+  DEAL_VERSION ||--o{ KEY_VALUE : "字段 值 来源 置信度 已确认"
+  DOCUMENT ||--o{ DEAL_VERSION : "产生"
+  DEAL ||--o{ DOCUMENT : "归档"
+  DEAL ||--o{ MILESTONE : "日期引擎生成"
+  MILESTONE ||--o{ TASK : "锚定"
+  MILESTONE ||--o{ EVENT : "上日历"
+  DEAL ||--o{ PARTY : "角色 + 联系人"
+  PARTY }o--|| CONTACT : "指向"
+  DEAL }o--|| PROPERTY : "地址主记录"
+  DEAL ||--o| NET_SHEET : "自动生成"
+  DEAL ||--o| COMMISSION : "自动生成"
+  DEAL ||--o| DEAL_HEALTH : "规则判断"
+  DEAL ||--o{ NOTIFICATION : "推送给经纪人或客户"
+  CONTACT ||--o{ CLIENT_USER : "客户端账号"
+  CLIENT_USER ||--o{ CLIENT_ACTION : "上传 签字 确认 留言 打分"
+  PLAYBOOK ||--o{ DEAL : "实例化"
+  PLAYBOOK ||--o{ PLAYBOOK_RULE : "阶段 任务 偏移 角色 必备文件 触发"
+  PROPERTY }o--o| COMMUNITY : "小区"
+  PROPERTY ||--o{ SHOWING : "带看 反馈"
+  KEY_VALUE {
+    string key
+    string value
+    string doc_id
+    int page
+    float confidence
+    bool confirmed
+    date effective_from
+  }
+  MILESTONE {
+    string name
+    date due
+    string derived_from_key
+    enum status_pending_done_overdue_risk
+    bool client_visible
+  }
+  DEAL_HEALTH {
+    enum verdict_continue_risk_terminate
+    string reasons
+    string next_termination_condition
+    int days_to_it
+    string em_disposition
+  }
+</pre>
+</section>
+
+<section id="build">
+<h2><span class="no">07</span>实现路线与架构</h2>
+<div class="grid2">
+<div class="card"><h4>架构（贴合你的条件：Windows + iPhone + Claude Code）</h4><ul>
+<li><b>后端：</b>Supabase（Postgres + Auth + Storage + Edge Functions + Realtime）。一个 schema 服务四端，Row Level Security 区分经纪人 / 客户。</li>
+<li><b>经纪人 App + 客户 App：</b>一个 Expo（React Native）代码库，按角色加载不同导航；EAS Build 云端出 iOS 包，无需 Mac；同一套代码出 Android。</li>
+<li><b>经纪人网站 + 客户网站：</b>Next.js（或 Expo Web），共用组件与 API；客户网站以魔法链接登录。</li>
+<li><b>AI：</b>Claude API 做抽取（多模态直接读 PDF / 照片）、摘要、草稿；输出强制 JSON schema（第 2 节）；每字段带来源与置信度。</li>
+<li><b>引擎：</b>日期引擎 / Playbook / Deal Health / Net Sheet 都是纯函数库（TypeScript），前后端共用，可单元测试。</li>
+<li><b>集成：</b>Google Calendar &amp; Gmail API；Twilio（短信）；DocuSign / dotloop（e-sign）；pdf-lib（表单填充）；Expo Notifications（推送）。</li>
+</ul></div>
+<div class="card"><h4>先做什么（自用）</h4><ul>
+<li>Deal 表 + Key-Value 版本表 + 日期引擎 + 你的 Seller 模板 → 一笔真实交易跑通</li>
+<li>合同拍照 / 上传 → 抽取 → 确认 → 派生（先只做 TREC 1-4 + Financing + HOA addendum）</li>
+<li>Contacts 最小版 + 导入 CSV；Property 最小版</li>
+<li>Today 页 + 推送；Google Calendar 分层同步</li>
+<li>然后才是客户 App（只读进度 + 推送 + 上传）</li>
+</ul></div>
+</div>
+<div class="roadmap">
+<div class="card p1"><div class="k">Phase 1 · 替代 Wise Agent</div><h4>交易内核</h4><ul><li>M1 必须有 + M5 必须有 + M2 / M3 最小版 + M4 + M6 / M7</li><li>5 套 Playbook 迁移</li><li>经纪人 App + 经纪人网站</li></ul></div>
+<div class="card p2"><div class="k">Phase 2 · 客户端</div><h4>客户 App / 网站</h4><ul><li>进度 · 下一步 · 推送 · 上传 · 签字跳转</li><li>Net Sheet 客户版</li><li>站内消息 · 一键联系</li></ul></div>
+<div class="card p3"><div class="k">Phase 3 · 智能层</div><h4>Deal Health + AI</h4><ul><li>走向判断规则引擎</li><li>AI 摘要 / 草稿 / 建议任务</li><li>报告：Listing 报告 · 市场报告 · CMA</li></ul></div>
+<div class="card p4"><div class="k">Phase 4 · 增长</div><h4>小区 · 营销 · Lead</h4><ul><li>小区管理 · 客户维护群发</li><li>Lead capture + 自动回复</li><li>小工具公开页（获客）</li></ul></div>
+</div>
+</section>
+
+<section id="open">
+<h2><span class="no">08</span>待你拍板的 8 件事</h2>
+<ol>
+<li><b>产品名：</b>"NewBee OS" 只是占位。客户端名字要让客户一眼知道是你（NewBee 什么）。</li>
+<li><b>电子签：</b>集成 DocuSign / dotloop（快、合规）还是先不做（客户端只看不签）？建议 Phase 2 集成。</li>
+<li><b>MLS 数据：</b>Property 字段靠 NTREIS 导出 / 你现有查询流程手动补，还是申请 RESO API（费用与审批）？Phase 1 建议手动 + 抽取。</li>
+<li><b>微信：</b>没有官方 API。方案：iOS 分享到 App（截图 / 文本）+ OCR 归档。接受吗？</li>
+<li><b>客户端首发形态：</b>先做客户网站（PWA，可加到主屏、可推送）再上 App Store，还是直接 App？建议先 PWA，省 App Store 审核。</li>
+<li><b>Deal Health 规则来源：</b>先按 Texas 常规规则写死，再由你逐条校订（我可以先起草规则表）。</li>
+<li><b>费用清单口径：</b>Title policy 费率表、escrow fee、你 broker 的费用表需要你提供一份现行版本。</li>
+<li><b>数据迁移范围：</b>Wise Agent 只迁联系人 + 5 套模板，进行中交易手动重建（约 10 笔），还是也想把历史交易迁进来做报表？</li>
+</ol>
+<footer>
+<div>对标信息来源（2026 年公开资料）：</div>
+<ul>
+<li><a href="https://www.docjacket.com/blog/best-transaction-coordinator-software">DocJacket · Best Transaction Coordinator Software (2026 Comparison)</a></li>
+<li><a href="https://www.docjacket.com/transaction-coordinator-software">DocJacket · Transaction Coordinator Software powered by AI</a></li>
+<li><a href="https://www.listedkit.com/best-tc-software">ListedKit · Best Transaction Coordinator Software 2026</a></li>
+<li><a href="https://followupace.com/blog/follow-up-boss-ai-tools-complete-guide">Follow Up Ace · Follow Up Boss AI Tools: The Complete 2026 Guide</a></li>
+<li><a href="https://www.luxurypresence.com/blogs/lofty-review/">Luxury Presence · Lofty Review 2026</a></li>
+<li><a href="https://placester.com/real-estate-marketing-academy/boldtrail-review">Placester · Full BoldTrail Review (2026)</a></li>
+<li><a href="https://realestatetoolkit.ai/tools/sisu/">RealEstateToolkit.ai · Sisu Review for Real Estate Agents (2026)</a></li>
+</ul>
+<div>所有示例字段与数字均为规格说明，不含任何客户数据。TREC 段落号以当前 1-4 Family Residential Contract (Resale) 为准，表单改版时同步更新类型库。</div>
+</footer>
+</section>
+</main>
+</div>

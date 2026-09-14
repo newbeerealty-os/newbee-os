@@ -1,0 +1,692 @@
+<title>NewBee OS 30 天开发计划</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&display=swap">
+<style>
+:root{
+  --bg:#F3F5F2; --surface:#FFFFFF; --surface-2:#E9EDE8; --line:#D3D9D2; --line-strong:#AEB7AD;
+  --ink:#171C1F; --ink-2:#3C464C; --muted:#66727A;
+  --accent:#0E5A86; --accent-ink:#FFFFFF; --accent-soft:#DCE9F2;
+  --ai:#B84E17; --ai-soft:#F7E4D8;
+  --bad:#A8322B; --bad-soft:#F5DEDC; --ok:#2C6E49; --ok-soft:#DCEBE1; --warn:#8A6A0F; --warn-soft:#F3EAC8;
+  --code-bg:#EEF1EC;
+  --shadow:0 1px 2px rgba(20,30,35,.06),0 8px 24px -16px rgba(20,30,35,.25);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#121618; --surface:#1A2023; --surface-2:#222A2E; --line:#2E383D; --line-strong:#45525A;
+    --ink:#E9ECE8; --ink-2:#C2CAC7; --muted:#8E9AA0;
+    --accent:#6FB2DD; --accent-ink:#0B1A24; --accent-soft:#1B3140;
+    --ai:#F0915A; --ai-soft:#3A2418;
+    --bad:#F08A80; --bad-soft:#3A1F1D; --ok:#7FC79B; --ok-soft:#1B3325; --warn:#E3C35A; --warn-soft:#3A3014;
+    --code-bg:#22292C;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -16px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121618; --surface:#1A2023; --surface-2:#222A2E; --line:#2E383D; --line-strong:#45525A;
+  --ink:#E9ECE8; --ink-2:#C2CAC7; --muted:#8E9AA0;
+  --accent:#6FB2DD; --accent-ink:#0B1A24; --accent-soft:#1B3140;
+  --ai:#F0915A; --ai-soft:#3A2418;
+  --bad:#F08A80; --bad-soft:#3A1F1D; --ok:#7FC79B; --ok-soft:#1B3325; --warn:#E3C35A; --warn-soft:#3A3014;
+  --code-bg:#22292C;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -16px rgba(0,0,0,.6);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans","Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;font-size:15.5px;line-height:1.7;padding-inline:16px;padding-block:0 80px;-webkit-font-smoothing:antialiased}
+a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+code,pre,.mono{font-family:"IBM Plex Mono","SFMono-Regular",Menlo,Consolas,monospace}
+code{background:var(--code-bg);padding:.1em .4em;border-radius:4px;font-size:.88em;color:var(--ink-2)}
+h1,h2,h3,h4{line-height:1.25;text-wrap:balance;margin:0}
+h1{font-size:clamp(28px,4vw,40px);font-weight:700;letter-spacing:-.01em}
+h2{font-size:24px;font-weight:700;margin-top:64px;padding-top:24px;border-top:2px solid var(--ink);display:flex;align-items:baseline;gap:14px}
+h2 .no{font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:500;color:var(--muted);letter-spacing:.08em}
+h3{font-size:18px;font-weight:600;margin-top:36px}
+h4{font-size:15px;font-weight:600;margin-top:20px;color:var(--ink-2)}
+p{margin:12px 0;max-width:72ch}
+ul,ol{margin:10px 0;padding-left:1.3em;max-width:78ch}li{margin:4px 0}
+.wrap{max-width:1160px;margin:0 auto;display:grid;grid-template-columns:220px minmax(0,1fr);gap:48px}
+@media (max-width:900px){.wrap{grid-template-columns:minmax(0,1fr)}nav.toc{position:static;max-height:none;border-right:0;border-bottom:1px solid var(--line);padding-bottom:16px}}
+nav.toc{position:sticky;top:0;align-self:start;max-height:100vh;overflow:auto;padding-top:40px;padding-right:16px;border-right:1px solid var(--line);font-size:13px}
+nav.toc .k{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin-bottom:10px}
+nav.toc a{display:block;color:var(--ink-2);padding:4px 0;border-left:2px solid transparent;padding-left:10px;margin-left:-11px}
+nav.toc a:hover{color:var(--accent);border-left-color:var(--accent);text-decoration:none}
+nav.toc a.sub{padding-left:22px;color:var(--muted);font-size:12.5px}
+main{min-width:0}
+header.masthead{padding-top:48px;padding-bottom:28px;border-bottom:1px solid var(--line)}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;display:flex;gap:16px;flex-wrap:wrap}
+.lede{font-size:17px;color:var(--ink-2);max-width:66ch;margin-top:16px}
+.verdict{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent);padding:20px 24px;margin-top:28px;box-shadow:var(--shadow)}
+.verdict h3{margin-top:0;font-size:16px}
+.verdict ol{margin:8px 0 0}
+table{border-collapse:collapse;width:100%;font-size:14px;background:var(--surface);border:1px solid var(--line)}
+th,td{padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top;text-align:left}
+th{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;background:var(--surface-2)}
+tr:last-child td{border-bottom:0}
+.tbl{overflow-x:auto;margin:14px 0}
+.tbl table{min-width:680px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin:16px 0}
+.card{background:var(--surface);border:1px solid var(--line);padding:16px 18px}
+.card h4{margin-top:0}
+.card ul{margin-bottom:0;font-size:14px}
+.pill{display:inline-block;font-size:11.5px;font-weight:600;letter-spacing:.04em;padding:1px 8px;border-radius:999px;vertical-align:2px;white-space:nowrap}
+.pill.bad{background:var(--bad-soft);color:var(--bad)}.pill.warn{background:var(--warn-soft);color:var(--warn)}.pill.ok{background:var(--ok-soft);color:var(--ok)}.pill.ai{background:var(--ai-soft);color:var(--ai)}.pill.acc{background:var(--accent-soft);color:var(--accent)}.pill.mut{background:var(--surface-2);color:var(--muted)}
+.obs{border-left:3px solid var(--accent);padding:8px 14px;margin:14px 0;background:var(--surface);font-size:14px}
+.obs.ai{border-left-color:var(--ai)}.obs.warn{border-left-color:var(--warn)}
+pre.mermaid{background:var(--surface);border:1px solid var(--line);padding:16px;overflow-x:auto;margin:16px 0;font-size:14px}
+.note{font-size:13px;color:var(--muted)}
+.mod{border:1px solid var(--line);background:var(--surface);margin:18px 0}
+.mod .mh{padding:12px 18px;border-bottom:1px solid var(--line);background:var(--surface-2);display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.mod .mh b{font-size:16px}
+.mod .mb{padding:6px 18px 16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:6px 28px}
+.mod .mb>div>b{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:12px 0 2px}
+.mod .mb ul{margin:0;padding-left:1.1em;font-size:14px}
+.mtx td:not(:first-child){text-align:center;font-family:"IBM Plex Mono",monospace;font-size:12.5px}
+.f{color:var(--ok);font-weight:600}.h{color:var(--warn);font-weight:600}.v{color:var(--muted)}
+.roadmap{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;margin:16px 0}
+.roadmap .card{border-top:4px solid var(--line-strong)}
+.roadmap .card.p1{border-top-color:var(--accent)}.roadmap .card.p2{border-top-color:var(--ai)}.roadmap .card.p3{border-top-color:var(--ok)}.roadmap .card.p4{border-top-color:var(--line-strong)}
+.roadmap .k{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.1em;color:var(--muted)}
+footer{margin-top:64px;padding-top:16px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted)}
+footer ul{font-size:12.5px}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.day{display:grid;grid-template-columns:86px minmax(0,1fr);gap:0;border:1px solid var(--line);background:var(--surface);margin:10px 0}
+.day>.d{padding:12px 12px;border-right:1px solid var(--line);background:var(--surface-2);font-family:"IBM Plex Mono",monospace;font-size:12px;line-height:1.4}
+.day>.d b{display:block;font-size:14px;font-family:"IBM Plex Sans","Noto Sans SC",sans-serif;color:var(--ink)}
+.day>.b{padding:10px 16px;font-size:14px}
+.day>.b b.t{display:block;font-size:15px;margin-bottom:4px}
+.day>.b .dod{margin-top:6px;padding-left:12px;border-left:3px solid var(--ok);color:var(--ink-2);font-size:13.5px}
+.day>.b .dod::before{content:"完成标准 · ";font-weight:600;color:var(--ok)}
+.day>.b .cc{margin-top:6px;font-size:13px;color:var(--muted)}
+.day>.b .cc::before{content:"给 Claude Code 的话 · ";font-weight:600;color:var(--ai)}
+pre.code{background:var(--code-bg);border:1px solid var(--line);padding:14px 16px;overflow-x:auto;font-size:12.5px;line-height:1.55;margin:12px 0;color:var(--ink)}
+.week{margin-top:28px;padding:10px 14px;background:var(--accent-soft);border-left:4px solid var(--accent);font-weight:600}
+.week span{font-weight:400;color:var(--ink-2);margin-left:10px;font-size:14px}
+</style>
+
+<div class="wrap">
+<nav class="toc" aria-label="目录">
+  <div class="k">目录</div>
+  <a href="#verdict">0 · 结论与策略</a>
+  <a href="#prep">1 · Day 0 准备：工具与账号</a>
+  <a href="#arch">2 · 架构决策</a>
+  <a href="#repo">3 · 仓库结构与约定</a>
+  <a href="#db">4 · 数据库 v1</a>
+  <a href="#core">5 · core 引擎</a>
+  <a href="#plan">6 · 四周逐日计划</a>
+  <a class="sub" href="#w1">Week 1 · 竖切跑通</a>
+  <a class="sub" href="#w2">Week 2 · 交易内核加宽</a>
+  <a class="sub" href="#w3">Week 3 · 联系人 · 房子 · 日历 · 提醒</a>
+  <a class="sub" href="#w4">Week 4 · 迁移真实数据 · 上线自用</a>
+  <a href="#method">7 · 每天怎么干活</a>
+  <a href="#change">8 · 变更协议</a>
+  <a href="#risk">9 · 风险与砍单顺序</a>
+  <a href="#next">10 · 第 2 个月</a>
+  <a href="#appendix">附录 · CLAUDE.md · Playbook JSON · 抽取 Prompt</a>
+</nav>
+<main>
+<header class="masthead">
+  <div class="eyebrow"><span>Dev Plan · Month 1</span><span>NewBee OS（占位名）</span><span>2026-09-11</span></div>
+  <h1>NewBee OS 30 天开发计划</h1>
+  <p class="lede">目标只有一句：30 天后，你用它而不是 Wise Agent 管一笔真实交易。计划按"先跑通一条竖切、再加宽"的顺序排，每一天都有交付物和完成标准；工具、账号、数据库、引擎函数、仓库约定、变更协议、砍单顺序全部写死，开发中改需求时照第 8 节的规则改。</p>
+</header>
+
+<section id="verdict">
+<h2><span class="no">00</span>结论与策略</h2>
+<div class="verdict">
+<h3>一个月能用，前提是"能用"定义清楚、顺序不乱、砍单果断。</h3>
+<ol>
+<li><b>"能用"的定义（Day 30 验收）：</b>新建交易 → 上传合同 → AI 抽取 → 你确认 → 自动生成关键日期和任务 → Today 页每天告诉你该干什么 → 关键日期出现在 Google 日历并有提醒 → 联系人和房子挂在交易上 → 你的 5 套 Playbook 全部在里面 → 进行中的交易全部迁进来。<b>不包括：</b>客户 App、Deal Health、Net Sheet、短信收件箱、营销、报表。</li>
+<li><b>先架构还是先 flow？两个都对，但各只做一半。</b>架构只做"改起来最贵"的骨架：monorepo、6 张核心表、Auth、core 包的函数签名——Day 1–2 做完。然后立刻做 flow：Week 1 用最丑的界面把"合同 → 抽取 → 日期 → 任务 → Today"整条线跑通（竖切 / walking skeleton）。跑通之后再加宽（更多字段、更多表、更多页面）。不要先把 20 张表全建完再写第一个页面，那样第 3 周才能看到东西，而且表一定会改。</li>
+<li><b>时间假设：</b>工作日每天 2–3 小时 + 周末各半天 ≈ 每周 20 小时，四周 80 小时。用 Claude Code 写代码，你的角色是产品经理 + 测试员：每天定目标、给上下文、跑一遍、提 bug。计划按这个强度排；如果一周不到 15 小时，按第 9 节砍。</li>
+<li><b>三条铁律：</b>① 业务逻辑只写在 <code>packages/core</code>，UI 永远是薄的；② 数据库改动一律走 migration，不手改；③ 每天结束时 <code>main</code> 分支必须能跑、能部署。</li>
+<li><b>Week 1 结束就要用真合同测试</b>（脱敏后的），不要等到 Week 4。抽取准确率是整个产品的地基，越早发现问题越便宜。</li>
+</ol>
+</div>
+<pre class="mermaid">
+flowchart LR
+  W1["Week 1 · 竖切<br/>1 笔交易 · 12 个字段 · 10 条任务<br/>丑但通"] --> W2["Week 2 · 加宽交易内核<br/>38 字段 · 版本 · 5 套 Playbook<br/>Pipeline · 各方 · 佣金"]
+  W2 --> W3["Week 3 · 周边<br/>联系人导入 · 房子 · 日历页<br/>Google 同步 · 提醒 · 搜索"]
+  W3 --> W4["Week 4 · 上线自用<br/>迁 10 笔真实交易 · 打磨<br/>PWA 装到 iPhone · 并行跑一周"]
+  W4 --> M2["第 2 个月<br/>Expo App · 客户端 · Deal Health · Net Sheet"]
+</pre>
+</section>
+<section id="prep">
+<h2><span class="no">01</span>Day 0 准备：工具与账号</h2>
+<p>一个下午办完。全部选免费或按量付费档，第一个月总花费在 $30–60 之间（主要是 Claude API 和一个域名）。</p>
+<div class="tbl"><table>
+<tr><th style="width:170px">工具 / 账号</th><th>用途</th><th style="width:130px">费用</th><th style="width:220px">备注</th></tr>
+<tr><td><b>GitHub</b></td><td>代码仓库、CI、issue 当 backlog 用</td><td>免费</td><td>私有仓库 <code>newbee-os</code></td></tr>
+<tr><td><b>Supabase</b></td><td>Postgres 数据库、Auth、文件存储、Edge Functions、Realtime</td><td>免费档够第 1 个月；Pro $25/月（备份 + 不休眠）</td><td>建两个项目：<code>newbee-dev</code> 现在建，<code>newbee-prod</code> Week 4 建</td></tr>
+<tr><td><b>Vercel</b></td><td>部署 Next.js 网站，每次 push 自动出预览链接</td><td>免费</td><td>绑域名后手机随时能打开</td></tr>
+<tr><td><b>Anthropic API</b></td><td>合同抽取、摘要、草稿</td><td>按量，预计 $10–30/月</td><td>console.anthropic.com 建 key；设月度用量上限</td></tr>
+<tr><td><b>Google Cloud 项目</b></td><td>Google Calendar（后面 Gmail、Contacts）OAuth</td><td>免费</td><td>Week 3 用；测试模式只加你自己的账号，不用过审核</td></tr>
+<tr><td><b>域名</b></td><td>网站 + 客户端链接（如 app.newbeehouse.com 子域）</td><td>已有域名则 $0</td><td>Week 4 绑</td></tr>
+<tr><td><b>Node 22 + pnpm</b></td><td>运行环境与包管理</td><td>免费</td><td>Windows 原生可用；建议装 WSL2 (Ubuntu)，工具链与云端一致，少踩坑</td></tr>
+<tr><td><b>VS Code + Claude Code</b></td><td>编辑器 + 写代码的主力</td><td>你已有</td><td>装 Supabase、ESLint、Prettier、Tailwind 插件</td></tr>
+<tr><td><b>Supabase CLI</b></td><td>migration、类型生成、部署 Edge Functions</td><td>免费</td><td>第一个月不装 Docker、不跑本地数据库，直接连 dev 项目</td></tr>
+<tr><td><b>Twilio · Apple Developer · Sentry</b></td><td>短信 / iOS 打包 / 错误监控</td><td>第 2 个月再说</td><td>第 1 个月不需要</td></tr>
+</table></div>
+<div class="obs"><b>Day 0 结束的检查：</b>GitHub 仓库建好并能从本机 push；Supabase dev 项目能在 SQL Editor 里跑 <code>select now()</code>；Vercel 已连仓库；Anthropic key 在本机 <code>.env.local</code> 里且 <code>.gitignore</code> 排除；Claude Code 能在仓库目录启动并读到 CLAUDE.md（附录 A）。</div>
+</section>
+
+<section id="arch">
+<h2><span class="no">02</span>架构决策</h2>
+<p>每条都写了"为什么"和"什么情况下会改"，方便你以后推翻。</p>
+<div class="tbl"><table>
+<tr><th style="width:150px">决策</th><th>选择</th><th>为什么</th><th style="width:200px">什么时候会改</th></tr>
+<tr><td>整体形态</td><td>一个 monorepo：<code>packages/core</code> + <code>apps/web</code>（第 2 个月加 <code>apps/mobile</code>）</td><td>网站和 App 共用数据库和业务逻辑，逻辑只写一次</td><td>不会改</td></tr>
+<tr><td>语言</td><td>全栈 TypeScript</td><td>前后端一种语言；Claude Code 对 TS 最熟；类型能从数据库自动生成</td><td>不会改</td></tr>
+<tr><td>数据库 / 后端</td><td>Supabase（Postgres + Auth + Storage + Edge Functions）</td><td>不用自己运维；RLS 天然支持"经纪人 / 客户"权限；Realtime 以后给客户端用</td><td>规模到几百个 agent 才需要考虑</td></tr>
+<tr><td>网站框架</td><td>Next.js（App Router）+ Tailwind + shadcn/ui</td><td>Vercel 一键部署；表格 / 表单 / 看板组件现成；响应式做 PWA</td><td>不会改</td></tr>
+<tr><td>AI 调用位置</td><td>只在服务端：Next.js Route Handler 或 Supabase Edge Function</td><td>API key 不能进浏览器 / App</td><td>不会改</td></tr>
+<tr><td>AI 模型分档</td><td>抽取 Sonnet；分类 / 摘要 / 简报 Haiku；疑难升 Opus</td><td>成本与准确率平衡（见费用分析）</td><td>按抽取准确率数据调</td></tr>
+<tr><td>文档存储</td><td>Supabase Storage，私有 bucket，按 <code>deals/{deal_id}/</code> 分目录</td><td>与 RLS 联动，签名 URL 给客户端</td><td>不会改</td></tr>
+<tr><td>日历</td><td>Google Calendar API，先单向写入一个专用日历 "NewBee Deals"</td><td>你现在就在用 Google；单向最简单最安全</td><td>Week 3 之后再考虑双向</td></tr>
+<tr><td>提醒</td><td>第 1 个月：邮件日报 + PWA web push；短信第 2 个月</td><td>不需要 App Store 也能推</td><td>Expo App 上线后加原生推送</td></tr>
+<tr><td>手机端</td><td>第 1 个月：网站响应式 + 加到 iPhone 主屏（PWA）</td><td>零打包成本；Today 和交易详情按手机优先做</td><td>第 2 个月 Expo</td></tr>
+<tr><td>测试</td><td>core 用 Vitest 强制测试（日期引擎 100% 覆盖）；UI 手测 + 一份 checklist</td><td>日期算错是最贵的 bug；UI 变得太快不值得自动化</td><td>产品化后加 Playwright</td></tr>
+<tr><td>环境</td><td>dev（现在）→ prod（Week 4）；本地不跑数据库</td><td>少一套 Docker；一个人开发 dev 项目就是你的沙盒</td><td>多人协作时再加本地</td></tr>
+</table></div>
+<pre class="mermaid">
+flowchart LR
+  subgraph CLIENTS["前端"]
+    WEB["apps/web · Next.js<br/>经纪人网站 · PWA"]
+    MOB["apps/mobile · Expo<br/>第 2 个月"]
+  end
+  subgraph CORE["packages/core · 纯 TypeScript"]
+    T["types · zod schema"]
+    E["date engine · playbook · netsheet"]
+    P["AI prompts · JSON schema"]
+  end
+  subgraph SB["Supabase"]
+    PG[("Postgres + RLS")]
+    ST["Storage · 合同 PDF"]
+    EF["Edge Functions<br/>extract · notify · sync"]
+    AU["Auth"]
+  end
+  WEB --> CORE
+  MOB --> CORE
+  WEB --> PG
+  WEB --> ST
+  WEB -->|"上传后触发"| EF
+  EF -->|"PDF + prompt"| AI["Claude API"]
+  AI -->|"JSON"| EF
+  EF --> PG
+  EF --> GC["Google Calendar"]
+  EF --> PUSH["Web Push · 邮件"]
+</pre>
+</section>
+
+<section id="repo">
+<h2><span class="no">03</span>仓库结构与约定</h2>
+<pre class="code">newbee-os/
+├── CLAUDE.md                 # 给 Claude Code 的项目宪法（附录 A）
+├── package.json  pnpm-workspace.yaml  turbo.json
+├── packages/core/
+│   ├── src/types/            # 从 Supabase 生成的 DB 类型 + 领域类型
+│   ├── src/schemas/          # zod：DealFields、Playbook、ExtractionResult
+│   ├── src/engines/
+│   │   ├── dates.ts          # 日历天 / 工作日 / 顺延规则（Texas）
+│   │   ├── milestones.ts     # fields → milestones
+│   │   ├── playbook.ts       # playbook + milestones → tasks
+│   │   ├── commission.ts     # 价格 × 比例 − 费用
+│   │   └── health.ts         # 第 2 个月
+│   ├── src/ai/
+│   │   ├── prompts/extract-contract.md
+│   │   ├── extract.ts        # 调 Claude，返回 zod 校验后的结果
+│   │   └── classify.ts
+│   ├── playbooks/            # seller.json buyer.json lease-listing.json …（附录 B）
+│   └── test/                 # vitest：dates / milestones / playbook / golden contracts
+├── apps/web/                 # Next.js
+│   ├── app/(agent)/today  deals  deals/[id]  deals/[id]/review  contacts  properties  calendar  settings
+│   ├── app/api/              # extract · calendar-sync · digest（服务端）
+│   ├── components/
+│   └── lib/supabase/         # server / browser client
+├── supabase/
+│   ├── migrations/           # 0001_init.sql 0002_… 只增不改
+│   ├── functions/            # extract-contract · daily-digest · calendar-sync
+│   └── seed.sql              # 一笔样例交易 + 你的 Playbook
+└── docs/                     # 本计划 · 规格 · 决策记录（ADR）</pre>
+<div class="grid2">
+<div class="card"><h4>约定（写进 CLAUDE.md）</h4><ul>
+<li>命名：表 snake_case 复数；TS camelCase；Key-Value 的 <code>key</code> 用规格第 2 节的英文 key，永不改名（改名 = 新 key + 迁移）</li>
+<li>时间：数据库全部 <code>timestamptz</code> 存 UTC；日期型字段（closing_date）用 <code>date</code>；所有"第 N 天"计算在 core 里做，UI 不算</li>
+<li>金额：<code>numeric(12,2)</code>，UI 显示才格式化</li>
+<li>每个表都有 <code>id uuid</code>、<code>agent_id</code>、<code>created_at</code>、<code>updated_at</code>、<code>deleted_at</code>（软删）</li>
+<li>Migration 只增不改；改字段 = 加新字段 + 回填 + 旧字段标 deprecated</li>
+<li>每次 migration 后跑 <code>supabase gen types</code> 更新 core 类型</li>
+<li>core 不许 import 任何 UI 或 Supabase client；只吃纯数据、吐纯数据</li>
+</ul></div>
+<div class="card"><h4>分支与部署</h4><ul>
+<li>单人开发：直接在 <code>main</code> 上小步提交；一天一个可运行版本</li>
+<li>大改动（换表结构、换抽取 schema）开分支，Vercel 自动给预览链接，手机上测完再合</li>
+<li>Vercel：<code>main</code> → 生产域名；分支 → 预览域名</li>
+<li>Supabase：migration 通过 CLI <code>supabase db push</code> 推到 dev；Week 4 起 prod 只在你手动确认后推</li>
+<li>Secrets：Vercel 环境变量 + Supabase Function secrets；本机 <code>.env.local</code>；仓库里永远没有 key</li>
+</ul></div>
+</div>
+</section>
+<section id="db">
+<h2><span class="no">04</span>数据库 v1</h2>
+<p>第 1 个月只建 12 张表，分两批：Week 1 的 6 张核心表，Week 2–3 补 6 张。以后的表（client_users、notifications、communities、showings、net_sheets…）到时候再加，migration 只增不改。</p>
+<div class="tbl"><table>
+<tr><th style="width:150px">表</th><th>关键字段</th><th style="width:90px">建于</th><th style="width:220px">说明</th></tr>
+<tr><td><b>agents</b></td><td>id（= auth.users.id）· name · brokerage · timezone · settings jsonb</td><td>W1</td><td>第 1 个月只有你一行</td></tr>
+<tr><td><b>deals</b></td><td>id · agent_id · type（seller / buyer / lease_listing / lease_tenant / property_mgmt）· stage · property_id · primary_contact_id · playbook_id · playbook_version · title · pinned · closed_at · terminated_at</td><td>W1</td><td>一笔交易一行；stage 由引擎推进也可手改</td></tr>
+<tr><td><b>deal_fields</b></td><td>deal_id · key · value_text · value_num · value_date · source_doc_id · source_page · source_quote · confidence · confirmed_at · version · superseded_at</td><td>W1</td><td>Key-Value 版本表：同一 key 新值插新行，旧行填 superseded_at；"当前值" = superseded_at is null</td></tr>
+<tr><td><b>documents</b></td><td>deal_id · storage_path · doc_type · page_count · status（uploaded / extracting / review / confirmed / failed）· extraction jsonb · uploaded_at</td><td>W1</td><td>抽取原始结果整块存 jsonb 便于重放</td></tr>
+<tr><td><b>milestones</b></td><td>deal_id · key（option_period_end …）· due_at · derived_from（jsonb：锚点 key + 偏移）· status（pending / done / overdue / na）· client_visible · calendar_event_id</td><td>W1</td><td>由日期引擎生成；手改要记 <code>manual_override</code></td></tr>
+<tr><td><b>tasks</b></td><td>deal_id（可空 = 个人任务）· title · stage · due_date · anchor_milestone_key · offset_days · assignee · priority · done_at · client_visible · playbook_rule_id</td><td>W1</td><td>Playbook 实例化产物 + 手动任务</td></tr>
+<tr><td><b>playbooks</b></td><td>id · agent_id · name · deal_type · version · definition jsonb（附录 B）· is_active</td><td>W2</td><td>改模板 = 插新版本行；进行中交易记住自己的版本</td></tr>
+<tr><td><b>contacts</b></td><td>id · agent_id · first_name · last_name · display_name · phones jsonb · emails jsonb · wechat · address jsonb · spouse_contact_id · birthday · tier（A/B/C/D）· status · source · tags text[] · lang · notes</td><td>W3</td><td>Vendor 也在这张表，靠 <code>roles text[]</code> 区分（client / vendor / agent / lender / title …）</td></tr>
+<tr><td><b>deal_parties</b></td><td>deal_id · contact_id · role（seller / buyer / buyer_agent / lender / title / inspector …）· notes</td><td>W2</td><td>交易各方；Week 2 先允许 contact_id 为空、只存名字，Week 3 联系人上线后回填</td></tr>
+<tr><td><b>properties</b></td><td>id · agent_id · address_line · city · state · zip · normalized_address（唯一）· geo · facts jsonb（beds / baths / sqft / year / lot / hoa …）· community</td><td>W3</td><td>一个地址一行；deals.property_id 指向它</td></tr>
+<tr><td><b>activities</b></td><td>deal_id · contact_id · type（note / call / sms / email / wechat / system / client_action）· body · meta jsonb · occurred_at</td><td>W2</td><td>统一时间线；系统事件（字段变更、任务完成）也写这里</td></tr>
+<tr><td><b>events</b></td><td>agent_id · deal_id · contact_id · title · starts_at · ends_at · kind（appointment / showing / inspection / closing / personal）· google_event_id</td><td>W3</td><td>非里程碑的日程；同步到 Google</td></tr>
+</table></div>
+<h4>Week 1 六张核心表的 DDL（直接作为 <code>0001_init.sql</code>）</h4>
+<pre class="code">create type deal_type as enum ('seller','buyer','lease_listing','lease_tenant','property_mgmt');
+create type deal_stage as enum ('lead','pre','active','offer','under_contract','closing','closed','terminated');
+create type doc_status as enum ('uploaded','extracting','review','confirmed','failed');
+create type ms_status as enum ('pending','done','overdue','na');
+
+create table agents (
+  id uuid primary key references auth.users(id) on delete cascade,
+  name text not null, brokerage text, timezone text not null default 'America/Chicago',
+  settings jsonb not null default '{}', created_at timestamptz default now()
+);
+
+create table deals (
+  id uuid primary key default gen_random_uuid(),
+  agent_id uuid not null references agents(id),
+  type deal_type not null, stage deal_stage not null default 'lead',
+  title text not null, property_id uuid, primary_contact_id uuid,
+  playbook_id uuid, playbook_version int,
+  pinned boolean default false, closed_at date, terminated_at date,
+  created_at timestamptz default now(), updated_at timestamptz default now(), deleted_at timestamptz
+);
+
+create table documents (
+  id uuid primary key default gen_random_uuid(),
+  deal_id uuid not null references deals(id) on delete cascade,
+  agent_id uuid not null references agents(id),
+  storage_path text not null, doc_type text, page_count int,
+  status doc_status not null default 'uploaded', extraction jsonb, error text,
+  uploaded_at timestamptz default now(), confirmed_at timestamptz
+);
+
+create table deal_fields (
+  id uuid primary key default gen_random_uuid(),
+  deal_id uuid not null references deals(id) on delete cascade,
+  key text not null, value_text text, value_num numeric(14,2), value_date date,
+  source_doc_id uuid references documents(id), source_page int, source_quote text,
+  confidence numeric(4,3), confirmed_at timestamptz, confirmed_by uuid,
+  version int not null default 1, superseded_at timestamptz,
+  created_at timestamptz default now()
+);
+create index on deal_fields (deal_id, key) where superseded_at is null;
+
+create table milestones (
+  id uuid primary key default gen_random_uuid(),
+  deal_id uuid not null references deals(id) on delete cascade,
+  key text not null, label text not null, due_at timestamptz,
+  derived_from jsonb, status ms_status not null default 'pending',
+  manual_override boolean default false, client_visible boolean default true,
+  calendar_event_id text, created_at timestamptz default now(), updated_at timestamptz default now(),
+  unique (deal_id, key)
+);
+
+create table tasks (
+  id uuid primary key default gen_random_uuid(),
+  agent_id uuid not null references agents(id),
+  deal_id uuid references deals(id) on delete cascade,
+  title text not null, stage text, due_date date,
+  anchor_milestone_key text, offset_days int, playbook_rule_id text,
+  assignee uuid, priority int default 0, done_at timestamptz,
+  client_visible boolean default false, created_at timestamptz default now(), updated_at timestamptz default now()
+);
+create index on tasks (agent_id, due_date) where done_at is null;
+
+-- RLS：第 1 个月一条规则走天下
+alter table deals enable row level security;  -- 其余表同理
+create policy "own rows" on deals for all using (agent_id = auth.uid()) with check (agent_id = auth.uid());</pre>
+<div class="obs"><b>为什么 deal_fields 用"版本行"而不是 jsonb：</b>你要的"价格变化历史、amendment 覆盖了什么、每个值来自哪份文件第几页"都靠这张表；jsonb 一改就丢历史。查询"当前值"就一句 <code>where superseded_at is null</code>。</div>
+</section>
+
+<section id="core">
+<h2><span class="no">05</span>core 引擎：函数签名先定死</h2>
+<p>这些签名 Day 2 就写进 <code>packages/core</code>，先用 <code>throw new Error('todo')</code> 占位，UI 和引擎并行开发都不会互相卡住。</p>
+<pre class="code">// engines/dates.ts —— Texas 常规：天数按日历天；落在周末/联邦假日时是否顺延由规则决定
+export type DateRule = { anchor: string; offset: number; unit: 'calendar'|'business'; rollForward?: boolean; time?: '17:00' };
+export function addDays(base: Date, rule: DateRule, holidays: Date[]): Date;
+
+// engines/milestones.ts —— 从当前字段算出全部里程碑；任一锚点变了整表重算
+export type Field = { key: string; value: string|number|Date|null };
+export function computeMilestones(fields: Field[], rules: MilestoneRule[], holidays: Date[]): Milestone[];
+export function diffMilestones(before: Milestone[], after: Milestone[]): { changed: Milestone[]; added: Milestone[]; removed: string[] };
+
+// engines/playbook.ts —— Playbook 定义 + 里程碑 → 任务；已完成的任务不重建，只更新到期日
+export function instantiate(playbook: Playbook, milestones: Milestone[], enabledAddenda: string[]): TaskDraft[];
+export function reconcile(existing: Task[], drafts: TaskDraft[]): { create: TaskDraft[]; update: Partial&lt;Task&gt;[]; keep: Task[] };
+
+// engines/commission.ts
+export function commission(input: { price: number; pct: number; brokerFeeTable: FeeTable; referralPct?: number }): { gci: number; fees: Fee[]; nci: number };
+
+// ai/extract.ts —— 只在服务端调用；返回 zod 校验过的结果，字段带来源与置信度
+export type Extracted = { key: string; value: string; page: number; quote: string; confidence: number };
+export function extractContract(pdf: Uint8Array, docTypeHint?: string): Promise&lt;{ docType: string; addenda: string[]; fields: Extracted[]; pages: number }&gt;;
+export function needsReview(f: Extracted): boolean;   // 数值/日期字段 或 confidence &lt; 0.9 → true
+
+// ai/classify.ts
+export function classifyDocument(firstPagesText: string): Promise&lt;'trec_1_4'|'amendment'|'financing_addendum'|'hoa_addendum'|'lease'|'inspection'|'other'&gt;;</pre>
+<div class="grid2">
+<div class="card"><h4>必须有的测试（Vitest，Week 1 就写）</h4><ul>
+<li><code>dates</code>：Effective 9/1 + 10 天 = 9/11；落周日是否顺延到周一；跨年；美国联邦假日表</li>
+<li><code>milestones</code>：给一组字段，断言 11 个里程碑的日期；改 closing_date 只有 closing 相关的变</li>
+<li><code>playbook</code>：Seller 模板实例化出 N 条任务；无 HOA addendum 时不生成 HOA 任务；reconcile 不会重建已完成任务</li>
+<li><code>extract</code>：5 份脱敏合同做"黄金集"，断言关键字段全对（跑一次要花钱，手动触发不进 CI）</li>
+</ul></div>
+<div class="card"><h4>抽取的服务端流程（Edge Function <code>extract-contract</code>）</h4><ul>
+<li>触发：documents 插入一行 → Database Webhook → Function</li>
+<li>下载 PDF → <code>classifyDocument</code>（Haiku，只看前 2 页）→ <code>extractContract</code>（Sonnet，整份 PDF）</li>
+<li>结果存 <code>documents.extraction</code>，状态 → <code>review</code></li>
+<li>每个字段插 <code>deal_fields</code>（confirmed_at 空）；<code>needsReview</code> 为 false 的自动 confirm</li>
+<li>你在确认页点"全部确认并派生" → 调 <code>computeMilestones</code> + <code>instantiate</code> + <code>reconcile</code> → 写 milestones / tasks → 写 activities → 触发日历同步</li>
+<li>失败：状态 <code>failed</code> + error，UI 提示重传；绝不静默</li>
+</ul></div>
+</div>
+</section>
+<section id="plan">
+<h2><span class="no">06</span>四周逐日计划</h2>
+<p>"Day"按你实际开工的日子数，不是日历日。每天一个交付物、一个完成标准；做不完就顺延，不要跳。每周最后一天是回顾日：跑一遍本周 checklist、砍下周的单。</p>
+
+<div class="week" id="w1">Week 1 · 竖切跑通<span>目标：一笔交易、一份合同、12 个字段、10 条任务，从上传到 Today 页全通，界面能丑</span></div>
+
+<div class="day"><div class="d"><b>Day 1</b>骨架</div><div class="b"><b class="t">仓库 + Supabase + 登录 + 部署</b>
+用 pnpm 建 monorepo（<code>packages/core</code>、<code>apps/web</code>、<code>supabase/</code>）；Next.js + Tailwind + shadcn 初始化；Supabase Auth 邮箱魔法链接登录；<code>0001_init.sql</code> 建 6 张核心表 + RLS；Vercel 部署；写 CLAUDE.md（附录 A）。
+<div class="dod">手机浏览器打开 Vercel 链接能登录，看到一个空的 "Today" 页；<code>supabase db push</code> 成功；<code>pnpm test</code> 能跑（哪怕 0 个测试）。</div>
+<div class="cc">把附录 A 的 CLAUDE.md 和第 4 节 DDL 直接给它，让它"按 CLAUDE.md 初始化仓库，不要装计划外的库"。</div></div></div>
+
+<div class="day"><div class="d"><b>Day 2</b>core 骨架</div><div class="b"><b class="t">core 包：类型 · zod · 引擎签名 · 日期引擎实现 + 测试</b>
+<code>supabase gen types</code> 出 DB 类型；写第 5 节全部函数签名；实现 <code>dates.ts</code>（日历天、周末顺延开关、联邦假日表）和 <code>computeMilestones</code>；Seller 的 11 条里程碑规则写成 JSON；Vitest 覆盖。
+<div class="dod">给定 effective_date / option_period_days / closing_date 等 6 个字段，<code>computeMilestones</code> 输出 11 个正确日期，测试全绿。</div>
+<div class="cc">先让它写测试用例（你口述几组真实日期的预期结果），再实现，别反过来。</div></div></div>
+
+<div class="day"><div class="d"><b>Day 3</b>上传 + 抽取</div><div class="b"><b class="t">PDF 上传 → Storage → Edge Function → Claude → deal_fields</b>
+交易页一个"上传合同"按钮；文件进 Storage；Database Webhook 触发 <code>extract-contract</code>；抽取 prompt 先只要 12 个字段（附录 C 的精简版）：effective_date · sales_price · cash_portion · loan_amount · earnest_money · option_fee · option_period_days · closing_date · buyer_names · seller_names · title_company · buyer_agent；结果进 <code>documents.extraction</code> 和 <code>deal_fields</code>。
+<div class="dod">上传一份脱敏 TREC 合同，60 秒内 deal_fields 出现 12 行，每行有 page 和 quote；失败时 documents.status = failed 并有 error。</div>
+<div class="cc">强调"用 tool_use 强制 JSON schema 输出，system prompt 用 prompt caching，PDF 用 document block 直接传"。</div></div></div>
+
+<div class="day"><div class="d"><b>Day 4</b>确认页</div><div class="b"><b class="t">抽取确认页 + 派生</b>
+<code>/deals/[id]/review</code>：左 PDF（浏览器原生 iframe 即可），右字段列表：值 · 来源 · 置信度 · 确认 / 改；"全部确认并派生"按钮 → 服务端调 <code>computeMilestones</code> 写 milestones。
+<div class="dod">点完确认，交易页出现 11 个里程碑和正确日期；改一个字段再确认，相关里程碑重算，其他不动。</div></div></div>
+
+<div class="day"><div class="d"><b>Day 5</b>Playbook</div><div class="b"><b class="t">Seller Playbook 精简版 → 任务</b>
+把你 Wise Agent 里 Seller 模板的 Under Contract + Closing 两个阶段（约 15 条）按附录 B 格式写成 <code>seller.json</code>；实现 <code>instantiate</code> + <code>reconcile</code>；确认派生时同时写 tasks。
+<div class="dod">交易页按阶段列出任务，每条带到期日；勾完成 → done_at；再次派生不会重建已完成任务。</div>
+<div class="cc">把 Wise Agent 模板页文字复制给它，让它转成 JSON；你只校对偏移天数。</div></div></div>
+
+<div class="day"><div class="d"><b>Day 6</b>Today + 交易页</div><div class="b"><b class="t">Today 页 · 交易详情 v0 · 手机可用</b>
+Today：今天 / 逾期 / 3 天内的里程碑与任务合并列表，按到期排序，一键完成；交易详情：里程碑（列表即可）+ 当前阶段任务 + 文档列表 + 字段面板；两页按手机宽度优先。
+<div class="dod">iPhone Safari 打开：加到主屏，能看 Today、能勾任务、能进交易页；桌面也不难看。</div></div></div>
+
+<div class="day"><div class="d"><b>Day 7</b>回顾</div><div class="b"><b class="t">真合同测试 + 黄金集 + 砍单</b>
+拿 3–5 份已结交易的合同（脱敏：涂掉姓名电话）跑抽取，记录每个字段对错，建 <code>test/golden/</code>；修 prompt；写下 Week 1 发现的问题；决定 Week 2 的取舍。
+<div class="dod">黄金集 12 个字段准确率 ≥ 90%（错的集中在哪类字段有记录）；<code>main</code> 可部署；docs/ 里有 Week 1 回顾。</div></div></div>
+
+<div class="week" id="w2">Week 2 · 交易内核加宽<span>目标：38 个字段、版本与 amendment、5 套 Playbook、Pipeline、各方、佣金、时间线</span></div>
+
+<div class="day"><div class="d"><b>Day 8</b>全字段</div><div class="b"><b class="t">抽取 schema 扩到规格第 2 节全部字段 + addenda 识别</b>
+prompt 升级为附录 C 完整版；识别勾选了哪些 addendum（Financing / HOA / Lead Paint / Temporary Lease …）；<code>needsReview</code> 规则上线（数值 / 日期 / 置信度 &lt; 0.9 进待确认）。
+<div class="dod">黄金集跑一遍：38 个字段中自动通过的 ≥ 70%，待确认的都是真需要看的；无 HOA 的合同不会出现 HOA 字段。</div></div></div>
+
+<div class="day"><div class="d"><b>Day 9</b>版本</div><div class="b"><b class="t">Amendment → Deal 新版本 → 重算 → 时间线</b>
+上传 Amendment 时 classify 识别 → 只抽变更字段 → 新 deal_fields 行、旧行 superseded → milestones/tasks 重算 → activities 写"closing_date 11/15 → 11/30"；交易页显示版本号和变更历史。
+<div class="dod">上传一份 amendment，只有被改的字段生成新版本，日历里程碑跟着变，时间线有一条人话记录。</div></div></div>
+
+<div class="day"><div class="d"><b>Day 10</b>Playbook 全量</div><div class="b"><b class="t">5 套 Playbook 全部迁入 + 按 addenda 启停 + 版本化</b>
+Seller 全阶段（Pre-Listing → After Closing）、Buyer、Lease Listing、Lease Tenant、Property Management 五个 JSON；<code>playbooks</code> 表 + 版本；实例化时按 addenda 启停任务；新建交易向导：类型 → Playbook → 联系人（暂时手填名字）→ 地址 → 创建。
+<div class="dod">五种类型各建一笔测试交易，任务数与 Wise Agent 模板一致（±你有意删掉的）；改模板生成新版本，旧交易不受影响。</div>
+<div class="cc">这天 JSON 很多，让它写一个 <code>scripts/import-playbook.ts</code> 校验 + 导入，别手插数据库。</div></div></div>
+
+<div class="day"><div class="d"><b>Day 11</b>Pipeline</div><div class="b"><b class="t">交易列表 / 看板 + 阶段推进</b>
+<code>/deals</code>：列表（默认）+ 看板（拖拽改阶段，用 dnd-kit）；卡片显示下一个里程碑倒计时和风险色（逾期红、3 天内黄）；阶段自动推进规则：所有 milestone 达成 → 提示进入下一阶段（先提示不自动）。
+<div class="dod">7 笔测试交易在看板上按阶段分列，拖动一张卡片，deals.stage 变化并写入 activities。</div></div></div>
+
+<div class="day"><div class="d"><b>Day 12</b>各方 + 文档</div><div class="b"><b class="t">交易各方 · 文档中心 · 里程碑图形化 v1</b>
+<code>deal_parties</code>（先存名字 + 角色 + 电话邮箱，Week 3 挂联系人）；文档列表：类型、状态、重新抽取、下载（签名 URL）；里程碑改成横向时间线组件（今天标记、完成 / 当前 / 逾期三色）。
+<div class="dod">交易页一屏看懂：进度条 + 下 3 个日期 + 当前阶段任务 + 各方 + 文档；抽取失败的文档能重跑。</div></div></div>
+
+<div class="day"><div class="d"><b>Day 13</b>佣金</div><div class="b"><b class="t">佣金自动算 + Key-Value 面板 + 价格历史</b>
+<code>commission.ts</code>：合同价 × 比例（从 listing agreement 字段或手填）− broker 费用表（settings 里配置）− referral；交易页佣金卡；Key-Value 面板（全部字段、来源、确认状态、历史）；价格变化小图（挂牌 → 降价 → offer → counter → 合同）。
+<div class="dod">改合同价 → 佣金和 NCI 自动变；面板里每个值点开能看来源页与原文。</div></div></div>
+
+<div class="day"><div class="d"><b>Day 14</b>回顾</div><div class="b"><b class="t">用一笔真实进行中的交易全流程走一遍</b>
+挑一笔 Under Contract 的真实交易，从新建到上传合同到任务到佣金全部录入；记录卡点；修最痛的 5 个；写回顾；决定 Week 3 是否砍 Google 同步或搜索。
+<div class="dod">这笔真实交易在系统里完整、正确；你能说出"下周我愿意用它管这笔交易"。</div></div></div>
+
+<div class="week" id="w3">Week 3 · 联系人 · 房子 · 日历 · 提醒<span>目标：交易不再孤立——挂上人、挂上地址、日期进 Google、每天早上有提醒</span></div>
+
+<div class="day"><div class="d"><b>Day 15</b>联系人</div><div class="b"><b class="t">contacts 表 + 列表 + 详情 + 快捷动作</b>
+建表（含配偶、家人、多电话邮箱 jsonb、微信名、分层、来源、标签、语言）；列表（搜索名字 / 电话 / 地址 / 微信名，筛分层 / 状态 / 来源）；详情（资料 · 关联交易 · 时间线 · 备注）；一键电话 / 短信 / 邮件（<code>tel:</code> / <code>sms:</code> / <code>mailto:</code>）。
+<div class="dod">新建联系人 → 挂到交易 → 交易页各方显示联系人卡；联系人页能看到他所有交易。</div></div></div>
+
+<div class="day"><div class="d"><b>Day 16</b>导入</div><div class="b"><b class="t">Wise Agent CSV 导入 + 去重 + 回填各方</b>
+<code>scripts/import-wiseagent.ts</code>：字段映射（配偶、分类 → tags、来源、Rank → tier、生日）；按电话 / 邮箱去重合并；把 Week 2 手填的各方名字匹配到联系人。
+<div class="dod">全部联系人进来，配偶关系与分类保留，无重复；测试交易的各方都指向真实联系人记录。</div>
+<div class="cc">先让它写"dry-run"模式打印映射结果，你确认后再真正写库。</div></div></div>
+
+<div class="day"><div class="d"><b>Day 17</b>房子</div><div class="b"><b class="t">properties 表 + 地址标准化 + 房子页</b>
+新建交易时地址自动补全 / 标准化（Google Places 或 Mapbox 免费额度）；同地址复用；房子页：事实（手填 + 你现有的地址查询流程结果）、交易历史、可复用文档（Survey / T-47 / HOA）。
+<div class="dod">同一地址开第二笔交易时自动挂到同一个 property；房子页能看到两笔交易和文档。</div></div></div>
+
+<div class="day"><div class="d"><b>Day 18</b>日历</div><div class="b"><b class="t">日历页 + Google Calendar 单向同步</b>
+<code>/calendar</code>：周 / 月视图，图层 = 里程碑 / 任务 / 约会；<code>events</code> 表；Google OAuth（测试模式，只加你自己）；Edge Function <code>calendar-sync</code>：里程碑和事件写到专用日历 "NewBee Deals"，改期就更新，取消就删。
+<div class="dod">你的 Google 日历里出现所有里程碑；改 closing_date，Google 里的事件跟着挪；不影响你的私人日历。</div></div></div>
+
+<div class="day"><div class="d"><b>Day 19</b>提醒</div><div class="b"><b class="t">每日邮件简报 + Web Push + 逾期规则</b>
+<code>daily-digest</code>（pg_cron 每天 7:00 CST）：今天 / 逾期 / 3 天内的里程碑与任务，发到你邮箱；PWA web push（iOS 主屏支持）：里程碑前 72h / 24h / 当天；push 订阅存 <code>agents.settings</code>。
+<div class="dod">早上 7 点收到简报邮件；iPhone 主屏应用收到一条测试推送；逾期任务在 Today 页红色置顶。</div></div></div>
+
+<div class="day"><div class="d"><b>Day 20</b>搜索 + 任务页</div><div class="b"><b class="t">全局搜索 ⌘K + 独立任务页 + 个人任务</b>
+搜索：联系人 / 地址 / 交易 / 文档名 / 备注（Postgres 全文 + trigram 即可）；<code>/tasks</code>：全部 / 逾期 / 今天 / 本周 / 已完成；个人任务（无交易）；快速新建。
+<div class="dod">输入地址片段或电话能直接跳到交易或联系人；个人待办和交易任务在 Today 合并显示。</div></div></div>
+
+<div class="day"><div class="d"><b>Day 21</b>回顾</div><div class="b"><b class="t">连续三天只用它管那笔真实交易</b>
+Week 3 的最后三天起，那笔真实交易只在新系统里管；记录所有"我还是得回 Wise Agent 看一眼"的场景，那就是 Week 4 的清单。
+<div class="dod">列出 ≤ 10 条必须修的、≤ 10 条以后再说的；<code>main</code> 稳定。</div></div></div>
+
+<div class="week" id="w4">Week 4 · 迁移真实数据 · 上线自用<span>目标：进行中交易全部迁入，prod 环境，绑域名，和 Wise Agent 并行跑一周后切换</span></div>
+
+<div class="day"><div class="d"><b>Day 22–23</b>迁移</div><div class="b"><b class="t">迁入全部进行中交易（约 10 笔）</b>
+每笔：新建 → 上传合同 / 租约（有的就传，没有的手填关键字段）→ 确认 → 派生 → 对照 Wise Agent 把已完成的任务勾掉 → 各方挂联系人 → 佣金核对；顺手记录抽取错误进黄金集。
+<div class="dod">Today 页显示的内容和你脑子里"今天该干什么"一致；Wise Agent 的 Hot List 里每一笔都在新系统里。</div></div></div>
+
+<div class="day"><div class="d"><b>Day 24</b>prod</div><div class="b"><b class="t">生产环境 + 域名 + 备份</b>
+建 <code>newbee-prod</code> Supabase 项目（Pro，开每日备份）；migration 推 prod；Vercel 生产环境变量；绑子域名；dev 的数据用 <code>pg_dump</code> 搬到 prod（或干脆在 prod 重新迁一遍，更干净）。
+<div class="dod">生产域名可登录；dev 和 prod 完全隔离；备份可见。</div></div></div>
+
+<div class="day"><div class="d"><b>Day 25–26</b>打磨</div><div class="b"><b class="t">修 Week 3 清单 · 错误处理 · 加载态 · 空态 · 中英文案</b>
+所有失败路径给人话提示；列表加载态；空态引导；日期显示统一（周几 + 相对时间）；手机端的触控尺寸 ≥ 44px；抽取确认页在手机上可用。
+<div class="dod">你一个上午在手机上完成：看 Today → 勾 3 个任务 → 拍一份 amendment 上传 → 确认 → 看到日期变化，全程不需要电脑。</div></div></div>
+
+<div class="day"><div class="d"><b>Day 27</b>安全与稳定</div><div class="b"><b class="t">RLS 复查 · Storage 权限 · 用量上限 · 日志</b>
+用第二个测试账号验证看不到你的数据；Storage bucket 私有 + 签名 URL 有效期；Anthropic 月度上限；Edge Function 失败记日志并发你邮件；Vercel Analytics 打开。
+<div class="dod">第二个账号登录后所有列表为空；故意传一个坏 PDF，收到失败邮件而不是静默。</div></div></div>
+
+<div class="day"><div class="d"><b>Day 28–30</b>并行 + 切换</div><div class="b"><b class="t">和 Wise Agent 并行一周 → 决定切换</b>
+每天早上先看新系统 Today，再看 Wise Agent 对照；差异记下来当天修；第 30 天开会（你和你自己）：能不能停 Wise Agent 的日常使用（订阅先留着，等第 2 个月客户端出来再停）。
+<div class="dod">连续 5 天没有回 Wise Agent 查任何交易信息；第 2 个月清单已排好。</div></div></div>
+</section>
+<section id="method">
+<h2><span class="no">07</span>每天怎么干活</h2>
+<div class="grid2">
+<div class="card"><h4>一天的循环（2–3 小时）</h4><ul>
+<li><b>10 分钟：</b>打开本计划当天那一格，把目标改写成给 Claude Code 的第一句话（说清"做什么、不做什么、完成标准"）</li>
+<li><b>90 分钟：</b>让它做；它每完成一块你就在浏览器 / 手机上点一遍；不对就说"哪里不对、期望是什么"，不要自己改代码</li>
+<li><b>20 分钟：</b><code>pnpm test</code> 绿 → commit → push → Vercel 预览链接手机再点一遍</li>
+<li><b>10 分钟：</b>在 <code>docs/log.md</code> 写三行：做了什么、卡在哪、明天第一件事。这个文件也给 Claude Code 读，它第二天就有上下文</li>
+</ul></div>
+<div class="card"><h4>给 Claude Code 下指令的规矩</h4><ul>
+<li>一次只要一个交付物；大任务让它先列步骤再动手</li>
+<li>每次开新会话先说"读 CLAUDE.md 和 docs/log.md"</li>
+<li>改数据库一定说"写 migration，不要改已有 migration"</li>
+<li>业务规则先让它写测试，你口述预期，再实现</li>
+<li>它提议装新库时问一句"不装能不能做"；第 1 个月尽量只用计划里的库</li>
+<li>UI 不追求好看，追求"手机上一只手能操作"</li>
+</ul></div>
+<div class="card"><h4>测试数据</h4><ul>
+<li><code>supabase/seed.sql</code>：一笔 Seller、一笔 Buyer、一笔 Lease，各带字段、里程碑、任务；随时可重置 dev</li>
+<li><code>test/golden/</code>：5 份脱敏合同 + 期望 JSON；改 prompt 必跑</li>
+<li>真实数据只进 prod；dev 永远是假数据</li>
+</ul></div>
+<div class="card"><h4>每周回顾（30 分钟）</h4><ul>
+<li>跑一遍本周所有"完成标准"，没过的顺延</li>
+<li>看 Anthropic 用量与费用</li>
+<li>按第 9 节决定砍什么</li>
+<li>更新本计划（它是活文档，放在 docs/ 里）</li>
+</ul></div>
+</div>
+</section>
+
+<section id="change">
+<h2><span class="no">08</span>变更协议：开发中改需求怎么改才不返工</h2>
+<div class="tbl"><table>
+<tr><th style="width:190px">你想改的东西</th><th>正确做法</th><th style="width:220px">禁止</th></tr>
+<tr><td>加 / 改数据库字段</td><td>新 migration 加字段 → <code>gen types</code> → core 类型跟着变 → UI 最后改；旧字段留着标 deprecated，两周后再删</td><td>手改 Supabase 表；改旧 migration 文件</td></tr>
+<tr><td>抽取字段增删</td><td>改附录 C 的 schema（加 key 不改旧 key）→ 黄金集跑一遍 → 提交 prompt 新版本号（<code>prompts/extract-contract.v3.md</code>）</td><td>改已有 key 的名字或语义</td></tr>
+<tr><td>Playbook 任务 / 天数</td><td>改 JSON → 导入为新版本 → 只对新交易生效；要应用到进行中交易，用"重新实例化"按钮（reconcile 保留已完成）</td><td>直接改 tasks 表里的到期日当作改模板</td></tr>
+<tr><td>日期规则（顺延、假日）</td><td>改 <code>dates.ts</code> + 先加测试用例；全部交易重算并把变化写进 activities</td><td>在 UI 里 hardcode 天数</td></tr>
+<tr><td>阶段定义</td><td>enum 只加不删；旧值映射到新值的 migration</td><td>删 enum 值</td></tr>
+<tr><td>页面布局、文案、颜色</td><td>随便改，不用记录</td><td>—</td></tr>
+<tr><td>新模块（如 Net Sheet）</td><td>先在 core 写引擎 + 测试，再建表，最后 UI；先写一页 ADR 说明范围</td><td>从 UI 开始做</td></tr>
+<tr><td>推翻架构决策</td><td>写 ADR（为什么、代价、迁移路径），过一夜再决定</td><td>当天冲动重构</td></tr>
+</table></div>
+<div class="obs"><b>不返工的秘诀只有一个：</b>数据和规则（core + migrations）是慢变层，界面是快变层。所有"不断修改"都尽量落在快变层；一旦要动慢变层，就按上表走版本，不覆盖。</div>
+</section>
+
+<section id="risk">
+<h2><span class="no">09</span>风险与砍单顺序</h2>
+<div class="grid2">
+<div class="card"><h4>最可能出问题的地方</h4><ul>
+<li><b>抽取准确率：</b>手写日期、多轮 counter、扫描歪斜。对策：黄金集 + 待确认队列兜底 + 疑难页升 Opus；准确率不到 85% 就把"待确认"范围扩大而不是硬推</li>
+<li><b>Google OAuth：</b>测试模式只能加 100 个测试用户，够你自用；产品化才需要过审核</li>
+<li><b>Web Push 在 iOS：</b>必须"加到主屏"才能收；先接受，第 2 个月原生 App 解决</li>
+<li><b>时间不够：</b>最常见。按右边顺序砍</li>
+<li><b>数据迁移拖延：</b>Week 4 前两天专门留给它，不做新功能</li>
+<li><b>Claude Code 跑偏：</b>CLAUDE.md 写清楚"不做什么"；每天 commit，跑偏就 <code>git checkout</code></li>
+</ul></div>
+<div class="card"><h4>砍单顺序（从上往下砍）</h4><ul>
+<li>看板拖拽 → 只留列表（Day 11 省半天）</li>
+<li>价格历史小图、里程碑图形化 → 列表（Day 12–13 省半天）</li>
+<li>全局搜索 → 只搜联系人和地址（Day 20 省半天）</li>
+<li>Google 同步 → 导出 .ics 订阅链接（Day 18 省一天）</li>
+<li>Web Push → 只发邮件简报（Day 19 省半天）</li>
+<li>房子页 → 只做地址去重（Day 17 省半天）</li>
+<li><b>不能砍：</b>抽取 + 确认 + 日期引擎 + Playbook + Today + 联系人导入 + 真实数据迁移</li>
+</ul></div>
+</div>
+</section>
+
+<section id="next">
+<h2><span class="no">10</span>第 2 个月（预告，不排日）</h2>
+<div class="roadmap">
+<div class="card p1"><div class="k">Month 2 · A</div><h4>Expo App（经纪人）</h4><ul><li><code>apps/mobile</code> 复用 core 与 API</li><li>Today · 交易 · 拍合同（原生相机连拍）· 原生推送</li><li>EAS Build → TestFlight 装到你的 iPhone</li></ul></div>
+<div class="card p2"><div class="k">Month 2 · B</div><h4>客户端 v1（PWA）</h4><ul><li>client_users + 魔法链接登录</li><li>进度 · 下一步 · 日期推送 · 上传 · 留言</li><li>字段 / 文件可见性开关</li></ul></div>
+<div class="card p3"><div class="k">Month 2 · C</div><h4>智能层</h4><ul><li>Deal Health 规则表（你先校订）</li><li>Net Sheet 引擎 + Texas 费率表</li><li>AI 每日简报 · 回复草稿 · 通话摘要</li></ul></div>
+<div class="card p4"><div class="k">Month 2 · D</div><h4>沟通</h4><ul><li>Twilio 短信双向 + 收件箱</li><li>Gmail 归档到时间线</li><li>微信截图 / 分享到 App 归档</li></ul></div>
+</div>
+</section>
+
+<section id="appendix">
+<h2><span class="no">A</span>附录 A · CLAUDE.md（直接放仓库根目录）</h2>
+<pre class="code"># NewBee OS
+
+## 这是什么
+一个人的房地产交易操作系统（self-use first）。核心思想：合同即数据——上传合同 → AI 抽取 Key-Value → 确认 → 派生里程碑 / 任务 / 日历 / 提醒 / 佣金。
+产品规格见 docs/spec.html，30 天计划见 docs/devplan.html，每日日志见 docs/log.md。开工前先读 log.md 最后 3 条。
+
+## 技术栈（不要换、不要加计划外的库）
+pnpm monorepo · TypeScript · Next.js App Router + Tailwind + shadcn/ui · Supabase (Postgres/Auth/Storage/Edge Functions) · Vitest · Anthropic SDK · zod · dnd-kit · date-fns-tz
+
+## 目录
+packages/core = 纯业务逻辑（types / schemas / engines / ai / playbooks / test），禁止 import UI 或 supabase client
+apps/web = Next.js；只做界面和调用；不写业务规则
+supabase/migrations = 只增不改；每次改动后运行 `pnpm gen:types`
+
+## 约定
+- 表 snake_case 复数；TS camelCase；Key-Value 的 key 永不改名
+- 所有表：id uuid, agent_id, created_at, updated_at, deleted_at(软删)
+- 时间 timestamptz(UTC)；日期 date；金额 numeric(12,2)
+- 业务日期计算只在 packages/core/engines/dates.ts
+- AI 只在服务端调用（Route Handler / Edge Function）；用 tool_use 强制 JSON；system prompt 加 cache_control
+- 数值/日期字段或 confidence &lt; 0.9 的抽取结果必须进待确认，不得自动派生
+- 失败必须落 status=failed + error，禁止静默
+
+## 工作方式
+- 先写测试再实现引擎；UI 手测
+- 一次一个交付物；大任务先列步骤
+- 每天结束 main 必须可运行可部署
+- 不确定就问，不要猜业务规则（Texas 合同规则以 docs/spec.html 第 2 节为准）
+
+## 不做（第 1 个月）
+客户端 · Deal Health · Net Sheet · 短信 · 营销 · 报表 · 多用户 · 本地 Docker</pre>
+
+<h2><span class="no">B</span>附录 B · Playbook JSON 格式（seller.json 节选）</h2>
+<pre class="code">{
+  "name": "Seller", "dealType": "seller", "version": 1,
+  "milestones": [
+    { "key": "effective_date",      "label": "Effective Date",        "from": "field:effective_date" },
+    { "key": "em_due",              "label": "Earnest Money Due",     "from": "effective_date", "offset": "field:earnest_money_due_days|3", "unit": "calendar", "rollForward": true },
+    { "key": "option_period_end",   "label": "Option Period Expires", "from": "effective_date", "offset": "field:option_period_days", "unit": "calendar", "time": "17:00", "rollForward": true },
+    { "key": "financing_deadline",  "label": "Buyer Approval Deadline","from": "effective_date", "offset": "field:buyer_approval_days", "requires": "financing_addendum" },
+    { "key": "hoa_docs_due",        "label": "HOA Docs Due",          "from": "effective_date", "offset": "field:hoa_docs_delivery_days", "requires": "hoa_addendum" },
+    { "key": "closing",             "label": "Closing",               "from": "field:closing_date" }
+  ],
+  "stages": ["pre_listing", "listing_appt", "post_listing", "offers", "under_contract", "closing", "after_closing"],
+  "tasks": [
+    { "id": "uc-01", "stage": "under_contract", "title": "Open escrow, deliver executed docs to Title", "anchor": "effective_date", "offset": 1 },
+    { "id": "uc-02", "stage": "under_contract", "title": "Confirm Title received Option Fee & EM",      "anchor": "em_due",         "offset": 0 },
+    { "id": "uc-05", "stage": "under_contract", "title": "HOA / Condo / PUD documents delivered",       "anchor": "hoa_docs_due",   "offset": 0, "requires": "hoa_addendum", "clientVisible": true },
+    { "id": "cl-03", "stage": "closing",        "title": "Send CDA to Title",                            "anchor": "closing",        "offset": -6 },
+    { "id": "ac-07", "stage": "after_closing",  "title": "Request Google review",                        "anchor": "closing",        "offset": 1, "trigger": { "type": "draft_message", "template": "review_request_zh" } }
+  ]
+}</pre>
+<p class="note"><code>offset</code> 支持数字或 <code>field:某个key|默认值</code>；<code>requires</code> 指向抽取出的 addenda；<code>trigger</code> 第 1 个月只支持 <code>draft_message</code> 和 <code>notify</code>。</p>
+
+<h2><span class="no">C</span>附录 C · 抽取 Prompt 骨架（system，缓存）</h2>
+<pre class="code">你是德州住宅房地产交易的合同数据抽取器。输入是一份 PDF（TREC 合同、addendum、amendment、租约或检查报告）。
+只输出 tool 调用 save_extraction，不要解释。
+
+规则：
+1. 逐字段给出 value、page（从 1 起）、quote（原文 ≤ 120 字符）、confidence（0–1）。找不到就不要输出该字段。
+2. 日期统一 YYYY-MM-DD；金额只留数字；天数为整数；勾选项用 true/false。
+3. 识别文档类型 docType，以及合同第 22 段勾选的 addenda 列表。
+4. 手写内容看不清时给低 confidence，不要猜。
+5. 多轮 counter / amendment：只抽最终生效的值，并在 notes 里说明依据。
+
+字段（key · 含义 · 通常位置）：
+effective_date · 合同生效日 · 末页 "Effective Date"
+sales_price · 3C 总价 · ¶3
+cash_portion · 3A 现金部分 · ¶3
+loan_amount · 3B 贷款额 · ¶3
+earnest_money · 诚意金 · ¶5
+earnest_money_due_days · 诚意金交付天数 · ¶5
+option_fee · Option 费 · ¶5
+option_period_days · Option 期天数 · ¶5
+closing_date · 过户日 · ¶9A
+seller_concessions · 卖方承担买方费用 · ¶12A(1)(b)
+survey_days · 交付 survey 天数 · ¶6C
+objection_days · title/survey 异议天数 · ¶6D
+buyer_approval_days · 贷款审批天数 · Third Party Financing Addendum ¶2A
+hoa_docs_delivery_days · HOA 文件交付天数 · HOA Addendum ¶A
+buyer_names / seller_names · 各方 · ¶1
+listing_agent / buyer_agent / brokerages / license_numbers · Broker Information 页
+title_company / escrow_officer · ¶6 / 末页
+addenda[] · ¶22 勾选项
+（完整清单见 docs/spec.html 第 2 节）</pre>
+<footer>本计划是活文档：放在仓库 <code>docs/devplan.html</code>，每周回顾时更新。所有示例数据均为占位。</footer>
+</section>
+</main>
+</div>

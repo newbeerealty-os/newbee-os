@@ -1,0 +1,719 @@
+<title>Wise Agent 拆解手册</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&display=swap">
+<style>
+:root{
+  --bg:#F3F5F2; --surface:#FFFFFF; --surface-2:#E9EDE8; --line:#D3D9D2; --line-strong:#AEB7AD;
+  --ink:#171C1F; --ink-2:#3C464C; --muted:#66727A;
+  --accent:#0E5A86; --accent-ink:#FFFFFF; --accent-soft:#DCE9F2;
+  --ai:#B84E17; --ai-soft:#F7E4D8;
+  --bad:#A8322B; --bad-soft:#F5DEDC; --ok:#2C6E49; --ok-soft:#DCEBE1; --warn:#8A6A0F; --warn-soft:#F3EAC8;
+  --code-bg:#EEF1EC;
+  --shadow:0 1px 2px rgba(20,30,35,.06),0 8px 24px -16px rgba(20,30,35,.25);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#121618; --surface:#1A2023; --surface-2:#222A2E; --line:#2E383D; --line-strong:#45525A;
+    --ink:#E9ECE8; --ink-2:#C2CAC7; --muted:#8E9AA0;
+    --accent:#6FB2DD; --accent-ink:#0B1A24; --accent-soft:#1B3140;
+    --ai:#F0915A; --ai-soft:#3A2418;
+    --bad:#F08A80; --bad-soft:#3A1F1D; --ok:#7FC79B; --ok-soft:#1B3325; --warn:#E3C35A; --warn-soft:#3A3014;
+    --code-bg:#22292C;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -16px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121618; --surface:#1A2023; --surface-2:#222A2E; --line:#2E383D; --line-strong:#45525A;
+  --ink:#E9ECE8; --ink-2:#C2CAC7; --muted:#8E9AA0;
+  --accent:#6FB2DD; --accent-ink:#0B1A24; --accent-soft:#1B3140;
+  --ai:#F0915A; --ai-soft:#3A2418;
+  --bad:#F08A80; --bad-soft:#3A1F1D; --ok:#7FC79B; --ok-soft:#1B3325; --warn:#E3C35A; --warn-soft:#3A3014;
+  --code-bg:#22292C;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -16px rgba(0,0,0,.6);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans","Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;font-size:15.5px;line-height:1.7;padding-inline:16px;padding-block:0 80px;-webkit-font-smoothing:antialiased}
+a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+code,pre,.mono{font-family:"IBM Plex Mono","SFMono-Regular",Menlo,Consolas,monospace}
+code{background:var(--code-bg);padding:.1em .4em;border-radius:4px;font-size:.88em;color:var(--ink-2)}
+h1,h2,h3,h4{line-height:1.25;text-wrap:balance;margin:0}
+h1{font-size:clamp(28px,4vw,40px);font-weight:700;letter-spacing:-.01em}
+h2{font-size:24px;font-weight:700;margin-top:64px;padding-top:24px;border-top:2px solid var(--ink);display:flex;align-items:baseline;gap:14px}
+h2 .no{font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:500;color:var(--muted);letter-spacing:.08em}
+h3{font-size:18px;font-weight:600;margin-top:36px}
+h4{font-size:15px;font-weight:600;margin-top:20px;color:var(--ink-2)}
+p{margin:12px 0;max-width:72ch}
+ul,ol{margin:10px 0;padding-left:1.3em;max-width:78ch}li{margin:4px 0}
+.wrap{max-width:1160px;margin:0 auto;display:grid;grid-template-columns:220px minmax(0,1fr);gap:48px}
+@media (max-width:900px){.wrap{grid-template-columns:minmax(0,1fr)}nav.toc{position:static;max-height:none;border-right:0;border-bottom:1px solid var(--line);padding-bottom:16px}}
+nav.toc{position:sticky;top:0;align-self:start;max-height:100vh;overflow:auto;padding-top:40px;padding-right:16px;border-right:1px solid var(--line);font-size:13px}
+nav.toc .k{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin-bottom:10px}
+nav.toc a{display:block;color:var(--ink-2);padding:4px 0;border-left:2px solid transparent;padding-left:10px;margin-left:-11px}
+nav.toc a:hover{color:var(--accent);border-left-color:var(--accent);text-decoration:none}
+nav.toc a.sub{padding-left:22px;color:var(--muted);font-size:12.5px}
+main{min-width:0}
+header.masthead{padding-top:48px;padding-bottom:28px;border-bottom:1px solid var(--line)}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;display:flex;gap:16px;flex-wrap:wrap}
+.lede{font-size:17px;color:var(--ink-2);max-width:66ch;margin-top:16px}
+.meta{display:flex;flex-wrap:wrap;gap:8px 24px;margin-top:18px;font-size:13px;color:var(--muted)}
+.meta b{color:var(--ink-2);font-weight:500}
+.verdict{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent);padding:20px 24px;margin-top:28px;box-shadow:var(--shadow)}
+.verdict h3{margin-top:0;font-size:16px}
+.verdict ol{margin:8px 0 0}
+.kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin-top:28px}
+@media (max-width:760px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:420px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.kpi{background:var(--surface);padding:14px 16px}
+.kpi .v{font-size:26px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.kpi .l{font-size:12px;color:var(--muted);letter-spacing:.04em}
+.tree{font-size:14px;line-height:1.55;background:var(--surface);border:1px solid var(--line);padding:18px 22px;overflow-x:auto}
+.tree ul{list-style:none;padding-left:0;margin:0;max-width:none}
+.tree ul ul{padding-left:22px;border-left:1px dashed var(--line-strong);margin-left:6px}
+.tree li{margin:2px 0;position:relative;padding-left:4px}
+.tree li>span.n{font-weight:600}
+.tree .u{color:var(--muted);font-family:"IBM Plex Mono",monospace;font-size:12px;margin-left:8px}
+.tree .tag{display:inline-block;font-size:11px;padding:0 6px;border-radius:3px;margin-left:6px;vertical-align:1px;background:var(--surface-2);color:var(--ink-2)}
+.tree .tag.ext{background:var(--warn-soft);color:var(--warn)}
+.tree .tag.js{background:var(--accent-soft);color:var(--accent)}
+table{border-collapse:collapse;width:100%;font-size:14px;background:var(--surface);border:1px solid var(--line)}
+th,td{padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top;text-align:left}
+th{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;background:var(--surface-2)}
+tr:last-child td{border-bottom:0}
+.tbl{overflow-x:auto;margin:14px 0}
+.tbl table{min-width:640px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin:16px 0}
+.card{background:var(--surface);border:1px solid var(--line);padding:16px 18px}
+.card h4{margin-top:0}
+.card ul{margin-bottom:0;font-size:14px}
+.pill{display:inline-block;font-size:11.5px;font-weight:600;letter-spacing:.04em;padding:1px 8px;border-radius:999px;vertical-align:2px}
+.pill.bad{background:var(--bad-soft);color:var(--bad)}.pill.warn{background:var(--warn-soft);color:var(--warn)}.pill.ok{background:var(--ok-soft);color:var(--ok)}.pill.ai{background:var(--ai-soft);color:var(--ai)}.pill.acc{background:var(--accent-soft);color:var(--accent)}
+.screen{border:1px solid var(--line);background:var(--surface);margin:16px 0}
+.screen .hd{padding:8px 14px;border-bottom:1px solid var(--line);background:var(--surface-2);font-size:12.5px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.screen .hd b{font-weight:600}
+.screen .bd{padding:14px 16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px 28px;font-size:14px}
+.screen .bd>div>b{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.screen .bd ul{margin:0;padding-left:1.1em}
+.obs{border-left:3px solid var(--bad);padding:8px 14px;margin:14px 0;background:var(--surface);font-size:14px}
+.obs.ok{border-left-color:var(--ok)}.obs.ai{border-left-color:var(--ai)}
+.obs b{font-weight:600}
+pre.mermaid{background:var(--surface);border:1px solid var(--line);padding:16px;overflow-x:auto;margin:16px 0;font-size:14px}
+.note{font-size:13px;color:var(--muted)}
+.sev{font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:500}
+.roadmap{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin:16px 0}
+.roadmap .card{border-top:4px solid var(--line-strong)}
+.roadmap .card.p0{border-top-color:var(--accent)}.roadmap .card.p1{border-top-color:var(--ai)}.roadmap .card.p2{border-top-color:var(--line-strong)}
+.roadmap .k{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.1em;color:var(--muted)}
+.term{display:grid;grid-template-columns:1fr 1fr;gap:0;font-size:14px;border:1px solid var(--line);background:var(--surface)}
+.term>div{padding:8px 12px;border-bottom:1px solid var(--line)}
+.term>div:nth-child(odd){border-right:1px solid var(--line);color:var(--muted)}
+.term>div:nth-last-child(-n+2){border-bottom:0}
+footer{margin-top:64px;padding-top:16px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted)}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+</style>
+
+<div class="wrap">
+<nav class="toc" aria-label="目录">
+  <div class="k">目录</div>
+  <a href="#verdict">0 · 结论</a>
+  <a href="#sitemap">1 · 网站架构 Sitemap</a>
+  <a href="#modules">2 · 模块拆解</a>
+  <a class="sub" href="#m-dash">Dashboard</a>
+  <a class="sub" href="#m-contacts">Contacts</a>
+  <a class="sub" href="#m-trans">Transactions / Checklists</a>
+  <a class="sub" href="#m-prop">Properties</a>
+  <a class="sub" href="#m-cal">Calendar · Tasks · Calls</a>
+  <a class="sub" href="#m-mkt">Marketing</a>
+  <a class="sub" href="#m-int">Integrations · Tools · Account</a>
+  <a href="#data">3 · 数据模型</a>
+  <a href="#flows">4 · 核心 User Flows</a>
+  <a href="#pain">5 · 痛点清单</a>
+  <a href="#tobe">6 · 新产品蓝图</a>
+  <a class="sub" href="#tobe-ai">AI 能力映射</a>
+  <a class="sub" href="#tobe-ia">桌面 / 手机 IA</a>
+  <a class="sub" href="#tobe-mvp">MVP 路线</a>
+  <a href="#appendix">附录 · URL 与术语</a>
+</nav>
+<main>
+<header class="masthead">
+  <div class="eyebrow"><span>Product Teardown</span><span>wiseagent.com</span><span>2026-09-10</span></div>
+  <h1>Wise Agent 拆解手册</h1>
+  <p class="lede">把你每天在用的 Wise Agent 从头到尾走了一遍：10 个一级菜单、45 个页面、全部弹窗和设置项。这份手册记录它的信息架构、每个模块的功能清单、底层数据对象和核心 user flow，再列出痛点，最后给出你自己那个 AI-native 版本的蓝图。配套的 Wireframe 画布单独交付。</p>
+  <div class="meta"><span>抓取方式 <b>登录态实机浏览，viewport ≈ 790px</b></span><span>覆盖 <b>10 菜单 / 45 页面 / 12 弹窗</b></span><span>数据 <b>全部样例化，不含客户信息</b></span></div>
+</header>
+<section id="verdict">
+<h2><span class="no">00</span>结论</h2>
+<div class="verdict">
+<h3>一句话：Wise Agent 是一个"以 Checklist 模板为引擎的老牌 CRM"，值钱的是引擎，不值钱的是壳。</h3>
+<ol>
+<li><b>真正的核心只有一个：Checklist 模板引擎。</b> 一个交易 = 一份模板实例，模板里的 Critical Dates 决定了几十个任务的到期日（"N days before/after 某个日期"），任务再联动 Task List、日历和触发器（Email / Text / Drip / Team Alert）。你做的 Seller / Buyer / Lease Listing 模板就是你的 SOP，这套东西必须完整迁移到新产品里。</li>
+<li><b>联系人层是"通讯录 + 活动日志"，不是关系管理。</b> Activity 只自动记录字段变更和 checklist 变化，真正的沟通内容（电话说了什么、微信聊了什么）全靠手动 Call Note。20 个 section 平铺，没有一句"这个人现在处于什么状态、下一步该干什么"。</li>
+<li><b>信息架构过时：</b> 菜单叫 Transactions，页面叫 Checklists；Calendar 没有独立页面只在 Dashboard 上；Properties 和 Checklist 之间只是弱关联；45 个 Integrations 开关堆在一个页面。整站是 ASP 时代的页面 + Bootstrap 皮肤，一屏信息密度低，Checklist Summary 单页高度超过 20 屏。</li>
+<li><b>AI 几乎为零：</b> 只有 GPT 写邮件助手；AI Bot 要另买 WiseText 号码；没有摘要、没有自动抽取合同日期、没有自动填表、没有"今天该做什么"。</li>
+<li><b>你的机会点：</b> 用 4 个核心对象（Contact · Property · Deal · Timeline）+ 1 个自动化引擎重建，把"录入"变成"自动抽取"，把"提醒"变成"主动建议"，把"英文邮件"变成"中英双语 + 微信/短信统一收件箱"，再加一个真正的 iPhone app。不要复制它 10 个菜单，复制它的 SOP 引擎。</li>
+</ol>
+</div>
+<div class="kpis">
+  <div class="kpi"><div class="v">10</div><div class="l">一级菜单</div></div>
+  <div class="kpi"><div class="v">45</div><div class="l">已抓取页面</div></div>
+  <div class="kpi"><div class="v">20</div><div class="l">联系人详情 section</div></div>
+  <div class="kpi"><div class="v">20 + 13</div><div class="l">Seller 模板日期 + 字段</div></div>
+  <div class="kpi"><div class="v">~60</div><div class="l">Seller 模板任务</div></div>
+  <div class="kpi"><div class="v">45</div><div class="l">第三方 Integrations</div></div>
+</div>
+<p class="note">页面计数按可直达 URL 统计；弹窗（Add Contact、Add Task、New Event、Add Rule、Add Tasks 等）单独计入模块拆解。</p>
+</section>
+
+<section id="sitemap">
+<h2><span class="no">01</span>网站架构 Sitemap</h2>
+<p>全站是一个固定顶栏 + 左侧抽屉式导航（汉堡菜单）。顶栏：日期、全局搜索（只能按 Name / Phone / Email / Company）、设置齿轮、通知铃铛（Today's Alerts / Team Alerts）、头像菜单。下面是完整的菜单树，<span class="mono">灰色</span>是路径，<span class="tag js" style="font-size:11px;padding:0 6px;background:var(--accent-soft);color:var(--accent);border-radius:3px">js</span> 表示不是页面而是弹窗/面板，<span style="font-size:11px;padding:0 6px;background:var(--warn-soft);color:var(--warn);border-radius:3px">ext</span> 表示跳到第三方。</p>
+<div class="tree">
+<ul>
+<li><span class="n">Dashboard</span>
+  <ul>
+  <li>Home <span class="u">/secure/client/ClientWelcome.asp</span></li>
+  <li>Reports <span class="tag js">js</span> <span class="u">Dashboard 顶部面板 · 17 个 KPI tile</span></li>
+  <li>Call List <span class="u">/secure/client/calllistmaster.asp</span></li>
+  <li>Task List <span class="u">/secure/planner/todolist.asp</span></li>
+  <li>Commission Report <span class="u">/secure/user/commissionreport.asp</span></li>
+  <li>Goal Tracker <span class="u">/secure/user/goaltracker.asp</span></li>
+  <li>Shark Tank <span class="tag js">js</span> <span class="u">团队抢 lead 池</span></li>
+  </ul></li>
+<li><span class="n">Contacts</span>
+  <ul>
+  <li>Contact List <span class="u">/secure/client/ClientList.asp</span> → Contact Detail <span class="u">/secure/client/summary.asp?clientId=</span></li>
+  <li>Lead Pipeline <span class="u">/secure/client/lead-pipeline.asp</span></li>
+  <li>Lead Rules <span class="u">/secure/user/leadrules.asp</span></li>
+  <li>Add Contact <span class="tag js">modal</span></li>
+  <li>Vendor List <span class="u">/secure/client/vendorlist.asp</span></li>
+  <li>Vendor Guides <span class="u">/secure/client/vendorguides.asp</span></li>
+  <li>Add Vendor <span class="tag js">modal</span></li>
+  <li>Import <span class="u">/secure/import/</span></li>
+  </ul></li>
+<li><span class="n">Marketing</span>
+  <ul>
+  <li>Drip Campaigns <span class="u">/secure/marketing/default.asp</span></li>
+  <li>Landing Pages <span class="u">/secure/user/landingPageWizard.asp</span></li>
+  <li>Postcards <span class="tag ext">ext</span> <span class="u">Xpressdocs SSO</span></li>
+  <li>Content Library <span class="u">/secure/docs/letterlist.asp</span></li>
+  <li>Property Flyers <span class="u">/secure/flyer/default.asp</span></li>
+  <li>Digital Ads <span class="tag ext">ext</span> · WiseSocial <span class="tag ext">ext</span> <span class="u">Back At You</span></li>
+  </ul></li>
+<li><span class="n">Transactions</span> <span class="tag">页面内叫 Checklists</span>
+  <ul>
+  <li>Templates <span class="u">/secure/property/ChecklistDefault.asp</span></li>
+  <li>Checklists <span class="u">/secure/property/checklist.asp</span> → Checklist Summary <span class="u">/secure/property/ChecklistSummary.asp?CLDataID=</span></li>
+  <li>Add Checklist <span class="u">/secure/property/newChecklistAttach.asp</span> <span class="tag">4 步向导</span></li>
+  <li>Transaction Portals <span class="u">/secure/property/fusion.asp</span></li>
+  </ul></li>
+<li><span class="n">Properties</span>
+  <ul>
+  <li>Property List <span class="u">/secure/property/Propertylist.asp</span> → Edit Property <span class="u">/secure/property/EditProperty.asp?PID=</span></li>
+  <li>Add Property <span class="tag js">modal</span></li>
+  <li>Lock Box <span class="u">/secure/client/lockbox.asp</span></li>
+  </ul></li>
+<li><span class="n">Send Email</span> <span class="u">/secure/email/plainmail.asp</span></li>
+<li><span class="n">Integrations</span>
+  <ul>
+  <li>Settings <span class="u">/secure/user/integrationsMenu.asp</span> <span class="tag">45 个集成开关 · 3 个 tab</span></li>
+  <li>Partners <span class="u">/partners.asp</span> · Facebook · Constant Contact · MailChimp · ExpressCopy <span class="tag ext">ext</span> · BombBomb</li>
+  </ul></li>
+<li><span class="n">Websites</span> <span class="u">/secure/websites/website.asp</span> <span class="tag">纯推销页</span></li>
+<li><span class="n">Tools</span>
+  <ul>
+  <li>RE Resources <span class="u">/secure/client/links.asp</span> · Education Tracking <span class="u">/secure/client/Class.asp</span> · Capture Forms <span class="u">/secure/user/formwizard.asp</span></li>
+  <li>Accounting <span class="u">/secure/client/tax.asp</span> · Calculators <span class="u">/secure/calculators/calculatormenu.asp</span> · Images <span class="u">/secure/user/images.asp</span> · Marketplace <span class="u">/secure/user/MarketPlace.asp</span></li>
+  </ul></li>
+<li><span class="n">Help</span> <span class="tag js">js</span></li>
+<li><span class="n">头像菜单</span>
+  <ul>
+  <li>Profile <span class="u">/secure/user/profile.asp</span> · Settings <span class="u">/secure/user/settings.asp</span> · Email Signature · Billing · Outside Team <span class="u">/secure/team/inhouse.asp</span> · Permissions · Refer a Friend · Logout</li>
+  </ul></li>
+</ul>
+</div>
+<div class="obs"><b>观察：</b>Calendar 不在任何菜单里，它只是 Dashboard 上的一个 widget；Task List 和 Call List 藏在 Dashboard 子菜单；"Transactions" 点进去全部叫 "Checklists"。一个新用户要找"我的交易在哪"需要试三次。</div>
+</section>
+<section id="modules">
+<h2><span class="no">02</span>模块拆解</h2>
+<p>每个模块按"页面结构 → 功能清单 → 观察"三段写。页面结构里的每个方块对应 Wireframe 画布上 as-is 画板里的一个区域。</p>
+
+<h3 id="m-dash">2.1 Dashboard（首页）</h3>
+<p>一个从上到下无限长的单列 widget 页，顺序固定、不能拖拽：Important Dates → Calendar → Task List → Transaction Hot List → Recent Leads → Call In Progress / Call List → Commission Report。顶部可以临时展开 Reports 面板或 Notifications 面板。</p>
+<div class="screen">
+<div class="hd"><b>Dashboard · Home</b><span class="mono">ClientWelcome.asp</span></div>
+<div class="bd">
+<div><b>Important Dates</b><ul><li>Birthdays（联系人 + 配偶）</li><li>Wedding Anniversaries</li><li>Home Sale Anniversaries</li><li>Other Important Dates</li><li>打印按钮</li></ul></div>
+<div><b>Calendar widget</b><ul><li>左：mini 月历 + 图层勾选（Events / Home Sales / Birthdays / Anniversaries / Hotlist / U.S. Holidays / Marketing）+ Team Calendars</li><li>右：主日历，视图 Day / Day List / Week / 7 Day / Week List / Month / Month List</li><li>齿轮：Sync · Print · Stack Events · Show Borders</li><li>点空白格 → New Event 弹窗</li></ul></div>
+<div><b>Task List widget</b><ul><li>列：Checklist · Task · Due Date · Team · Est. Time · Done?</li><li>tab：Due / All</li><li>See Full Task List · Add Task</li></ul></div>
+<div><b>Transaction Hot List</b><ul><li>列：Transaction · Date Updated · Team · Actions</li><li>只列勾了 "Show on Hot List" 的 checklist</li><li>See All Checklists · Add Checklist</li></ul></div>
+<div><b>Recent Leads</b><ul><li>列：Contact · Source · Date Added（相对时间）</li><li>See All Contacts · Add Contact</li></ul></div>
+<div><b>Call In Progress / Call List</b><ul><li>Past Due Calls 计数</li><li>Follow Up 表单：Notes · Next Contact Date/Time · Call Type · Assigned To · Reason · Mark Important · Alert</li><li>Call Note：Subject · Note；Skip / Complete</li></ul></div>
+<div><b>Commission Report widget</b><ul><li>From / To 日期 + 团队筛选</li><li>4 个仪表：Closed 数 · GCI · Sales · NCI</li><li>每个仪表下按状态拆分：Active / Pending / Expired / Leased / Withdrawn / Under Contract / Coming Soon</li><li>Sales List · New Sale</li></ul></div>
+<div><b>Reports 面板（顶部展开）</b><ul><li>tab：All / Activities / Email / Leads / Team</li><li>17 个 KPI tile：Total Monthly Emails · Monthly Blacklisted · Call List · Planner Events · Planner by Contact · Task List · Marketing Campaigns · Marketing by Contact · Team Leads by Rank · Lead Count by Source · Leads by Team · Leads by Outside Team · Lead Count by Status · Team Leads · Transactions · Text Messages Sent · Monthly SMS Blacklist</li></ul></div>
+</div></div>
+
+<h4>Dashboard 子页面</h4>
+<div class="tbl"><table>
+<tr><th style="width:170px">页面</th><th>结构与功能</th></tr>
+<tr><td>Call List</td><td>tab：All / Past Due / Today / Future / Completed；搜索（Name）；筛选 Assigned、Call Type（可自定义类型）；Export；New Call。空态文案 "You currently dont have any calls to make!"</td></tr>
+<tr><td>Task List</td><td>同样 5 个 tab；搜索按 Task Name；筛选 Assigned、Task Filter；50 条/页；<b>卡片式</b>列表（任务名、联系人、所属 checklist、Due Date、Priority、Estimated Time、编辑/删除、完成勾选）。New Task 弹窗：Details（Subject · Inside Team · Est. Time · Priority · Due Date · Search Contact · Details）+ Alerts。</td></tr>
+<tr><td>Commission Report</td><td>日期区间 + 团队；4 仪表；状态筛选（Active / Under Contract / Pending / Expired / Closed / Withdrawn / Leased / Coming Soon）；类型筛选（Seller / Buyer / Lessee / Lessor / Referral / Dual Agency）；表格列：Name · Team Member · Close · Sale · GCI · Referral Fee · Broker Fee · Custom Fee · NCI · Totals；New Sale · Export CSV · Manage Custom Fee Names。</td></tr>
+<tr><td>Goal Tracker</td><td>Annual Goals 按年份（2019–2027）：Gross Annual Sales · Average Sale Price · Homes to Sell，每项一个进度条；Short-Term Goals：Weekly / Monthly。</td></tr>
+<tr><td>Shark Tank</td><td>团队功能：新 lead 进池，成员抢单。单人账号点击只弹 "no new leads"。</td></tr>
+<tr><td>Notifications 面板</td><td>Today's Alerts / Team Alerts 两个计数，列表。</td></tr>
+</table></div>
+<div class="obs"><b>观察：</b>Dashboard 把"今天要做的事"分散在 4 个 widget 里（Important Dates、Calendar、Task、Call），没有一个合并的"今日待办"；Commission 仪表和 Goal Tracker 是两套数据源、两个页面；Reports 面板里一半 tile 显示 N/A。</div>
+<h3 id="m-contacts">2.2 Contacts（联系人 / Lead / Vendor）</h3>
+<div class="screen">
+<div class="hd"><b>Contact List</b><span class="mono">ClientList.asp</span></div>
+<div class="bd">
+<div><b>顶部</b><ul><li>Google Sync 状态 + 手动同步</li><li>齿轮 FAB：Manage Categories · Manage Sources</li><li>绿色 + FAB：Add Contact</li><li>Recent Exports</li></ul></div>
+<div><b>搜索 / 筛选</b><ul><li>搜索框只按 Name</li><li>Filters（可叠加）：Additional Fields · Category · Client Custom Fields · Inside Team · Marketing Campaign · Outside Team · Pipeline · Rank · Relitix · Search Groups · Source · Status · Web Activity</li><li>Saved Searches（保存筛选组合）</li><li>A–Z 字母索引；50 条/页翻页；Sort By</li></ul></div>
+<div><b>列（Columns 可勾选）</b><ul><li>Name（含配偶）· Phone（Home / Cell / Spouse Cell）· Email（含 Spouse）· Address · Rank（A/B/C/D/Unranked）· Status · Last Contact Date</li><li>可加：Company · Date Added · Date Updated · Date Met</li></ul></div>
+<div><b>勾选后批量工具栏</b><ul><li>Categories · Set Source · Pipeline · Set Status · Set Rank · Add to Call List · Marketing Campaign · Google Sync · Integration Options</li><li>More：Set DNC · Enhance Contacts · Assign/Remove Inside Team · Merge Contacts · Manage Repeating Emails · Send Vcard · Export Contacts</li><li>右侧：Add Note · Export · Print · Delete</li></ul></div>
+</div></div>
+
+<div class="screen">
+<div class="hd"><b>Contact Detail</b><span class="mono">summary.asp?clientId=</span></div>
+<div class="bd">
+<div><b>左侧 section 菜单（20 项，可 Make Default 定制显示）</b><ul><li>Activity · Addresses · Attached Files · Calls · Checklists · Commission · Custom Fields · Email Addresses · Family · Gmail · Important Dates · Lead Enhancement · Marketing · Phone Numbers · Planner · Referrals · Scheduled Emails · Search Criteria · Tasks · Websites</li></ul></div>
+<div><b>头部</b><ul><li>Last Updated 日期</li><li>Add Source 下拉</li><li>Actions 下拉：View Contact Activity · Envelope · Custom Envelope · Marketing · Fax Cover Sheet · Print Summary · Add to Vendors · … · Delete Contact · Delete Spouse Information · Add To DNC</li></ul></div>
+<div><b>状态卡</b><ul><li>Pipeline · Status · Rank 三个徽章</li><li>Date Met · Date Added</li><li># of Calls · # of Texts · # of Emails</li><li>Integration Actions</li></ul></div>
+<div><b>名片卡</b><ul><li>头像、姓名、公司、生日、手机、邮箱</li><li>快捷动作：Text · Note · Calendar · Task · Call</li><li>Relation（配偶 / 家人，各自生日、电话、邮箱）</li><li>Categories 标签 · Extra Details · Inside Team Members</li></ul></div>
+<div><b>正文 section（按左菜单顺序平铺）</b><ul><li>Addresses（Type / Address / City / State / Zip）</li><li>Property Connections（Relation · Address · Actions）</li><li>Checklists（Name · Property Address · HotList）· Transaction Portal</li><li>Gmail Conversations（需开 Gmail 集成）</li><li>Important Dates（Date Met · Last Contact · 生日 · Anniversary · Home Sale）</li><li>Activity feed（可筛选，自动记录字段变更 / checklist 变更 / 邮件 / 通话）</li><li>Planner（Event · Assigned · Start · End · Repeat）· Referrals（Referred by / Referred）· Search Criteria · Tasks</li></ul></div>
+</div></div>
+
+<h4>其他联系人页面</h4>
+<div class="tbl"><table>
+<tr><th style="width:170px">页面</th><th>结构与功能</th></tr>
+<tr><td>Add Contact 弹窗</td><td>First / Last Name · Email · Company · Company Title · Address（地图定位）· Phone Type + Number · Inside Team · Categories · Sources · Drip Campaign；Cancel / Save &amp; New / Save。</td></tr>
+<tr><td>Lead Pipeline</td><td>需先 Create a Pipeline。Settings：Pipeline Name · Default Sort By · Default Lead Flow · 自定义 Status 列（看板列）。Reports：按 Team Member / Status / Source 计数。</td></tr>
+<tr><td>Lead Rules（Lead Management）</td><td>Auto Lead Rule 弹窗 5 个 tab：<b>Rule</b>（Default Rule · Add to Pipeline · Add to Drip Program · Add to Categories · Add to Call List · Send Notification + 额外通知邮箱/手机）· <b>Email Response</b>（自动回邮开关）· <b>Text Response</b> · <b>AI Bot</b>（需购买 WiseText 号码）· <b>Distribution</b>（按 filter 分配给团队）。下方给一个专属 lead 邮箱 <code>xxx@leads.wiseagent.com</code>，支持 50+ 邮件来源（Zillow、Realtor.com、Homes.com、IDX Broker、Wix …）和 40+ API 来源（Zillow、Facebook Lead Ads、Zapier、dotloop、Real Geeks、Ylopo …）。</td></tr>
+<tr><td>Vendor List</td><td>与 Contact List 同构：搜索 · Filters · A–Z · 列 Company / Contact / Category / Phone / Email / Address；Manage Vendor Categories（Cooperating-Agent、Home-Inspection、Home-Warranty、Mortgage、Pest-Inspection、Staging、Title …）；Add Vendor。</td></tr>
+<tr><td>Vendor Guides</td><td>把 Vendor List 生成可分享的"推荐商家指南"：Classic / Cards / Compact 三种版式，公开链接或 PDF，可嵌 WordPress。</td></tr>
+<tr><td>Import</td><td>4 步向导：Upload CSV → Settings → Review → Progress；或从 Top Producer / LionDesk / Follow Up Boss 迁移；Export 已并入 Contact List。</td></tr>
+</table></div>
+<div class="obs"><b>观察：</b>联系人对象本身很厚（配偶、家人、多地址、多电话、custom fields、search criteria、referrals），但"关系状态"只靠 Rank（A/B/C/D）+ Status + Pipeline 三个手动字段；Activity 里 90% 是 "Client Information Changed"，沟通内容需要手动 Call Note。列表搜索不能按地址、电话或交易搜。</div>
+<div class="obs ai"><b>新产品对照：</b>这三块是 AI 最容易接管的地方——通话/微信记录 → 自动 Call Note 与摘要；Rank / Status → 由最近互动和交易阶段自动推算；全局搜索 → 名字 / 电话 / 地址 / 交易 / 文档一个框。</div>
+<h3 id="m-trans">2.3 Transactions / Checklists（交易）</h3>
+<p>这是整个产品的心脏。三层结构：<b>Template</b>（SOP 模板）→ <b>Checklist</b>（一笔具体交易 = 模板实例，绑定 1 个联系人 + 1 个地址）→ <b>Task / Date / Field</b>（实例里的任务、关键日期、表单字段）。你账号里有 5 个自定义模板（Buyer · Lease Listing · Lease Tenant · Property Management · Seller）和 6 个系统默认模板（Listing · Buyer · Lender · Short Sale-Listing · Title/Escrow · Commercial Listing）。</p>
+<div class="screen">
+<div class="hd"><b>Checklists 列表</b><span class="mono">checklist.asp</span></div>
+<div class="bd">
+<div><b>顶部 tab</b><ul><li>Checklists · Templates · Transaction Portals（三个页面共用一个 tab 条）</li></ul></div>
+<div><b>筛选</b><ul><li>Show by Template · Show by Team Member · Show by Status · 搜索</li><li>绿色 + FAB：New Checklist</li></ul></div>
+<div><b>行结构</b><ul><li>模板图标 + Checklist Name（命名靠人肉：Seller-地址 / Lease Listing-地址 / CL RL-地址）</li><li>Team · Attached Client + Property Address</li><li>Hot List 火苗开关 · "+" · Date Created · 删除</li></ul></div>
+</div></div>
+
+<div class="screen">
+<div class="hd"><b>Checklist Summary（交易详情）</b><span class="mono">ChecklistSummary.asp?CLDataID=</span></div>
+<div class="bd">
+<div><b>页头动作</b><ul><li>Edit Template · Print/Email Summary · Transaction Portal · DocuSign · View Transactions (ZipForm)</li><li>滚动后出现 sticky 小标题 + 回顶按钮</li></ul></div>
+<div><b>基本信息</b><ul><li>Contact（带 编辑 / 打电话 / 邮件 / 备注 / 日历 快捷图标）</li><li>Address · Source · Assigned To · Parent Checklist</li><li>Email Attachments To：每笔交易一个专属邮箱 <code>xxx@checklist.wiseagent.com</code>，转发邮件即归档</li><li>4 个开关：Complete Checklist · Updates Appear as Transaction Notes · Show on Hot List · Disable Triggers</li></ul></div>
+<div><b>Commission 卡</b><ul><li>Sale Price · Gross Commission Income · Net Commission Income · Deal Close Date（Edit 弹窗）</li></ul></div>
+<div><b>Critical Dates（Seller 模板 20 个）</b><ul><li>First Met · View House · Listing Date* · Offer Receive Date · Contract Date Offer Accepted · Option Fee &amp; Earnest Money Due · Option Period Expires · Close Date · Home Inspection · Foundation Inspection · Existing Survey &amp; T-47 Due · HOA Documents Due · Remove Inspection Contingency · Receive Title Commitment · Finance Contingency Expire · Title Objection Expires · Final Walk Through · Actual Close of Escrow · Possession · Contract Cancelation Date</li><li>三列输入框网格，* 为必填</li></ul></div>
+<div><b>Important Fields（13 个）</b><ul><li>MLS # · Listing Price · Listing Price 1st/2nd/3rd（降价记录）· Original Offer Price · Seller Counter 1 · Buyer Counter 2 · Seller Counter 3 · Contract Price · Repair Credit · Sold Price · Escrow #</li></ul></div>
+<div><b>Tasks（完成度 %）</b><ul><li>按 SubHeading 分组：Pre-Listing → Listing Appointment → Post Listing → Negotiation &amp; Offers → Under Contract → Closing → After Closing → Additional Tasks</li><li>每条任务：勾选框 · 名称 · 规则文字（"3 days after Contract Date"）· Assigned to（No one / All / 成员）· Due Date · N/A 按钮</li><li>Add（只加到本实例，不回写模板）</li></ul></div>
+<div><b>底部</b><ul><li>Important Contacts：Agent · Mortgage Company · Title/Escrow · Home Inspection · Handyman · Staging · Buyer</li><li>Documents（附件列表 + Add）</li><li>Transaction Notes：自动日志（日期变更、任务完成/取消、字段变更）+ 手动备注，Show All</li></ul></div>
+</div></div>
+
+<h4>模板与其他页面</h4>
+<div class="tbl"><table>
+<tr><th style="width:190px">页面</th><th>结构与功能</th></tr>
+<tr><td>Templates 列表</td><td>My Templates：名称 + 使用数徽章 + Triggers 列；行动作：+ 新建 checklist · 编辑 · 复制 · 分享 · 删除。Default Templates：Add Template / Preview。</td></tr>
+<tr><td>Template 编辑器</td><td>4 步 stepper：<b>Dates</b>（每个日期：显示/隐藏 · 加入日历 · 必填 · 编辑 · 删除；New Date）→ <b>Form Fields</b> → <b>Contacts</b>（Important Contacts 角色）→ <b>Tasks</b>（SubHeadings 管理；New Task 弹窗：Description · SubHeading · Task Due = N Days Before/After 某个 Date · Show · Add to Task List · Assign；<b>Add Trigger</b> tab：Email / Text / Drip Campaign / Team Alert）。</td></tr>
+<tr><td>New Checklist 向导</td><td>Start（Start 新建 / Join 用 join code 加入别人的）→ Contact（选或建联系人）→ Address（选或建 Property）→ Finish（选模板、命名）。</td></tr>
+<tr><td>Transaction Portals</td><td>给客户看的交易进度门户。tab：Managing（Name · Portal Name · Last Modified · Join Code · Website）· Joined · Watching；Transaction Portal Themes 定制外观。</td></tr>
+</table></div>
+<div class="obs"><b>观察：</b>交易详情是一个 20+ 屏的长页：20 个日期输入框、13 个字段、60 条任务、上百条日志全部平铺；每条任务占约 150px 高，没有按阶段折叠、没有时间线/看板视图、没有"当前阶段 + 下一个到期"。Sale Price 在 Commission 卡和 Important Fields 里各有一份；Property 记录里 MLS / 价格 / 面积基本为空，说明大家根本不会去 Properties 里填。</div>
+<div class="obs ok"><b>值得保留：</b>"日期锚定任务"的模板规则（N days before/after Date）；每笔交易的专属收件邮箱；Hot List 开关；自动日志；Transaction Portal 的思路。</div>
+
+<h3 id="m-prop">2.4 Properties（房源 / 地址）</h3>
+<div class="tbl"><table>
+<tr><th style="width:170px">页面</th><th>结构与功能</th></tr>
+<tr><td>Property List</td><td>列：Address · City · State · Zip · MLS ID · Status · Bedroom · Bath · Square Feet · Price · Actions；按 City 分组排序；View Archived · Active Checklists · Edit Categories · Filters；+ FAB 新建。</td></tr>
+<tr><td>Edit Property</td><td>头部：地址 · Assign Inside Team · Archive 开关；动作：Order Photography（Virtuance）· MAP IT · Generate Property Profile · Activate Immoviewer · Delete · Save。Property Images（多图 + Primary + Slide Show）。tab：Property Details · Attached Contacts · Checklists · Flyers · Commission。字段：Address · Categories · Residence；List Price · Last Sale Price · Listing Date · Year Built · Sq.Ft · Lot Size · Annual Taxes · Annual HOA · Status · MLS ID · Prop. Type；Property Features · Commissions / Concessions · Description · Agent/Broker Info · Office/Franchise Info · Lock Box。</td></tr>
+<tr><td>Lock Box</td><td>Serial Number · CBS Code · Shackle Code · Property · Notes；列表。</td></tr>
+</table></div>
+<div class="obs"><b>观察：</b>Property 在这里只是"地址 + 一堆手填字段"，没有 MLS 拉取，没有房源照片自动同步，跟 Checklist 是弱绑定（一个地址可以对应多个 checklist，但 checklist 页面不显示房源数据）。对你来说它的价值是"一个地址下所有交易的历史"（同一房子先出租再出售），这个关系要保留。</div>
+<h3 id="m-cal">2.5 Calendar · Tasks · Calls（日程与待办）</h3>
+<div class="grid2">
+<div class="card"><h4>Calendar（只存在于 Dashboard）</h4><ul>
+<li>7 种视图：Day · Day List · Week · 7 Day · Week List · Month · Month List</li>
+<li>图层：Events · Home Sales · Birthdays · Anniversaries · Hotlist · U.S. Holidays · Marketing；Team Calendars</li>
+<li>事件颜色：红 = checklist 关键日期，绿 = 任务，黄 = 备注型事件，紫 = 生日，蓝 = 团队</li>
+<li>New Event 弹窗：Event Info（Title · Location · Team Calendar · Event Color · Event Icon · Start/End Date &amp; Time · All Day · Guest = Contact / Vendor · Details）· Repeat · Alerts</li>
+<li>Google Calendar 双向同步（所有日历一起拉进来）</li>
+<li>Settings 里可设默认视图、显示哪些事件、假日国家、Stack Events</li>
+</ul></div>
+<div class="card"><h4>Tasks</h4><ul>
+<li>来源两种：checklist 模板生成的任务（带 checklist 名）和手动任务</li>
+<li>字段：Subject · Inside Team · Estimated Time · Priority · Due Date · Contact · Details · Alerts</li>
+<li>Task List 页 5 个 tab（All / Past Due / Today / Future / Completed）</li>
+<li>Reports 里的 Task List tile 显示完成率</li>
+</ul></div>
+<div class="card"><h4>Calls（Call List）</h4><ul>
+<li>把联系人加入 Call List（单个或批量）→ 出现在 Today / Past Due</li>
+<li>打电话时的 Follow Up 表单：Notes · Next Contact Date/Time · Call Type（可自定义）· Assigned To · Reason for contact · Mark Important · Alert</li>
+<li>Call Note 写入联系人 Activity；Skip / Complete</li>
+<li>集成：WAVV Power Dialer、Mojo Dialer、REDX Vortex</li>
+</ul></div>
+<div class="card"><h4>Notifications / Alerts</h4><ul>
+<li>Today's Alerts · Team Alerts 两类</li>
+<li>Alert 可挂在 Event / Task / Call 上（邮件或短信提醒）</li>
+<li>没有推送通知（没有 app）</li>
+</ul></div>
+</div>
+<div class="obs"><b>观察：</b>日历、任务、电话是三个平行列表，同一个"今天"要看三个地方。Google 同步把私人日程全带进来，业务日历里混着私事。任务没有"来自哪笔交易的哪个阶段"的上下文，只有一个 checklist 名字。</div>
+
+<h3 id="m-mkt">2.6 Marketing（营销）</h3>
+<div class="tbl"><table>
+<tr><th style="width:170px">页面</th><th>结构与功能</th></tr>
+<tr><td>Drip Campaigns</td><td>可视化时间线编辑器：Start of Campaign（Program Contacts）→ 一串 Drip Events，每个事件 = Days From Start + Preferred Time + Action Type（Send Email · Print Letter · Phone Call · Newsletter · Text）+ Custom Actions；统计 Sent / Delivered / Open Rate；Stock 模板和西班牙语模板；Settings。你账号目前 0 个 campaign。</td></tr>
+<tr><td>Send Email</td><td>先选编辑器（Drag &amp; Drop / Classic），或从 My Content / Stock Content / Newsletter / Drafts 起步；收件人选 Contacts 或 Vendors；Subject · Signature · Send Copy to yourself · Add message to contact activity · Schedule / Send；AI Writing Assistant（GPT，输入 prompt 生成正文）；Email Stats。</td></tr>
+<tr><td>Content Library</td><td>Letter/Email Content 列表（Name · Group），行动作：打印 · 复制 · 编辑 · 发邮件 · 分享 · 预览 · 链接 · 删除；Create Content（Details + Legacy Editor + AI Writing Assistant）。你有 1 条：Lease Welcome Email。</td></tr>
+<tr><td>Landing Pages</td><td>列表卡片：类型（如 Open House Sign-In Form）· Mo. Visits · Mo. Leads · Conversions · Short URL · Share；Domains（只能用 Wise Agent 卖的域名）；Leads 列表 + All Time Stats。横幅提示新版编辑器 Coming Soon。</td></tr>
+<tr><td>Property Flyers</td><td>5 步向导：Select Flyer（选 Property + 模板，按 1–6 张照片分类）→ Select Photos → Flyer Information → Agent Information → Finalize Flyer。</td></tr>
+<tr><td>Postcards · Digital Ads · WiseSocial</td><td>全部是第三方 SSO（Xpressdocs · Back At You），Wise Agent 只做入口。</td></tr>
+</table></div>
+<div class="obs"><b>观察：</b>营销模块是英文邮件时代的产物：以 email drip 为中心，短信要另买 WiseText，社媒和明信片外包。对你的华人客群（微信群、小红书、短信）基本不适用——你已经在用自己的 flyer pipeline 和小红书文案流程，这块新产品里应该是"内容生成 + 多渠道发送记录"，而不是复制 drip 编辑器。</div>
+
+<h3 id="m-int">2.7 Integrations · Tools · Account</h3>
+<div class="grid2">
+<div class="card"><h4>Integrations（45 个开关，3 个 tab）</h4><ul>
+<li><b>Google：</b>Gmail Conversations · Google Calendar · Google Contacts · Gmail Chrome Extension</li>
+<li><b>合同 / 交易：</b>DocuSign · dotloop · SkySlope Forms · Transactions (ZipForm) · Form Simplicity · Brokermint · Title ToolBox</li>
+<li><b>Lead / MLS：</b>Zillow · Zillow Lender · Realtor.com · MLS · IDX Broker · iHomefinder · Cloud CMA · Cloud Streams · Lead Enhancement · Relitix · Revaluate · Landvoice · Lending Tree · API Nation · Zapier</li>
+<li><b>沟通 / 营销：</b>WiseText · AI Bot · WAVV Dialer · Mojo Dialer · Vortex (REDX) · BombBomb · Dubb · Zoom · MailChimp · Constant Contact · Happy Grasshopper · SalesTalk · Facebook · Xpressdocs · ExpressCopy · Digital Ads · WiseSocial · Immoviewer · Virtuance</li>
+<li>tab 2 Lead Management = Lead Rules；tab 3 Outside Team Leads</li>
+</ul></div>
+<div class="card"><h4>Tools</h4><ul>
+<li>RE Resources：各州 MLS / 协会链接 + My Links</li>
+<li>Education Tracking：CE 学分表（Legal · Contract Law · Agency · Commissioner's Standards · Fair Housing · Disclosure · General）</li>
+<li>Capture Forms：WordPress 表单插件生成 shortcode</li>
+<li>Accounting：Income/Expense 录入（Date · Time · Place · Type · Amount · Purpose · Relationship · Description · Import CSV）· Mileage Report · Annual Tax Report</li>
+<li>Calculators：Amortization · Debt Consolidation · Early Payoff · Home Affordability · Refinance · Home Saving（英 / 西）</li>
+<li>Images 素材库 · Marketplace 合作商目录</li>
+</ul></div>
+<div class="card"><h4>Account（头像菜单 5 个 tab）</h4><ul>
+<li>Profile：选 MLS · 个人资料 · 默认签名 · Social Links · Account Details（公司、地址、网站、时区）· Default Branding · Authorize Logins（Google / Facebook）· Add Inside Team Member</li>
+<li>Billing</li>
+<li>Settings：Calendar · Checklist · Contacts/Vendors · Emailing · Commission Report · Properties · Content Library · Call List · Task List · Color Theme</li>
+<li>Permissions：Inside Team（要买额外 login）· Outside Team</li>
+<li>Outside Team：Team · Lead Tracker（Received / Sent）</li>
+</ul></div>
+<div class="card"><h4>Websites · Help</h4><ul>
+<li>Websites 整页是卖网站的推销页（IDX 搜索 · Lead Capture · SEO）</li>
+<li>Help 是外链支持中心</li>
+</ul></div>
+</div>
+</section>
+<section id="data">
+<h2><span class="no">03</span>数据模型</h2>
+<p>从页面反推出来的对象关系。粗线是核心链路：一个 <b>Contact</b> 在一个 <b>Property</b> 上开一份 <b>Checklist</b>（交易），Checklist 由 <b>Template</b> 实例化，展开成 Date / Field / Task / Note / Document，Task 再流到 Task List 和 Calendar；成交后 Checklist 生成 <b>Commission Sale</b>。</p>
+<pre class="mermaid">
+erDiagram
+  CONTACT ||--o{ CHECKLIST : "attached client"
+  PROPERTY ||--o{ CHECKLIST : "attached address"
+  TEMPLATE ||--o{ CHECKLIST : "instantiates"
+  CHECKLIST ||--o{ CL_DATE : "critical dates"
+  CHECKLIST ||--o{ CL_FIELD : "important fields"
+  CHECKLIST ||--o{ TASK : "dated tasks"
+  CHECKLIST ||--o{ DOCUMENT : "attachments"
+  CHECKLIST ||--o{ NOTE : "transaction notes"
+  CHECKLIST ||--o{ CL_CONTACT : "important contacts"
+  CHECKLIST ||--o| COMMISSION_SALE : "closes into"
+  CHECKLIST ||--o| PORTAL : "client portal"
+  TEMPLATE ||--o{ TPL_TASK : "task rules"
+  TPL_TASK ||--o{ TRIGGER : "email text drip alert"
+  CL_DATE ||--o{ TASK : "anchors due date"
+  TASK }o--o| EVENT : "shows on calendar"
+  CONTACT ||--o{ CALL : "call list"
+  CONTACT ||--o{ ACTIVITY : "activity feed"
+  CONTACT ||--o{ EVENT : "planner"
+  CONTACT }o--o{ CATEGORY : "tags"
+  CONTACT }o--|| SOURCE : "lead source"
+  CONTACT }o--o| PIPELINE_STAGE : "pipeline"
+  CONTACT }o--o{ CAMPAIGN : "drip enrolment"
+  CONTACT ||--o{ RELATION : "spouse family"
+  CONTACT ||--o{ REFERRAL : "referred by or to"
+  LEAD_RULE ||--o{ CONTACT : "routes new leads"
+  VENDOR }o--|| VENDOR_CATEGORY : "type"
+  VENDOR }o--o{ CL_CONTACT : "title lender inspector"
+  CAMPAIGN ||--o{ CAMPAIGN_STEP : "day offset action"
+  CONTENT ||--o{ CAMPAIGN_STEP : "email or letter body"
+  USER ||--o{ GOAL : "annual weekly monthly"
+  USER ||--o{ TEAM_MEMBER : "inside outside team"
+  CONTACT {
+    string first_last_name
+    string company_title
+    string phones_home_cell_spouse
+    string emails
+    string addresses
+    enum rank_A_B_C_D
+    string status
+    date date_met_added_updated
+    json custom_fields
+    json search_criteria
+    bool dnc
+  }
+  CHECKLIST {
+    string name
+    string source
+    string assigned_to
+    string parent_checklist
+    string inbound_email
+    bool hot_list
+    bool complete
+    bool triggers_disabled
+  }
+  TASK {
+    string subject
+    int offset_days
+    enum before_after
+    string anchor_date
+    date due_date
+    string assigned
+    int priority
+    string est_time
+    bool done
+  }
+  COMMISSION_SALE {
+    enum status
+    enum type_seller_buyer_lessor_lessee_referral_dual
+    date close_date
+    money sale_price
+    money gci
+    money referral_fee
+    money broker_fee
+    money custom_fee
+    money nci
+  }
+</pre>
+<div class="grid2">
+<div class="card"><h4>枚举值（照抄即可用）</h4><ul>
+<li><b>Contact.rank：</b>A · B · C · D · Unranked</li>
+<li><b>Contact.status：</b>New · Future Opportunity · Closed …（可自定义）</li>
+<li><b>Sale.status：</b>Active · Under Contract · Pending · Expired · Closed · Withdrawn · Leased · Coming Soon</li>
+<li><b>Sale.type：</b>Seller · Buyer · Lessee · Lessor · Referral · Dual Agency</li>
+<li><b>Trigger.type：</b>Email · Text · Drip Campaign · Team Alert</li>
+<li><b>Campaign action：</b>Send Email · Print Letter · Phone Call · Newsletter · Text</li>
+<li><b>Calendar layer：</b>Events · Home Sales · Birthdays · Anniversaries · Hotlist · Holidays · Marketing</li>
+</ul></div>
+<div class="card"><h4>模型上的硬伤</h4><ul>
+<li>Sale Price / Close Date 在 Checklist 字段和 Commission Sale 里各存一份，靠人肉同步</li>
+<li>Property 与 Checklist 只靠地址字符串关联，重名地址会产生两条 Property</li>
+<li>Activity 是扁平日志，没有"沟通"这个一等对象（电话 / 短信 / 邮件 / 微信各存各的）</li>
+<li>Task 不知道自己属于哪个阶段（SubHeading 只是显示分组，不是数据）</li>
+<li>Document 只是附件，没有类型、没有版本、没有从文档抽出来的字段</li>
+</ul></div>
+</div>
+</section>
+
+<section id="flows">
+<h2><span class="no">04</span>核心 User Flows</h2>
+<h3>F1 · Lead 进来到跟进</h3>
+<pre class="mermaid">
+flowchart LR
+  A["Lead 来源<br/>专属 lead 邮箱 / API / 网站表单 / 手动 Add Contact / CSV Import"] --> B{"Lead Rule<br/>匹配 Distribution 条件?"}
+  B -->|"命中"| C["自动动作<br/>加 Pipeline 列 · 加 Drip · 打 Category<br/>加 Call List · 通知邮件或短信"]
+  B -->|"未命中"| D["Default Rule"]
+  C --> E["Contact 记录<br/>Source · Status=New · Rank=Unranked"]
+  D --> E
+  E --> F["Dashboard · Recent Leads<br/>Call List · Today"]
+  F --> G["打电话 → Follow Up 表单<br/>Notes · Next Contact Date · Call Type"]
+  G --> H["手动改 Status / Rank / Pipeline 列"]
+  H --> I{"有房要买卖?"}
+  I -->|"是"| J["New Checklist 向导"]
+  I -->|"否"| K["Drip / 定期 Call List 再跟进"]
+</pre>
+<h3>F2 · 一笔交易的全生命周期</h3>
+<pre class="mermaid">
+flowchart TD
+  T["Templates<br/>Seller · Buyer · Lease Listing …"] --> W["New Checklist 向导<br/>Start or Join → Contact → Address → Finish"]
+  W --> S["Checklist Summary"]
+  S --> D1["填 Critical Dates<br/>Listing Date · Contract Date · Close Date …"]
+  D1 --> T1["模板规则自动算出每条任务的 Due Date<br/>N days before/after 锚定日期"]
+  T1 --> L1["Task List · Calendar 红色事件 · Hot List"]
+  L1 --> X["勾完成任务 / 改日期 / 填字段"]
+  X --> TR{"任务带 Trigger?"}
+  TR -->|"是"| TA["自动 Email / Text / 加 Drip / Team Alert"]
+  TR -->|"否"| X
+  X --> N["Transaction Notes 自动记录每次变更"]
+  X --> P["Transaction Portal 给客户看进度"]
+  X --> C1["Commission 卡填 Sale Price · Close Date"]
+  C1 --> C2["Commission Report 出现一条 Sale<br/>GCI · Broker Fee · NCI"]
+  C2 --> AC["After Closing 任务<br/>Mark Sold · 撤牌 · 社媒 · 收佣金 · 要 Google Review"]
+  AC --> DR["Add to Post Close Marketing Campaign"]
+  AC --> HS["Home Sale Anniversary 进 Important Dates"]
+</pre>
+<h3>F3 · 每天早上在 Dashboard 上的动线</h3>
+<pre class="mermaid">
+flowchart LR
+  A["打开 Dashboard"] --> B["Important Dates<br/>谁今天生日"]
+  B --> C["Calendar<br/>红色关键日期 + 私人日程混在一起"]
+  C --> D["Task List widget<br/>今天到期的 checklist 任务"]
+  D --> E["Transaction Hot List<br/>点进某笔交易"]
+  E --> F["Checklist Summary<br/>滚 20 屏找到要改的任务"]
+  F --> G["回 Dashboard 看 Call List"]
+  G --> H["Commission 仪表看本月"]
+</pre>
+<h3>F4 · 模板维护（SOP 迭代）</h3>
+<pre class="mermaid">
+flowchart LR
+  A["Templates 列表"] --> B["编辑模板 · 4 步 stepper"]
+  B --> C["Dates<br/>加/删关键日期 · 是否上日历 · 是否必填"]
+  B --> D["Form Fields<br/>MLS # · 价格 · Escrow #"]
+  B --> E["Contacts<br/>Title · Lender · Inspector 角色位"]
+  B --> F["Tasks<br/>SubHeading 分组 · N days before/after Date · Assign"]
+  F --> G["Add Trigger<br/>Email · Text · Drip · Team Alert"]
+  G --> H["新建的 Checklist 才生效<br/>已有 checklist 不回溯"]
+</pre>
+<h3>F5 · 营销发送</h3>
+<pre class="mermaid">
+flowchart LR
+  A["Content Library<br/>AI 写 / 手写模板"] --> B["Send Email<br/>选编辑器 → 选收件人 → 排期"]
+  A --> C["Drip Campaign<br/>Day 0 Email → Day 7 Letter → Day 14 Call"]
+  D["Landing Page / Capture Form"] --> E["Lead 进 Lead Rule"]
+  B --> F["Email Stats · Reports tile"]
+  C --> F
+  E --> C
+</pre>
+<div class="obs"><b>观察：</b>F2 是它最强的流程，也是你新产品必须 1:1 保留并做得更顺的流程；F3 说明为什么你觉得"不够智能"——每天的动线要跨 5 个 widget、2 次深链接，系统从不主动告诉你"今天最要紧的 3 件事"。</div>
+</section>
+<section id="pain">
+<h2><span class="no">05</span>痛点清单</h2>
+<p>按对你日常效率的影响排序。P1 = 每天都在付出代价，P2 = 每周，P3 = 偶尔。</p>
+<div class="tbl"><table>
+<tr><th style="width:56px">级别</th><th style="width:190px">痛点</th><th>证据</th><th style="width:220px">新产品怎么解</th></tr>
+<tr><td><span class="pill bad">P1</span></td><td>没有"今天"</td><td>今日事项散在 Important Dates / Calendar / Task / Call 四个 widget，没有合并视图，没有优先级</td><td>Today 页：AI 每日简报 + 按紧急度排序的一张清单</td></tr>
+<tr><td><span class="pill bad">P1</span></td><td>交易详情 20 屏长页</td><td>20 日期 + 13 字段 + 60 任务 + 日志全平铺，每条任务 ~150px，无折叠、无阶段视图</td><td>交易页 = 阶段时间线 + 当前阶段任务 + 下 3 个关键日期；其余折叠</td></tr>
+<tr><td><span class="pill bad">P1</span></td><td>手机端没法用</td><td>日常等于在手机浏览器里开网页：交易详情页出现横向滚动条，checklist 在手机上几乎没法操作</td><td>iPhone app 优先：Today · Deals · Contacts · Inbox 四个 tab + 语音/拍照快捷录入</td></tr>
+<tr><td><span class="pill bad">P1</span></td><td>沟通内容不入库</td><td>Activity 90% 是字段变更；电话内容靠手写 Call Note；微信/短信完全在系统外</td><td>统一 Timeline：通话录音/语音备忘 → AI 转写摘要；短信/邮件自动归档；微信截图/粘贴一键归档</td></tr>
+<tr><td><span class="pill bad">P1</span></td><td>关键日期靠手填</td><td>合同签了要手动把 Option Period / Closing Date 等 20 个日期敲进去</td><td>上传合同 PDF → AI 抽取日期和价格 → 自动生成任务并推送提醒</td></tr>
+<tr><td><span class="pill warn">P2</span></td><td>搜索太弱</td><td>顶栏只能按 Name / Phone / Email / Company；不能搜地址、交易、文档内容</td><td>全局搜索 ⌘K：人 · 地址 · 交易 · 文档 · 备注全文</td></tr>
+<tr><td><span class="pill warn">P2</span></td><td>私人日程混入</td><td>Google 同步把全部日历拉进业务日历，颜色混乱</td><td>按 Google 日历分层同步，业务 / 私人可分开显示，交易日期写回指定日历</td></tr>
+<tr><td><span class="pill warn">P2</span></td><td>数据重复录入</td><td>Sale Price / Close Date 在 Checklist 与 Commission 各一份；Property 字段几乎全空</td><td>单一数据源：Deal 字段驱动佣金计算；Property 由地址自动补全（你已有的地址查询流程）</td></tr>
+<tr><td><span class="pill warn">P2</span></td><td>列表信息密度低</td><td>Task List 用卡片，一屏 4 条；Contact List 一行三行高</td><td>表格 / 卡片可切换；默认紧凑表格</td></tr>
+<tr><td><span class="pill warn">P2</span></td><td>信息架构混乱</td><td>Transactions ≠ Checklists；Calendar 无独立页；Integrations 45 个开关一页</td><td>7 个一级：Today · Contacts · Deals · Calendar · Inbox · Marketing · Reports；设置分组</td></tr>
+<tr><td><span class="pill warn">P2</span></td><td>AI 只会写邮件</td><td>AI Writing Assistant 是唯一 AI；AI Bot 要买 WiseText 号</td><td>每个模块内嵌 AI：摘要 · 抽取 · 草稿 · 建议 · 问答</td></tr>
+<tr><td><span class="pill ok">P3</span></td><td>英文单语</td><td>全站英文；模板、邮件、门户都不支持中文</td><td>中英双语 UI 与内容；客户门户可切中文</td></tr>
+<tr><td><span class="pill ok">P3</span></td><td>报表空洞</td><td>Reports 面板一半 N/A；没有漏斗、来源 ROI、佣金预测</td><td>Pipeline 加权佣金预测 · 来源 → 成交漏斗 · 月度 GCI</td></tr>
+<tr><td><span class="pill ok">P3</span></td><td>营销模块不对客群</td><td>以英文 email drip 为中心，短信/社媒外包</td><td>内容生成（小红书 / 群发 / flyer）+ 发送记录；drip 先不做</td></tr>
+<tr><td><span class="pill ok">P3</span></td><td>模板改动不回溯</td><td>改模板只影响新建 checklist</td><td>模板版本化；可选"应用到进行中交易"</td></tr>
+</table></div>
+</section>
+
+<section id="tobe">
+<h2><span class="no">06</span>新产品蓝图</h2>
+<p><b>定位：</b>一个人的 AI 交易操作系统（self-use first）。服务对象是 DFW 华人买卖/租赁客户，流程是 Texas TREC 合同流程，沟通渠道是微信 + 短信 + 邮件。先把你自己的 5 套模板跑起来，再考虑产品化。</p>
+<div class="grid2">
+<div class="card"><h4>设计原则</h4><ul>
+<li><b>4 个对象 + 1 个引擎：</b>Contact · Property · Deal · Timeline，加 Automation（触发器 → 动作）</li>
+<li><b>录入变抽取：</b>合同、名片、微信截图、语音都是输入，AI 负责结构化</li>
+<li><b>提醒变建议：</b>系统每天主动给出"最要紧的 3 件事"和一键动作</li>
+<li><b>手机优先：</b>80% 操作在 iPhone 上 30 秒内完成；桌面端做重活（模板、报表、批量）</li>
+<li><b>双语：</b>UI 中文为主、术语英文；客户面材料可中/英切换</li>
+</ul></div>
+<div class="card"><h4>从 Wise Agent 带走的</h4><ul>
+<li>5 套模板的日期、字段、任务规则（导出后做成 playbook JSON）</li>
+<li>联系人 CSV（含配偶、家人、生日、分类、来源）</li>
+<li>Rank / Status / Source / Category 的现有取值</li>
+<li>每笔交易专属收件邮箱 + Hot List 的思路</li>
+<li>Transaction Portal 的思路（客户看进度）</li>
+</ul></div>
+</div>
+
+<h3 id="tobe-ai">6.1 模块 × AI 能力映射</h3>
+<div class="tbl"><table>
+<tr><th style="width:120px">模块</th><th>基础功能（对标 Wise Agent）</th><th>AI 增强 <span class="pill ai">AI</span></th></tr>
+<tr><td><b>Today</b></td><td>合并今日：关键日期 · 到期任务 · 待回复消息 · 生日；一键完成 / 推迟 / 打电话</td><td>每日简报（中文，3 句话）；按风险排序（Option Period 明天到期排第一）；"建议动作"卡：草拟提醒短信、生成 net sheet、约 inspection</td></tr>
+<tr><td><b>Contacts</b></td><td>联系人 / 配偶家人 / 多地址电话 / 分类 / 来源 / Rank / 状态 / 自定义字段 / 推荐关系 / 生日纪念日 / 去重合并 / 导入导出 / Google 同步</td><td>关系摘要（最近沟通、预算、偏好、时间线）；自动 Rank（互动频率 + 交易阶段）；名片 / 微信资料截图 → 建档；下一步跟进建议；中英双语称呼与称谓</td></tr>
+<tr><td><b>Deals</b></td><td>模板实例化；阶段时间线；关键日期；字段；任务（日期锚定）；重要联系人（Title / Lender / Inspector / 对方 agent）；文档；自动日志；佣金；客户门户；专属收件邮箱</td><td>合同 PDF（TREC 1-4、租约、amendment）→ 自动抽取日期 / 价格 / 各方信息；风险预警（到期前 72h / 24h 推送）；对方 agent 背景卡（历史交易、风格备注）；谈判笔记结构化；佣金自动算（合同价 × 比例 − broker fee 表）</td></tr>
+<tr><td><b>Calendar</b></td><td>日 / 周 / 月；分层（业务 / 私人 / 交易关键日期 / 生日）；Google 双向同步；事件绑定联系人或交易</td><td>自动排程（inspection、showing、closing）；冲突提醒；语音"帮我约周四下午看房" → 事件 + 短信草稿</td></tr>
+<tr><td><b>Inbox</b></td><td>统一收件箱：短信（Twilio 号）· 邮件（Gmail）· 通话记录 · 微信（粘贴 / 截图归档）；按联系人和交易归档；模板回复；群发</td><td>中英草稿回复；自动回复规则（新 lead 5 分钟内回）；对话摘要写入 Timeline；语音转写；情绪 / 意向标记</td></tr>
+<tr><td><b>Documents</b></td><td>按交易归档；类型（合同 · 披露 · 检查报告 · 收据）；版本；分享链接；e-sign 集成</td><td>OCR + 分类；字段抽取回填 Deal；TREC 表单自动填（从 Contact + Property + Deal 字段）；"这份 inspection 报告里最贵的 3 项"</td></tr>
+<tr><td><b>Marketing</b></td><td>内容库；群发短信 / 邮件；flyer 生成（复用你现有 pipeline）；发送记录；简单 drip</td><td>小红书 / 群发文案（你已有的 voice）；listing 描述中英；价格调整 flyer 自动排版；成交后自动 review 请求</td></tr>
+<tr><td><b>Reports</b></td><td>佣金报表（状态 / 类型 / 日期）；目标进度；来源统计</td><td>Pipeline 加权预测；来源 → 成交漏斗；月报自动生成（给自己看 + 给 broker）</td></tr>
+<tr><td><b>Automation</b></td><td>模板 = playbook（阶段 · 日期 · 任务规则 · 角色）；触发器：日期到期 / 状态变化 / 收到消息 / 文档上传 → 动作：任务 · 提醒 · 短信 / 邮件 · 更新字段 · 通知</td><td>触发动作可以是"让 AI 起草"；playbook 版本化并可应用到进行中交易；从历史交易学习常用偏移天数</td></tr>
+</table></div>
+
+<h3 id="tobe-ia">6.2 信息架构：桌面与手机</h3>
+<div class="grid2">
+<div class="card"><h4>桌面（Web）</h4><ul>
+<li>左侧 rail 7 项：Today · Contacts · Deals · Calendar · Inbox · Marketing · Reports；底部 Settings</li>
+<li>顶部全局搜索 ⌘K（人 / 地址 / 交易 / 文档 / 备注）+ 快速新建</li>
+<li>右侧可收起 AI 面板：随上下文（当前联系人 / 交易）问答与起草</li>
+<li>列表默认紧凑表格，可切卡片；批量操作栏与 Wise Agent 一致</li>
+<li>Deal 详情：左 = 阶段时间线，中 = 当前阶段任务 + 关键日期，右 = 各方联系人 + 文档 + Timeline</li>
+</ul></div>
+<div class="card"><h4>手机（iPhone app）</h4><ul>
+<li>底部 4 tab：Today · Deals · Contacts · Inbox；More 里放 Calendar · Reports · Settings</li>
+<li>中间悬浮 "+"：语音备忘 · 拍文档 · 新 lead · 新任务 · 新事件</li>
+<li>Deal 页：阶段进度条 + 下 3 个关键日期 + 今日任务；其余折叠</li>
+<li>Contact 页：AI 摘要卡置顶 + 一键 电话 / 短信 / 微信复制 / 邮件</li>
+<li>推送通知：关键日期、逾期任务、新消息、新 lead</li>
+</ul></div>
+</div>
+
+<h3 id="tobe-mvp">6.3 MVP 路线（self-use）</h3>
+<div class="roadmap">
+<div class="card p0"><div class="k">P0 · 先能替代 Wise Agent</div><h4>核心闭环</h4><ul>
+<li>Contacts（导入 CSV，保留配偶 / 分类 / 来源 / Rank）</li>
+<li>Deals + 5 套 playbook（日期锚定任务）</li>
+<li>Today 页 + 推送提醒</li>
+<li>Google Calendar 分层同步</li>
+<li>文档上传 + AI 抽取关键日期</li>
+<li>Timeline（手动备注 + 语音转写）</li>
+</ul></div>
+<div class="card p1"><div class="k">P1 · 开始比它强</div><h4>沟通与 AI</h4><ul>
+<li>Inbox：短信（Twilio）+ Gmail + 微信归档</li>
+<li>AI 草稿回复 / 关系摘要 / 每日简报</li>
+<li>佣金自动计算 + 报表</li>
+<li>TREC 表单自动填</li>
+<li>全局搜索</li>
+</ul></div>
+<div class="card p2"><div class="k">P2 · 产品化</div><h4>对外与团队</h4><ul>
+<li>客户门户（中文）</li>
+<li>Marketing 内容库 + 群发</li>
+<li>多用户 / 权限 / 团队</li>
+<li>Lead 路由规则 + 自动回复</li>
+<li>模板市场（把你的 playbook 给其他华人 agent）</li>
+</ul></div>
+</div>
+<h4>技术选型建议（Windows 开发机 + iPhone 测试 + Claude Code）</h4>
+<ul>
+<li><b>App：</b>Expo（React Native）+ Expo Router；iOS 打包走 EAS Build 云端，不需要 Mac；同一代码出 Web 桌面端。</li>
+<li><b>后端：</b>Supabase（Postgres · Auth · Storage · Edge Functions · Realtime），schema 直接照第 3 节的对象建表。</li>
+<li><b>AI：</b>Claude API 做抽取 / 摘要 / 草稿；PDF 用 pdf.js 转文本或直接送多模态；表单填充用 pdf-lib 写 TREC 可填 PDF。</li>
+<li><b>集成：</b>Twilio（短信 / 通话记录）· Google Gmail &amp; Calendar API · Expo Notifications（推送）· 微信没有 API，用"分享到 app"和截图 OCR 归档。</li>
+<li><b>迁移：</b>Wise Agent 联系人走 Export CSV；模板用 Print/Email Summary 或人工整理成 JSON（5 套，一次性活）。</li>
+</ul>
+</section>
+
+<section id="appendix">
+<h2><span class="no">A</span>附录 · 术语对照</h2>
+<p>Wise Agent 的叫法 → 你新产品里建议的叫法（中英）。统一术语能少写一半的重复代码。</p>
+<div class="term">
+<div>Checklist</div><div>Deal · 交易</div>
+<div>Checklist Template</div><div>Playbook · 交易模板</div>
+<div>Critical Dates</div><div>Key Dates · 关键日期</div>
+<div>Important Fields</div><div>Deal Fields · 交易字段</div>
+<div>SubHeading</div><div>Stage · 阶段（变成真正的数据）</div>
+<div>Important Contacts</div><div>Parties · 交易各方</div>
+<div>Transaction Notes</div><div>Timeline · 时间线（含沟通）</div>
+<div>Hot List</div><div>Pinned · 置顶交易</div>
+<div>Transaction Portal</div><div>Client Portal · 客户门户</div>
+<div>Contact / Client</div><div>Contact · 联系人</div>
+<div>Rank A/B/C/D</div><div>Tier · 分层（AI 自动 + 手动覆盖）</div>
+<div>Lead Rule</div><div>Automation · 自动化规则</div>
+<div>Call List</div><div>Follow-ups · 待跟进</div>
+<div>Planner Event</div><div>Event · 日程</div>
+<div>Drip Campaign</div><div>Sequence · 序列（P2）</div>
+<div>Content Library</div><div>Templates · 内容模板</div>
+<div>Commission Report / New Sale</div><div>Commission · 佣金（由 Deal 派生）</div>
+<div>Inside / Outside Team</div><div>Team · 团队（P2）</div>
+</div>
+<footer>抓取时间 2026-09-10 · 基于登录态实机浏览整理 · 所有截图与样例数据已脱敏，报告与画布中不出现任何客户姓名、电话、地址或佣金数字。</footer>
+</section>
+</main>
+</div>
