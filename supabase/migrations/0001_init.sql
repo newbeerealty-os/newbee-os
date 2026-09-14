@@ -96,7 +96,7 @@ create table deal_fields (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-create index deal_fields_current on deal_fields (deal_id, key) where superseded_at is null;
+create index deal_fields_current_idx on deal_fields (deal_id, key) where superseded_at is null;
 create trigger deal_fields_updated before update on deal_fields for each row execute function set_updated_at();
 
 -- 当前值视图：每个 deal 每个 key 只取未被覆盖的那一行

@@ -1,3 +1,658 @@
-// 由 `pnpm gen:types` 生成（supabase gen types typescript）。
-// Day 1 连上 Supabase 后运行一次；之后每次 migration 后重新生成。不要手改。
-export type Database = Record<string, never>;
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
+
+export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.5"
+  }
+  public: {
+    Tables: {
+      agents: {
+        Row: {
+          brokerage: string | null
+          created_at: string
+          id: string
+          name: string
+          settings: Json
+          timezone: string
+          updated_at: string
+        }
+        Insert: {
+          brokerage?: string | null
+          created_at?: string
+          id: string
+          name: string
+          settings?: Json
+          timezone?: string
+          updated_at?: string
+        }
+        Update: {
+          brokerage?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          settings?: Json
+          timezone?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      deal_fields: {
+        Row: {
+          agent_id: string
+          confidence: number | null
+          confirmed_at: string | null
+          confirmed_by: string | null
+          created_at: string
+          deal_id: string
+          id: string
+          key: string
+          source_doc_id: string | null
+          source_page: number | null
+          source_quote: string | null
+          superseded_at: string | null
+          updated_at: string
+          value_date: string | null
+          value_num: number | null
+          value_text: string | null
+          version: number
+        }
+        Insert: {
+          agent_id: string
+          confidence?: number | null
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          deal_id: string
+          id?: string
+          key: string
+          source_doc_id?: string | null
+          source_page?: number | null
+          source_quote?: string | null
+          superseded_at?: string | null
+          updated_at?: string
+          value_date?: string | null
+          value_num?: number | null
+          value_text?: string | null
+          version?: number
+        }
+        Update: {
+          agent_id?: string
+          confidence?: number | null
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          deal_id?: string
+          id?: string
+          key?: string
+          source_doc_id?: string | null
+          source_page?: number | null
+          source_quote?: string | null
+          superseded_at?: string | null
+          updated_at?: string
+          value_date?: string | null
+          value_num?: number | null
+          value_text?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deal_fields_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_fields_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_fields_source_doc_id_fkey"
+            columns: ["source_doc_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      deals: {
+        Row: {
+          addenda: string[]
+          agent_id: string
+          closed_at: string | null
+          created_at: string
+          deleted_at: string | null
+          id: string
+          pinned: boolean
+          playbook_id: string | null
+          playbook_version: number | null
+          primary_contact_id: string | null
+          property_id: string | null
+          stage: Database["public"]["Enums"]["deal_stage"]
+          terminated_at: string | null
+          title: string
+          type: Database["public"]["Enums"]["deal_type"]
+          updated_at: string
+        }
+        Insert: {
+          addenda?: string[]
+          agent_id: string
+          closed_at?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          pinned?: boolean
+          playbook_id?: string | null
+          playbook_version?: number | null
+          primary_contact_id?: string | null
+          property_id?: string | null
+          stage?: Database["public"]["Enums"]["deal_stage"]
+          terminated_at?: string | null
+          title: string
+          type: Database["public"]["Enums"]["deal_type"]
+          updated_at?: string
+        }
+        Update: {
+          addenda?: string[]
+          agent_id?: string
+          closed_at?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          pinned?: boolean
+          playbook_id?: string | null
+          playbook_version?: number | null
+          primary_contact_id?: string | null
+          property_id?: string | null
+          stage?: Database["public"]["Enums"]["deal_stage"]
+          terminated_at?: string | null
+          title?: string
+          type?: Database["public"]["Enums"]["deal_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deals_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documents: {
+        Row: {
+          agent_id: string
+          confirmed_at: string | null
+          created_at: string
+          deal_id: string
+          deleted_at: string | null
+          doc_type: string | null
+          error: string | null
+          extraction: Json | null
+          file_name: string | null
+          id: string
+          page_count: number | null
+          status: Database["public"]["Enums"]["doc_status"]
+          storage_path: string
+          updated_at: string
+          uploaded_at: string
+        }
+        Insert: {
+          agent_id: string
+          confirmed_at?: string | null
+          created_at?: string
+          deal_id: string
+          deleted_at?: string | null
+          doc_type?: string | null
+          error?: string | null
+          extraction?: Json | null
+          file_name?: string | null
+          id?: string
+          page_count?: number | null
+          status?: Database["public"]["Enums"]["doc_status"]
+          storage_path: string
+          updated_at?: string
+          uploaded_at?: string
+        }
+        Update: {
+          agent_id?: string
+          confirmed_at?: string | null
+          created_at?: string
+          deal_id?: string
+          deleted_at?: string | null
+          doc_type?: string | null
+          error?: string | null
+          extraction?: Json | null
+          file_name?: string | null
+          id?: string
+          page_count?: number | null
+          status?: Database["public"]["Enums"]["doc_status"]
+          storage_path?: string
+          updated_at?: string
+          uploaded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      milestones: {
+        Row: {
+          agent_id: string
+          calendar_event_id: string | null
+          client_visible: boolean
+          created_at: string
+          deal_id: string
+          derived_from: Json | null
+          due_date: string | null
+          due_time: string | null
+          id: string
+          key: string
+          label: string
+          manual_override: boolean
+          status: Database["public"]["Enums"]["ms_status"]
+          updated_at: string
+        }
+        Insert: {
+          agent_id: string
+          calendar_event_id?: string | null
+          client_visible?: boolean
+          created_at?: string
+          deal_id: string
+          derived_from?: Json | null
+          due_date?: string | null
+          due_time?: string | null
+          id?: string
+          key: string
+          label: string
+          manual_override?: boolean
+          status?: Database["public"]["Enums"]["ms_status"]
+          updated_at?: string
+        }
+        Update: {
+          agent_id?: string
+          calendar_event_id?: string | null
+          client_visible?: boolean
+          created_at?: string
+          deal_id?: string
+          derived_from?: Json | null
+          due_date?: string | null
+          due_time?: string | null
+          id?: string
+          key?: string
+          label?: string
+          manual_override?: boolean
+          status?: Database["public"]["Enums"]["ms_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "milestones_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "milestones_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tasks: {
+        Row: {
+          agent_id: string
+          anchor_milestone_key: string | null
+          assignee: string | null
+          client_visible: boolean
+          created_at: string
+          deal_id: string | null
+          deleted_at: string | null
+          done_at: string | null
+          due_date: string | null
+          id: string
+          notes: string | null
+          offset_days: number | null
+          playbook_rule_id: string | null
+          priority: number
+          stage: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          agent_id: string
+          anchor_milestone_key?: string | null
+          assignee?: string | null
+          client_visible?: boolean
+          created_at?: string
+          deal_id?: string | null
+          deleted_at?: string | null
+          done_at?: string | null
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          offset_days?: number | null
+          playbook_rule_id?: string | null
+          priority?: number
+          stage?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          agent_id?: string
+          anchor_milestone_key?: string | null
+          assignee?: string | null
+          client_visible?: boolean
+          created_at?: string
+          deal_id?: string | null
+          deleted_at?: string | null
+          done_at?: string | null
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          offset_days?: number | null
+          playbook_rule_id?: string | null
+          priority?: number
+          stage?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+    }
+    Views: {
+      deal_fields_current: {
+        Row: {
+          agent_id: string | null
+          confidence: number | null
+          confirmed_at: string | null
+          confirmed_by: string | null
+          created_at: string | null
+          deal_id: string | null
+          id: string | null
+          key: string | null
+          source_doc_id: string | null
+          source_page: number | null
+          source_quote: string | null
+          superseded_at: string | null
+          updated_at: string | null
+          value_date: string | null
+          value_num: number | null
+          value_text: string | null
+          version: number | null
+        }
+        Insert: {
+          agent_id?: string | null
+          confidence?: number | null
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string | null
+          deal_id?: string | null
+          id?: string | null
+          key?: string | null
+          source_doc_id?: string | null
+          source_page?: number | null
+          source_quote?: string | null
+          superseded_at?: string | null
+          updated_at?: string | null
+          value_date?: string | null
+          value_num?: number | null
+          value_text?: string | null
+          version?: number | null
+        }
+        Update: {
+          agent_id?: string | null
+          confidence?: number | null
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string | null
+          deal_id?: string | null
+          id?: string | null
+          key?: string | null
+          source_doc_id?: string | null
+          source_page?: number | null
+          source_quote?: string | null
+          superseded_at?: string | null
+          updated_at?: string | null
+          value_date?: string | null
+          value_num?: number | null
+          value_text?: string | null
+          version?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deal_fields_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_fields_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_fields_source_doc_id_fkey"
+            columns: ["source_doc_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      deal_stage:
+        | "lead"
+        | "pre"
+        | "active"
+        | "offer"
+        | "under_contract"
+        | "closing"
+        | "closed"
+        | "terminated"
+      deal_type:
+        | "seller"
+        | "buyer"
+        | "lease_listing"
+        | "lease_tenant"
+        | "property_mgmt"
+      doc_status: "uploaded" | "extracting" | "review" | "confirmed" | "failed"
+      ms_status: "pending" | "done" | "overdue" | "na"
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+}
+
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never) = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never) = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never) = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never) = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never) = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {
+      deal_stage: [
+        "lead",
+        "pre",
+        "active",
+        "offer",
+        "under_contract",
+        "closing",
+        "closed",
+        "terminated",
+      ],
+      deal_type: [
+        "seller",
+        "buyer",
+        "lease_listing",
+        "lease_tenant",
+        "property_mgmt",
+      ],
+      doc_status: ["uploaded", "extracting", "review", "confirmed", "failed"],
+      ms_status: ["pending", "done", "overdue", "na"],
+    },
+  },
+} as const
