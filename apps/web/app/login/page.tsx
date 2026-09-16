@@ -10,7 +10,7 @@ export default async function LoginPage() {
       <div className="flex items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold">NewBee OS</h1>
-          <p className="text-sm text-zinc-500">{t("login.subtitle")}</p>
+          <p className="text-sm text-muted">{t("login.subtitle")}</p>
         </div>
         <LocaleSwitch />
       </div>

@@ -39,7 +39,7 @@ export default async function DealsPage() {
 
       {groups.map((g) => (
         <Section key={g.stage} title={`${t(`stage.${g.stage}`)} · ${g.deals.length}`}>
-          <ul className="divide-y divide-zinc-100">
+          <ul className="divide-y divide-line">
             {g.deals.map((d) => {
               const next = d.milestones.filter((m) => m.status === "pending" && m.due_date && m.due_date >= today).sort((a, b) => a.due_date!.localeCompare(b.due_date!))[0];
               const open = d.tasks.filter((x) => !x.done_at && !x.deleted_at).length;
@@ -47,8 +47,8 @@ export default async function DealsPage() {
                 <li key={d.id} className="py-2">
                   <Link href={`/deals/${d.id}`} className="flex items-center justify-between gap-3">
                     <div className="min-w-0">
-                      <div className="truncate text-sm font-medium text-zinc-800">{d.title}</div>
-                      <div className="mt-0.5 flex flex-wrap gap-1 text-xs text-zinc-500">
+                      <div className="truncate text-sm font-medium text-fg">{d.title}</div>
+                      <div className="mt-0.5 flex flex-wrap gap-1 text-xs text-muted">
                         <Badge>{t(`type.${d.type}`)}</Badge>
                         {d.addenda.map((a) => <Badge key={a} tone="blue">{a.replace(/_addendum$/, "")}</Badge>)}
                         <span>{t("deals.openTasks", { n: open })}</span>
@@ -56,11 +56,11 @@ export default async function DealsPage() {
                     </div>
                     {next ? (
                       <div className="shrink-0 text-right">
-                        <div className="text-xs text-zinc-500">{t("deals.next")} · {t.or(`ms.${next.key}`, next.label)}</div>
+                        <div className="text-xs text-muted">{t("deals.next")} · {t.or(`ms.${next.key}`, next.label)}</div>
                         <Badge tone={dueTone(next.due_date, today)}>{next.due_date} · {relDays(next.due_date, today, t)}</Badge>
                       </div>
                     ) : (
-                      <span className="text-xs text-zinc-400">{t("deals.noNext")}</span>
+                      <span className="text-xs text-muted">{t("deals.noNext")}</span>
                     )}
                   </Link>
                 </li>

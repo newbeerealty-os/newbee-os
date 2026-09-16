@@ -33,22 +33,22 @@ export default async function TodayPage() {
     <div className="mx-auto flex max-w-3xl flex-col gap-4">
       <div className="flex items-baseline justify-between">
         <h1 className="text-xl font-semibold">{t("today.title")} · {today}</h1>
-        <span className="text-xs text-zinc-500">{t("today.summary", { ms: milestones.length, tasks: tasks.length })}</span>
+        <span className="text-xs text-muted">{t("today.summary", { ms: milestones.length, tasks: tasks.length })}</span>
       </div>
 
       {buckets.map((b) => (
-        <Section key={b.key} title={t(b.key)} right={<span className="text-xs text-zinc-400">{b.ms.length + b.ts.length}</span>}>
+        <Section key={b.key} title={t(b.key)} right={<span className="text-xs text-muted">{b.ms.length + b.ts.length}</span>}>
           {b.ms.length === 0 && b.ts.length === 0 ? (
             <Empty>{b.key === "today.overdue" ? t("today.noOverdue") : t("common.empty")}</Empty>
           ) : (
             <>
               {b.ms.length > 0 && (
-                <ul className="mb-2 divide-y divide-zinc-100">
+                <ul className="mb-2 divide-y divide-line">
                   {b.ms.map((m) => (
                     <li key={m.id} className="flex items-center justify-between gap-3 py-2">
                       <div className="min-w-0">
-                        <div className="truncate text-sm font-medium text-zinc-800">◆ {t.or(`ms.${m.key}`, m.label)}</div>
-                        <Link href={`/deals/${m.deal_id}`} className="text-xs text-[#1f5f8b] hover:underline">{dealTitle(m.deals) ?? t("common.deal")}</Link>
+                        <div className="truncate text-sm font-medium text-fg">◆ {t.or(`ms.${m.key}`, m.label)}</div>
+                        <Link href={`/deals/${m.deal_id}`} className="text-xs text-accent hover:underline">{dealTitle(m.deals) ?? t("common.deal")}</Link>
                       </div>
                       <Badge tone={dueTone(m.due_date, today)}>{m.due_date}{m.due_time ? ` ${m.due_time.slice(0, 5)}` : ""} · {relDays(m.due_date, today, t)}</Badge>
                     </li>
@@ -56,7 +56,7 @@ export default async function TodayPage() {
                 </ul>
               )}
               {b.ts.length > 0 && (
-                <ul className="divide-y divide-zinc-100">
+                <ul className="divide-y divide-line">
                   {b.ts.map((x) => <TaskItem key={x.id} task={x} today={today} backTo="/today" t={t} showDeal />)}
                 </ul>
               )}

@@ -4,20 +4,15 @@ import { cache } from "react";
 import { cookies } from "next/headers";
 import { makeT, isLocale, DEFAULT_LOCALE, type Locale, type Overrides, type Translator } from "@newbee/core";
 import { createClient } from "@/lib/supabase/server";
+import { getAgentSettings } from "@/lib/settings";
 
 export const LOCALE_COOKIE = "locale";
 
 export const getLocale = cache(async (): Promise<Locale> => {
   const fromCookie = (await cookies()).get(LOCALE_COOKIE)?.value;
   if (isLocale(fromCookie)) return fromCookie;
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (user) {
-    const { data } = await supabase.from("agents").select("settings").eq("id", user.id).single();
-    const saved = (data?.settings as { locale?: unknown } | null)?.locale;
-    if (isLocale(saved)) return saved;
-  }
-  return DEFAULT_LOCALE;
+  const saved = (await getAgentSettings()).locale;
+  return isLocale(saved) ? saved : DEFAULT_LOCALE;
 });
 
 /** 未登录时 ui_strings 查不到行（RLS），自然回到代码默认值 */

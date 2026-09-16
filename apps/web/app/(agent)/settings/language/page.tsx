@@ -31,9 +31,9 @@ export default async function LanguageSettingsPage({ searchParams }: { searchPar
     <div className="mx-auto flex max-w-4xl flex-col gap-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h1 className="text-xl font-semibold">{t("settings.language")}</h1>
-        <span className="text-xs text-zinc-500">{t("settings.count", { n: keys.length })}</span>
+        <span className="text-xs text-muted">{t("settings.count", { n: keys.length })}</span>
       </div>
-      <p className="text-sm text-zinc-500">{t("settings.languageHint")}</p>
+      <p className="text-sm text-muted">{t("settings.languageHint")}</p>
 
       <form method="get" className="flex gap-2">
         <input name="q" defaultValue={q} placeholder={t("settings.filter")} className={inputCls} />
@@ -42,26 +42,26 @@ export default async function LanguageSettingsPage({ searchParams }: { searchPar
 
       {Array.from(byNs.entries()).map(([ns, list]) => (
         <Section key={ns} title={`${ns} · ${list.length}`}>
-          <ul className="divide-y divide-zinc-100">
+          <ul className="divide-y divide-line">
             {list.map((k) => {
               const m = MESSAGES[k];
               const o = overrides.get(k);
               const overridden = !!(o?.zh || o?.en);
               return (
-                <li key={k} className={`py-2 ${overridden ? "bg-amber-50/60" : ""}`}>
+                <li key={k} className={`py-2 ${overridden ? "bg-warn-bg/50" : ""}`}>
                   <form action={saveUiString} className="flex flex-col gap-1 sm:flex-row sm:items-start">
                     <input type="hidden" name="key" value={k} />
                     <div className="min-w-0 sm:w-56 sm:shrink-0">
-                      <code className="text-xs text-zinc-700">{k}</code>
+                      <code className="text-xs text-fg">{k}</code>
                       {overridden && <Badge tone="amber">{t("settings.overridden")}</Badge>}
                     </div>
                     <div className="flex-1">
                       <input name="zh" defaultValue={o?.zh ?? ""} placeholder={m.zh} className={inputCls} />
-                      {overridden && <div className="mt-0.5 text-xs text-zinc-400">{t("settings.default")}: {m.zh}</div>}
+                      {overridden && <div className="mt-0.5 text-xs text-muted">{t("settings.default")}: {m.zh}</div>}
                     </div>
                     <div className="flex-1">
                       <input name="en" defaultValue={o?.en ?? ""} placeholder={m.en} className={inputCls} />
-                      {overridden && <div className="mt-0.5 text-xs text-zinc-400">{t("settings.default")}: {m.en}</div>}
+                      {overridden && <div className="mt-0.5 text-xs text-muted">{t("settings.default")}: {m.en}</div>}
                     </div>
                     <div className="flex shrink-0 gap-1">
                       <Button variant="ghost" type="submit">{t("common.save")}</Button>
@@ -77,10 +77,10 @@ export default async function LanguageSettingsPage({ searchParams }: { searchPar
 
       {stale.length > 0 && (
         <Section title={`${t("settings.stale")} · ${stale.length}`}>
-          <ul className="divide-y divide-zinc-100">
+          <ul className="divide-y divide-line">
             {stale.map((k) => (
               <li key={k} className="flex items-center justify-between gap-2 py-2">
-                <code className="text-xs text-zinc-500">{k}</code>
+                <code className="text-xs text-muted">{k}</code>
                 <form action={resetUiString.bind(null, k)}>
                   <Button variant="danger" type="submit">{t("common.delete")}</Button>
                 </form>

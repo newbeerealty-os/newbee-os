@@ -41,13 +41,13 @@ export default async function TasksPage() {
 
       <Section title={`${t("tasks.personal")} · ${personal.length}`}>
         {personal.length === 0 ? <Empty>{t("common.empty")}</Empty> : (
-          <ul className="divide-y divide-zinc-100">{personal.map((x) => <TaskItem key={x.id} task={x} today={today} backTo="/tasks" t={t} />)}</ul>
+          <ul className="divide-y divide-line">{personal.map((x) => <TaskItem key={x.id} task={x} today={today} backTo="/tasks" t={t} />)}</ul>
         )}
       </Section>
 
       {Array.from(byDeal.entries()).map(([dealId, list]) => (
         <Section key={dealId} title={`${list[0].deal_title ?? t("common.deal")} · ${list.length}`}>
-          <ul className="divide-y divide-zinc-100">{list.map((x) => <TaskItem key={x.id} task={x} today={today} backTo="/tasks" t={t} />)}</ul>
+          <ul className="divide-y divide-line">{list.map((x) => <TaskItem key={x.id} task={x} today={today} backTo="/tasks" t={t} />)}</ul>
         </Section>
       ))}
     </div>

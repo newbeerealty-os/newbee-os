@@ -74,24 +74,24 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
       {/* 1. 文件 */}
       <Section title={`${t("deal.files")} · ${documents.length}`}>
         <form action={uploadDocument.bind(null, id)} className="mb-3 flex flex-col gap-2 sm:flex-row">
-          <input type="file" name="file" accept="application/pdf" required className="block w-full text-sm file:mr-3 file:h-10 file:rounded-md file:border-0 file:bg-zinc-100 file:px-3 file:text-sm" />
+          <input type="file" name="file" accept="application/pdf" required className="block w-full text-sm file:mr-3 file:h-10 file:rounded-md file:border-0 file:bg-chip file:px-3 file:text-sm" />
           <Button type="submit">{t("deal.uploadPdf")}</Button>
         </form>
         {documents.length === 0 ? (
           <Empty>{t("deal.uploadHint")}</Empty>
         ) : (
-          <ul className="divide-y divide-zinc-100">
+          <ul className="divide-y divide-line">
             {documents.map((d) => (
               <li key={d.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
                 <div className="min-w-0">
-                  <div className="truncate text-sm text-zinc-800">{d.file_name ?? d.id}</div>
-                  <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-zinc-500">
+                  <div className="truncate text-sm text-fg">{d.file_name ?? d.id}</div>
+                  <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-muted">
                     <Badge tone={DOC_TONE[d.status] ?? "zinc"}>{t.or(`docStatus.${d.status}`, d.status)}</Badge>
                     {d.doc_type && <span>{d.doc_type}</span>}
                     {d.page_count && <span>{t("common.pages", { n: d.page_count })}</span>}
                     <span>{d.uploaded_at.slice(0, 10)}</span>
                   </div>
-                  {d.error && <div className="mt-1 text-xs text-red-600">{d.error}</div>}
+                  {d.error && <div className="mt-1 text-xs text-danger">{d.error}</div>}
                 </div>
                 {(d.status === "uploaded" || d.status === "failed") && (
                   <form action={extractDocument.bind(null, id, d.id)}>
@@ -109,17 +109,17 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
         {pending.length === 0 ? (
           <Empty>{t("deal.noPending")}</Empty>
         ) : (
-          <ul className="divide-y divide-zinc-100">
+          <ul className="divide-y divide-line">
             {pending.map((f) => (
               <li key={f.id} className="py-3">
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <div className="text-sm font-medium text-zinc-800">{fieldLabel(f.key)}</div>
-                  <div className="text-xs text-zinc-500">
+                  <div className="text-sm font-medium text-fg">{fieldLabel(f.key)}</div>
+                  <div className="text-xs text-muted">
                     {f.source_page && <span>{t("deal.page", { n: f.source_page })} · </span>}
                     {t("deal.confidence", { n: f.confidence !== null ? Math.round(f.confidence * 100) : "—" })}
                   </div>
                 </div>
-                {f.source_quote && <blockquote className="mt-1 border-l-2 border-zinc-200 pl-2 text-xs text-zinc-500">“{f.source_quote}”</blockquote>}
+                {f.source_quote && <blockquote className="mt-1 border-l-2 border-line pl-2 text-xs text-muted">“{f.source_quote}”</blockquote>}
                 <div className="mt-2 flex flex-wrap items-center gap-2">
                   <form action={confirmField.bind(null, id, f.id)} className="flex flex-1 items-center gap-2">
                     <input name="value" defaultValue={show(f) === "—" ? "" : f.value_date ?? (f.value_num !== null ? String(f.value_num) : f.value_text ?? "")} className={`${inputCls} max-w-xs`} />
@@ -153,12 +153,12 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
               if (!rows.length) return null;
               return (
                 <div key={g}>
-                  <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-zinc-400">{t(`group.${g}`)}</div>
-                  <dl className="divide-y divide-zinc-100 text-sm">
+                  <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted">{t(`group.${g}`)}</div>
+                  <dl className="divide-y divide-line text-sm">
                     {rows.map((f) => (
                       <div key={f.id} className="flex justify-between gap-3 py-1">
-                        <dt className="text-zinc-500">{fieldLabel(f.key)}</dt>
-                        <dd className="text-right font-medium text-zinc-800">{show(f)}</dd>
+                        <dt className="text-muted">{fieldLabel(f.key)}</dt>
+                        <dd className="text-right font-medium text-fg">{show(f)}</dd>
                       </div>
                     ))}
                   </dl>
@@ -167,14 +167,14 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
             })}
           </div>
         )}
-        <form action={setField.bind(null, id)} className="mt-4 flex flex-col gap-2 border-t border-zinc-100 pt-3 sm:flex-row">
+        <form action={setField.bind(null, id)} className="mt-4 flex flex-col gap-2 border-t border-line pt-3 sm:flex-row">
           <select name="key" className={`${inputCls} sm:w-64`} defaultValue="effective_date">
             {DEAL_FIELDS.map((f) => <option key={f.key} value={f.key}>{fieldLabel(f.key)} ({f.key})</option>)}
           </select>
           <input name="value" required placeholder={t("deal.valuePlaceholder")} className={inputCls} />
           <Button variant="ghost" type="submit">{t("deal.manualWrite")}</Button>
         </form>
-        <p className="mt-2 text-xs text-zinc-400">{t("deal.addendaHint", { list: ADDENDA.join(" · ") })}</p>
+        <p className="mt-2 text-xs text-muted">{t("deal.addendaHint", { list: ADDENDA.join(" · ") })}</p>
       </Section>
 
       {/* 4. 里程碑 */}
@@ -182,12 +182,12 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
         {milestones.length === 0 ? (
           <Empty>{t("deal.noMilestones")}</Empty>
         ) : (
-          <ol className="relative ml-2 border-l border-zinc-200">
+          <ol className="relative ml-2 border-l border-line">
             {milestones.map((m) => (
               <li key={m.id} className="mb-3 ml-4">
-                <span className={`absolute -left-[5px] mt-1.5 h-2.5 w-2.5 rounded-full ${m.due_date && m.due_date < today ? "bg-zinc-400" : "bg-[#1f5f8b]"}`} />
+                <span className={`absolute -left-[5px] mt-1.5 h-2.5 w-2.5 rounded-full ${m.due_date && m.due_date < today ? "bg-muted" : "bg-accent"}`} />
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="text-sm text-zinc-800">{t.or(`ms.${m.key}`, m.label)}{m.client_visible ? "" : <span className="ml-1 text-xs text-zinc-400">{t("common.internal")}</span>}</div>
+                  <div className="text-sm text-fg">{t.or(`ms.${m.key}`, m.label)}{m.client_visible ? "" : <span className="ml-1 text-xs text-muted">{t("common.internal")}</span>}</div>
                   {m.due_date ? (
                     <Badge tone={dueTone(m.due_date, today)}>{m.due_date}{m.due_time ? ` ${m.due_time.slice(0, 5)}` : ""} · {relDays(m.due_date, today, t)}</Badge>
                   ) : (
@@ -207,8 +207,8 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
         ) : (
           stagesInTasks.map((s) => (
             <div key={s} className="mb-3">
-              <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-zinc-400">{s ? t.or(`playbookStage.${s}`, s) : t("deal.otherStage")}</div>
-              <ul className="divide-y divide-zinc-100">
+              <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted">{s ? t.or(`playbookStage.${s}`, s) : t("deal.otherStage")}</div>
+              <ul className="divide-y divide-line">
                 {tasks.filter((x) => (x.stage ?? "") === s).map((x) => <TaskItem key={x.id} task={x} today={today} backTo={backTo} t={t} />)}
               </ul>
             </div>

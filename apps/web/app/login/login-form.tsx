@@ -37,16 +37,16 @@ export function LoginForm({ labels }: { labels: LoginLabels }) {
     location.href = "/today";
   }
 
-  const input = "h-12 w-full rounded-md border border-zinc-300 px-3 text-base";
-  if (state === "sent") return <p className="rounded-md bg-emerald-50 p-4 text-emerald-800">{labels.sent}</p>;
+  const input = "h-12 w-full rounded-md border border-line-strong px-3 text-base";
+  if (state === "sent") return <p className="rounded-md bg-ok-bg p-4 text-ok">{labels.sent}</p>;
   return (
     <form onSubmit={password ? signInPassword : sendLink} className="flex flex-col gap-3">
       <input id="email" type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className={input} />
       <input id="password" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={labels.passwordPlaceholder} className={input} />
-      <button disabled={state === "sending"} className="h-12 rounded-md bg-[#1f5f8b] font-medium text-white disabled:opacity-60">
+      <button disabled={state === "sending"} className="h-12 rounded-md bg-accent font-medium text-accent-ink disabled:opacity-60">
         {state === "sending" ? labels.wait : password ? labels.signIn : labels.sendLink}
       </button>
-      {state === "error" && <p className="text-sm text-red-600">{err}</p>}
+      {state === "error" && <p className="text-sm text-danger">{err}</p>}
     </form>
   );
 }
