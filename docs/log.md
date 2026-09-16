@@ -19,3 +19,8 @@
 - 做了：中英双语全套——core 词典 + makeT + 覆盖测试（34/34）；ui_strings 表（0002 已上线）；cookie + agents.settings.locale 记住选择；导航/登录页切换按钮；5 个页面、字段名、里程碑、任务标题按 key 翻译显示（库里仍英文）；/settings/language 编辑页可改中英并恢复默认；真机手测通过
 - 卡在：
 - 明天：把 setField / confirmField 的类型判断收回 core（统一走 toFieldColumns + FIELD_BY_KEY）；之后加 buyer Playbook 时 i18n 测试会逼着补翻译
+
+## Day 4（v0.2.0）
+- 做了：主题（10 套、日出日落自动）· 导航方案 A（可收起侧栏 / 红圈 / 选项卡 / 搜索）· 字体 Manrope + DM Mono + MiSans · 联系人模块（人 / 公司 / 交易各方 / 紧密关系 / 详情页强度排序）· 22 个 commit，test 66/66，build 通过；版本说明见 docs/CHANGELOG.md，打 tag v0.2.0
+- 卡在：
+- 明天：抽取结果 → 联系人匹配建议；然后把 setField / confirmField 的类型判断收回 core
