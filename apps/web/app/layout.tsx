@@ -38,7 +38,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <head>
         <style dangerouslySetInnerHTML={{ __html: THEME_STYLE }} />
       </head>
-      <body className="min-h-dvh bg-bg text-fg antialiased">
+      <body className="min-h-dvh bg-bg text-fg antialiased" suppressHydrationWarning>
         {children}
         {next && <ThemeAutoSwitch switchAt={next.at.getTime()} switchTo={THEME_BY_ID[next.becomes === "day" ? settings.day : settings.night].id} />}
       </body>
