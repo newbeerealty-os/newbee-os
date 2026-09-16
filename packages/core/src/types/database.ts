@@ -44,6 +44,127 @@ export type Database = {
         }
         Relationships: []
       }
+      contacts: {
+        Row: {
+          address_line1: string | null
+          address_line2: string | null
+          agent_id: string
+          birthday: string | null
+          city: string | null
+          created_at: string
+          deleted_at: string | null
+          email: string | null
+          first_name: string
+          id: string
+          job_title: string | null
+          kind: Database["public"]["Enums"]["contact_kind"]
+          last_contacted_at: string | null
+          last_name: string
+          license_no: string | null
+          name_zh: string | null
+          notes: string | null
+          organization_id: string | null
+          phone: string | null
+          preferred_channel:
+            | Database["public"]["Enums"]["contact_channel"]
+            | null
+          preferred_language: Database["public"]["Enums"]["contact_language"]
+          referred_by_contact_id: string | null
+          source: string | null
+          state: string | null
+          tags: string[]
+          updated_at: string
+          wechat: string | null
+          zip: string | null
+        }
+        Insert: {
+          address_line1?: string | null
+          address_line2?: string | null
+          agent_id: string
+          birthday?: string | null
+          city?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          email?: string | null
+          first_name: string
+          id?: string
+          job_title?: string | null
+          kind?: Database["public"]["Enums"]["contact_kind"]
+          last_contacted_at?: string | null
+          last_name?: string
+          license_no?: string | null
+          name_zh?: string | null
+          notes?: string | null
+          organization_id?: string | null
+          phone?: string | null
+          preferred_channel?:
+            | Database["public"]["Enums"]["contact_channel"]
+            | null
+          preferred_language?: Database["public"]["Enums"]["contact_language"]
+          referred_by_contact_id?: string | null
+          source?: string | null
+          state?: string | null
+          tags?: string[]
+          updated_at?: string
+          wechat?: string | null
+          zip?: string | null
+        }
+        Update: {
+          address_line1?: string | null
+          address_line2?: string | null
+          agent_id?: string
+          birthday?: string | null
+          city?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          email?: string | null
+          first_name?: string
+          id?: string
+          job_title?: string | null
+          kind?: Database["public"]["Enums"]["contact_kind"]
+          last_contacted_at?: string | null
+          last_name?: string
+          license_no?: string | null
+          name_zh?: string | null
+          notes?: string | null
+          organization_id?: string | null
+          phone?: string | null
+          preferred_channel?:
+            | Database["public"]["Enums"]["contact_channel"]
+            | null
+          preferred_language?: Database["public"]["Enums"]["contact_language"]
+          referred_by_contact_id?: string | null
+          source?: string | null
+          state?: string | null
+          tags?: string[]
+          updated_at?: string
+          wechat?: string | null
+          zip?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contacts_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contacts_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contacts_referred_by_contact_id_fkey"
+            columns: ["referred_by_contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       deal_fields: {
         Row: {
           agent_id: string
@@ -126,6 +247,80 @@ export type Database = {
           },
         ]
       }
+      deal_parties: {
+        Row: {
+          agent_id: string
+          contact_id: string | null
+          created_at: string
+          deal_id: string
+          deleted_at: string | null
+          id: string
+          is_primary: boolean
+          notes: string | null
+          organization_id: string | null
+          role: Database["public"]["Enums"]["party_role"]
+          side: Database["public"]["Enums"]["party_side"]
+          updated_at: string
+        }
+        Insert: {
+          agent_id: string
+          contact_id?: string | null
+          created_at?: string
+          deal_id: string
+          deleted_at?: string | null
+          id?: string
+          is_primary?: boolean
+          notes?: string | null
+          organization_id?: string | null
+          role: Database["public"]["Enums"]["party_role"]
+          side?: Database["public"]["Enums"]["party_side"]
+          updated_at?: string
+        }
+        Update: {
+          agent_id?: string
+          contact_id?: string | null
+          created_at?: string
+          deal_id?: string
+          deleted_at?: string | null
+          id?: string
+          is_primary?: boolean
+          notes?: string | null
+          organization_id?: string | null
+          role?: Database["public"]["Enums"]["party_role"]
+          side?: Database["public"]["Enums"]["party_side"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deal_parties_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_parties_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_parties_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_parties_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       deals: {
         Row: {
           addenda: string[]
@@ -187,6 +382,13 @@ export type Database = {
             columns: ["agent_id"]
             isOneToOne: false
             referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deals_primary_contact_fkey"
+            columns: ["primary_contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
             referencedColumns: ["id"]
           },
         ]
@@ -322,6 +524,84 @@ export type Database = {
             columns: ["deal_id"]
             isOneToOne: false
             referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          address_line1: string | null
+          address_line2: string | null
+          agent_id: string
+          city: string | null
+          created_at: string
+          deleted_at: string | null
+          email: string | null
+          id: string
+          kind: Database["public"]["Enums"]["org_kind"]
+          license_no: string | null
+          name: string
+          notes: string | null
+          phone: string | null
+          primary_contact_id: string | null
+          state: string | null
+          updated_at: string
+          website: string | null
+          zip: string | null
+        }
+        Insert: {
+          address_line1?: string | null
+          address_line2?: string | null
+          agent_id: string
+          city?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          email?: string | null
+          id?: string
+          kind?: Database["public"]["Enums"]["org_kind"]
+          license_no?: string | null
+          name: string
+          notes?: string | null
+          phone?: string | null
+          primary_contact_id?: string | null
+          state?: string | null
+          updated_at?: string
+          website?: string | null
+          zip?: string | null
+        }
+        Update: {
+          address_line1?: string | null
+          address_line2?: string | null
+          agent_id?: string
+          city?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          email?: string | null
+          id?: string
+          kind?: Database["public"]["Enums"]["org_kind"]
+          license_no?: string | null
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          primary_contact_id?: string | null
+          state?: string | null
+          updated_at?: string
+          website?: string | null
+          zip?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organizations_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "organizations_primary_contact_fkey"
+            columns: ["primary_contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
             referencedColumns: ["id"]
           },
         ]
@@ -531,6 +811,17 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      contact_channel: "phone" | "sms" | "email" | "wechat" | "whatsapp"
+      contact_kind:
+        | "client"
+        | "agent"
+        | "broker"
+        | "title_lending"
+        | "vendor"
+        | "tc"
+        | "attorney"
+        | "other"
+      contact_language: "zh" | "en"
       deal_stage:
         | "lead"
         | "pre"
@@ -548,6 +839,42 @@ export type Database = {
         | "property_mgmt"
       doc_status: "uploaded" | "extracting" | "review" | "confirmed" | "failed"
       ms_status: "pending" | "done" | "overdue" | "na"
+      org_kind:
+        | "brokerage"
+        | "title_company"
+        | "lender"
+        | "law_firm"
+        | "vendor"
+        | "hoa"
+        | "property_management"
+        | "other"
+      party_role:
+        | "buyer"
+        | "seller"
+        | "tenant"
+        | "landlord"
+        | "listing_agent"
+        | "buyer_agent"
+        | "listing_broker"
+        | "buyer_broker"
+        | "tc"
+        | "buyer_attorney"
+        | "seller_attorney"
+        | "escrow_officer"
+        | "title_company"
+        | "lender"
+        | "loan_officer"
+        | "inspector"
+        | "appraiser"
+        | "surveyor"
+        | "photographer"
+        | "stager"
+        | "contractor"
+        | "hoa"
+        | "property_manager"
+        | "referral"
+        | "other"
+      party_side: "ours" | "theirs" | "neutral"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -675,6 +1002,18 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      contact_channel: ["phone", "sms", "email", "wechat", "whatsapp"],
+      contact_kind: [
+        "client",
+        "agent",
+        "broker",
+        "title_lending",
+        "vendor",
+        "tc",
+        "attorney",
+        "other",
+      ],
+      contact_language: ["zh", "en"],
       deal_stage: [
         "lead",
         "pre",
@@ -694,6 +1033,44 @@ export const Constants = {
       ],
       doc_status: ["uploaded", "extracting", "review", "confirmed", "failed"],
       ms_status: ["pending", "done", "overdue", "na"],
+      org_kind: [
+        "brokerage",
+        "title_company",
+        "lender",
+        "law_firm",
+        "vendor",
+        "hoa",
+        "property_management",
+        "other",
+      ],
+      party_role: [
+        "buyer",
+        "seller",
+        "tenant",
+        "landlord",
+        "listing_agent",
+        "buyer_agent",
+        "listing_broker",
+        "buyer_broker",
+        "tc",
+        "buyer_attorney",
+        "seller_attorney",
+        "escrow_officer",
+        "title_company",
+        "lender",
+        "loan_officer",
+        "inspector",
+        "appraiser",
+        "surveyor",
+        "photographer",
+        "stager",
+        "contractor",
+        "hoa",
+        "property_manager",
+        "referral",
+        "other",
+      ],
+      party_side: ["ours", "theirs", "neutral"],
     },
   },
 } as const
