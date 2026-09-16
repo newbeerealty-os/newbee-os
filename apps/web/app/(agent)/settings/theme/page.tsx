@@ -5,6 +5,7 @@ import { getT } from "@/lib/i18n";
 import { getThemeSettings } from "@/lib/settings";
 import { Section, Button, Badge, inputCls } from "@/components/ui";
 import { SettingsTabs } from "@/components/settings-tabs";
+import { PageHeader } from "@/components/page";
 import { ThemeLivePreview, UseMyLocation } from "@/components/theme-form-client";
 
 export const dynamic = "force-dynamic";
@@ -67,7 +68,7 @@ export default async function ThemeSettingsPage() {
 
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-4">
-      <h1 className="text-xl font-semibold">{t("settings.title")}</h1>
+      <PageHeader crumbs={[{ label: t("nav.settings") }, { label: t("settings.theme") }]} title={t("settings.theme")} />
       <SettingsTabs active="/settings/theme" />
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <p className="text-sm text-muted">{t("settings.themeHint")}</p>

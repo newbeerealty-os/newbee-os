@@ -1,14 +1,16 @@
-// /today —— 每天打开的第一页：逾期 / 今天 / 未来 7 天 的里程碑与任务
+// /today —— 每天打开的第一页：逾期 / 今天 / 未来 7 天 的里程碑与任务（选项卡：全部 / 逾期 / 今天 / 7 天）
 import Link from "next/link";
 import { addCalendarDays } from "@newbee/core";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n";
 import { todayISO, relDays } from "@/lib/format";
 import { Section, Empty, Badge, TaskItem, dueTone, type TaskRow } from "@/components/ui";
+import { PageHeader, Tabs } from "@/components/page";
 
 export const dynamic = "force-dynamic";
 
-export default async function TodayPage() {
+export default async function TodayPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+  const { tab = "all" } = await searchParams;
   const supabase = await createClient();
   const t = await getT();
   const today = todayISO();
@@ -24,22 +26,25 @@ export default async function TodayPage() {
   const tasks: TaskRow[] = ((ts ?? []) as unknown as (TaskRow & { deals: { title: string } | { title: string }[] | null })[]).map((x) => ({ ...x, deal_title: dealTitle(x.deals) }));
 
   const buckets = [
-    { key: "today.overdue", ms: milestones.filter((m) => m.due_date < today), ts: tasks.filter((x) => x.due_date! < today) },
-    { key: "today.today", ms: milestones.filter((m) => m.due_date === today), ts: tasks.filter((x) => x.due_date === today) },
-    { key: "today.next7", ms: milestones.filter((m) => m.due_date > today), ts: tasks.filter((x) => x.due_date! > today) },
+    { id: "overdue", key: "today.overdue", ms: milestones.filter((m) => m.due_date < today), ts: tasks.filter((x) => x.due_date! < today) },
+    { id: "today", key: "today.today", ms: milestones.filter((m) => m.due_date === today), ts: tasks.filter((x) => x.due_date === today) },
+    { id: "week", key: "today.next7", ms: milestones.filter((m) => m.due_date > today), ts: tasks.filter((x) => x.due_date! > today) },
   ];
+  const shown = tab === "all" ? buckets : buckets.filter((b) => b.id === tab);
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-4">
-      <div className="flex items-baseline justify-between">
-        <h1 className="text-xl font-semibold">{t("today.title")} · {today}</h1>
-        <span className="text-xs text-muted">{t("today.summary", { ms: milestones.length, tasks: tasks.length })}</span>
-      </div>
+    <div className="mx-auto flex max-w-4xl flex-col gap-4">
+      <PageHeader crumbs={[{ label: t("nav.today") }]} title={`${t("today.title")} · ${today}`}
+        actions={<span className="text-xs text-muted">{t("today.summary", { ms: milestones.length, tasks: tasks.length })}</span>} />
+      <Tabs base="/today" active={tab} tabs={[
+        { id: "all", label: t("today.all"), count: milestones.length + tasks.length },
+        ...buckets.map((b) => ({ id: b.id, label: t(b.key), count: b.ms.length + b.ts.length })),
+      ]} />
 
-      {buckets.map((b) => (
-        <Section key={b.key} title={t(b.key)} right={<span className="text-xs text-muted">{b.ms.length + b.ts.length}</span>}>
+      {shown.map((b) => (
+        <Section key={b.id} title={t(b.key)} right={<span className="text-xs text-muted">{b.ms.length + b.ts.length}</span>}>
           {b.ms.length === 0 && b.ts.length === 0 ? (
-            <Empty>{b.key === "today.overdue" ? t("today.noOverdue") : t("common.empty")}</Empty>
+            <Empty>{b.id === "overdue" ? t("today.noOverdue") : t("common.empty")}</Empty>
           ) : (
             <>
               {b.ms.length > 0 && (
