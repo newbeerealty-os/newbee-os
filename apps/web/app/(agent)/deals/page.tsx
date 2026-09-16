@@ -8,6 +8,7 @@ import { DEAL_STAGES } from "@/lib/nav";
 import { todayISO, relDays } from "@/lib/format";
 import { Section, Empty, Button, Badge, inputCls, dueTone } from "@/components/ui";
 import { PageHeader, Stat, StatGrid } from "@/components/page";
+import { StageBar, StageBadge } from "@/components/stage";
 
 export const dynamic = "force-dynamic";
 
@@ -103,16 +104,16 @@ export default async function DealsPage({ searchParams }: { searchParams: Promis
                 return (
                   <li key={d.id}>
                     <Link href={`/deals/${d.id}`} className="grid gap-1.5 px-4 py-3 hover:bg-chip/40 md:grid-cols-[1.6fr_1fr_1.2fr_1.4fr_.6fr] md:items-center md:gap-3">
-                      <div className="min-w-0">
+                      <div className="flex min-w-0 gap-3"><StageBar stage={d.stage} /><div className="min-w-0">
                         <div className="truncate text-sm font-semibold text-fg">{d.title}</div>
                         <div className="mt-0.5 flex flex-wrap gap-1 text-[11.5px] text-muted">
                           {d.addenda.map((a) => <Badge key={a} tone="blue">{a.replace(/_addendum$/, "")}</Badge>)}
                           <span className="md:hidden">{t("deals.openTasks", { n: open })}</span>
                         </div>
-                      </div>
+                      </div></div>
                       <div className="flex gap-1">
                         <Badge>{t(`type.${d.type}`)}</Badge>
-                        {!stageFilter && <Badge tone="blue">{t(`stage.${d.stage}`)}</Badge>}
+                        {!stageFilter && <StageBadge stage={d.stage} label={t(`stage.${d.stage}`)} />}
                       </div>
                       <div className="truncate text-sm">{next ? t.or(`ms.${next.key}`, next.label) : <span className="text-muted">{t("deals.noNext")}</span>}</div>
                       <div>{next && <Badge tone={dueTone(next.due_date, today)}>{next.due_date} · {relDays(next.due_date, today, t)}</Badge>}</div>

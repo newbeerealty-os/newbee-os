@@ -114,7 +114,7 @@ function OrgPicker({ l, kind, orgs, value, onChange, orgKindOptions, onCreate }:
 
 export interface ContactFormProps {
   l: L; kindOptions: Opt[]; orgKindOptions: Opt[]; channelOptions: Opt[]; languageOptions: Opt[];
-  orgs: OrgOpt[]; contacts?: Opt[]; jobTitles: Record<string, string[]>; tags: Record<string, string[]>;
+  orgs: OrgOpt[]; contacts?: Opt[]; jobTitles: Record<string, string[]>; tags: Record<string, string[]>; sources: string[];
   values?: Record<string, string | string[] | null | undefined>; defaultKind?: string;
   action: (formData: FormData) => void | Promise<void>; submitLabel: string; compact?: boolean;
   createOrg: (input: { kind: string; name: string }) => Promise<OrgOpt>;
@@ -152,6 +152,7 @@ export function ContactFormClient(p: ContactFormProps) {
         <F label={p.l.preferredChannel}><select name="preferred_channel" defaultValue={v("preferred_channel") || "wechat"} className={inputCls}>{p.channelOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></F>
         <F label={p.l.preferredLanguage}><select name="preferred_language" defaultValue={v("preferred_language") || "zh"} className={inputCls}>{p.languageOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></F>
       </div>
+      {p.compact && <F label={p.l.source} className="sm:col-span-2"><SuggestInput name="source" defaultValue={v("source")} options={p.sources} onChange={dirty} /></F>}
       <div className="flex flex-col gap-1 sm:col-span-2">
         <F label={p.l.tags}><input ref={tagInput} name="tags" value={tags} onChange={(e) => setTags(e.target.value)} autoComplete="off" className={inputCls} /></F>
         <div className="flex max-h-[26px] flex-wrap items-center gap-x-1.5 gap-y-4 overflow-hidden">
@@ -165,7 +166,7 @@ export function ContactFormClient(p: ContactFormProps) {
       {!p.compact && (
         <>
           <F label={p.l.licenseNo}><input name="license_no" defaultValue={v("license_no")} className={`${inputCls} font-mono`} /></F>
-          <F label={p.l.source}><input name="source" defaultValue={v("source")} className={inputCls} /></F>
+          <F label={p.l.source}><SuggestInput name="source" defaultValue={v("source")} options={p.sources} onChange={dirty} /></F>
           <F label={p.l.referredBy}><select name="referred_by_contact_id" defaultValue={v("referred_by_contact_id")} className={inputCls}><option value="">—</option>{(p.contacts ?? []).map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}</select></F>
           <F label={p.l.birthday}><input name="birthday" type="date" defaultValue={v("birthday")} className={inputCls} /></F>
           <F label={p.l.address} className="sm:col-span-2"><input name="address_line1" defaultValue={v("address_line1")} className={inputCls} /></F>

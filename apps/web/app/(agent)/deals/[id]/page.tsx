@@ -12,6 +12,7 @@ import { DEAL_STAGES } from "@/lib/nav";
 import { todayISO, relDays, money } from "@/lib/format";
 import { Section, Empty, Button, Badge, inputCls, TaskItem, dueTone, type TaskRow } from "@/components/ui";
 import { PageHeader, Tabs, Stat, StatGrid } from "@/components/page";
+import { StageBadge } from "@/components/stage";
 
 export const dynamic = "force-dynamic";
 
@@ -90,7 +91,7 @@ export default async function DealPage({ params, searchParams }: { params: Promi
     <div className="mx-auto flex max-w-5xl flex-col gap-4">
       <PageHeader
         crumbs={[{ label: t("nav.deals"), href: "/deals" }, { label: t(`stage.${deal.stage}`), href: `/deals?stage=${deal.stage}` }, { label: deal.title }]}
-        title={<>{deal.title} <span className="text-muted">· {t(`type.${deal.type}`)}</span></>}
+        title={<span className="flex flex-wrap items-center gap-2">{deal.title}<span className="text-muted">· {t(`type.${deal.type}`)}</span><StageBadge stage={deal.stage} label={t(`stage.${deal.stage}`)} /></span>}
         actions={
           <>
             <form action={setStage.bind(null, id)} className="flex items-center gap-2">

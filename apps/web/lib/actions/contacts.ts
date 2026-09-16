@@ -2,7 +2,7 @@
 // 联系人 / 公司 / 交易参与方的写操作。校验全部走 core 的 zod schema；失败直接抛（页面显示错误），不静默。
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { ContactInputSchema, OrganizationInputSchema, PartyInputSchema, roleSide, type DealType } from "@newbee/core";
+import { ContactInputSchema, OrganizationInputSchema, PartyInputSchema, roleSide, CONTACT_RELATIONS, type DealType } from "@newbee/core";
 import { createClient } from "@/lib/supabase/server";
 
 async function me() {
@@ -76,6 +76,33 @@ export async function deleteOrganization(id: string) {
   if (error) throw error;
   revalidatePath("/contacts");
   redirect("/contacts");
+}
+
+// ---------- 备注 / 紧密关系 ----------
+export async function saveContactNotes(id: string, formData: FormData) {
+  const { supabase } = await me();
+  const notes = String(formData.get("notes") ?? "").trim() || null;
+  const { error } = await supabase.from("contacts").update({ notes }).eq("id", id);
+  if (error) throw error;
+  revalidatePath(`/contacts/${id}`);
+}
+
+export async function addContactLink(id: string, formData: FormData) {
+  const { supabase, userId } = await me();
+  const related = String(formData.get("related_contact_id") ?? "");
+  const relation = String(formData.get("relation") ?? "other");
+  if (!related || related === id || !(CONTACT_RELATIONS as readonly string[]).includes(relation)) return;
+  const { error } = await supabase.from("contact_links").insert({ agent_id: userId, contact_id: id, related_contact_id: related, relation });
+  if (error) throw error;
+  revalidatePath(`/contacts/${id}`);
+  revalidatePath(`/contacts/${related}`);
+}
+
+export async function removeContactLink(id: string, linkId: string) {
+  const { supabase } = await me();
+  const { error } = await supabase.from("contact_links").update({ deleted_at: new Date().toISOString() }).eq("id", linkId);
+  if (error) throw error;
+  revalidatePath(`/contacts/${id}`);
 }
 
 // ---------- deal_parties ----------

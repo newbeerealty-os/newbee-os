@@ -53,7 +53,7 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
               <Button variant="ghost" type="submit">OK</Button>
             </form>
             <ContactCreator l={l}
-              contact={{ l, ...opts, orgs, jobTitles: suggestions.jobTitles, tags: suggestions.tags, defaultKind: defaults.contact, action: createContact, submitLabel: t("contacts.add"), compact: true, createOrg: createOrganizationInline }}
+              contact={{ l, ...opts, orgs, jobTitles: suggestions.jobTitles, tags: suggestions.tags, sources: suggestions.sources, defaultKind: defaults.contact, action: createContact, submitLabel: t("contacts.add"), compact: true, createOrg: createOrganizationInline }}
               org={{ l, orgKindOptions: opts.orgKindOptions, defaultKind: defaults.org, action: createOrganization, submitLabel: t("contacts.addOrg"), compact: true }} />
           </>
         }
