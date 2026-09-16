@@ -25,9 +25,19 @@ function RedBadge({ n, className = "" }: { n?: number; className?: string }) {
   return <span className={`inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#d64545] px-1.5 font-mono text-[10.5px] font-semibold leading-none text-white ${className}`}>{n}</span>;
 }
 
+/** 头像：有图用图，没有就是默认空头像（人形剪影） */
+function Avatar({ name, src }: { name: string; src?: string | null }) {
+  if (src) return <img src={src} alt={name} className="h-8 w-8 shrink-0 rounded-full object-cover ring-1 ring-side-line" />;
+  return (
+    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-side-hover text-side-muted ring-1 ring-side-line" aria-label={name}>
+      <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5" aria-hidden="true"><path d="M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Zm0 2c-4.4 0-8 2.3-8 5.2V21h16v-1.8c0-2.9-3.6-5.2-8-5.2Z" /></svg>
+    </span>
+  );
+}
+
 export interface SidebarLabels { collapse: string; expand: string; toggle: string }
 
-export function Sidebar({ items, initialCollapsed, labels, footer, userName }: { items: NavItem[]; initialCollapsed: boolean; labels: SidebarLabels; footer: React.ReactNode; userName: string }) {
+export function Sidebar({ items, initialCollapsed, labels, footer, userName, avatarUrl }: { items: NavItem[]; initialCollapsed: boolean; labels: SidebarLabels; footer: React.ReactNode; userName: string; avatarUrl?: string | null }) {
   const pathname = usePathname();
   const search = useSearchParams().toString();
   const current = search ? `${pathname}?${search}` : pathname;
@@ -112,10 +122,25 @@ export function Sidebar({ items, initialCollapsed, labels, footer, userName }: {
           })}
         </nav>
 
-        <div className={`flex shrink-0 items-center border-t border-side-line py-2 ${collapsed ? "justify-center px-1" : "justify-between px-4"}`}>
-          {!collapsed && <span className="truncate text-xs text-side-muted">{userName}</span>}
-          {footer}
-        </div>
+        {collapsed ? (
+          <div className="group relative flex shrink-0 justify-center border-t border-side-line py-2">
+            <Avatar name={userName} src={avatarUrl} />
+            <div className="absolute bottom-0 left-full z-20 hidden pl-1.5 group-hover:block">
+              <div className="flex min-w-[176px] flex-col gap-2 rounded-md border border-side-line bg-side p-2.5 shadow-xl">
+                <div className="truncate text-xs font-semibold text-side-text">{userName}</div>
+                {footer}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="flex shrink-0 items-center justify-between gap-2 border-t border-side-line px-3 py-2">
+            <div className="flex min-w-0 items-center gap-2">
+              <Avatar name={userName} src={avatarUrl} />
+              <span className="truncate text-xs text-side-muted">{userName}</span>
+            </div>
+            {footer}
+          </div>
+        )}
       </aside>
 
       {/* 手机底部 tab */}

@@ -27,6 +27,7 @@ export default async function AgentLayout({ children }: { children: React.ReactN
           initialCollapsed={collapsed}
           labels={{ collapse: t("nav.collapse"), expand: t("nav.expand"), toggle: t("nav.toggleGroup") }}
           userName={agent?.name ?? user.email ?? ""}
+          avatarUrl={(user.user_metadata as { avatar_url?: string } | null)?.avatar_url ?? null}
           footer={
             <div className="flex items-center gap-2">
               <LocaleSwitch />
