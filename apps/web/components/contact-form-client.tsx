@@ -1,7 +1,7 @@
 "use client";
 // 联系人 / 公司表单（客户端）：类型→公司列表联动、下拉底部固定"+ 添加公司"、邮箱域名灰字补全（Tab）、
-// 姓名首字母大写、美国号码 3-3-4、职位 datalist、常用标签一行、未保存提示。文案由服务端算好传进来。
-import { useMemo, useRef, useState } from "react";
+// 姓名首字母大写、美国号码 3-3-4、职位候选层、常用标签可点选、未保存提示。文案由服务端算好传进来。
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ORG_KINDS_FOR, emailCompletion, formatUsPhone, capitalizeName, type ContactKind } from "@newbee/core";
 
 export type Opt = { value: string; label: string };
@@ -23,11 +23,11 @@ export function EmailInput({ name, value, onChange, hint, className = "" }: { na
     <div className={`relative ${className}`}>
       <input name={name} type="email" value={value} onChange={(e) => onChange(e.target.value)} autoComplete="off" spellCheck={false}
         onKeyDown={(e) => { if (ghost && (e.key === "Tab" || e.key === "ArrowRight")) { e.preventDefault(); onChange(value + ghost); } }}
-        className={`${inputCls} font-mono`} />
+        className={`${inputCls} font-mono ${ghost ? "text-transparent caret-fg" : ""}`} />
       {ghost && (
-        <div aria-hidden className="pointer-events-none absolute inset-0 flex items-center px-3 font-mono text-sm">
-          <span className="invisible whitespace-pre">{value}</span><span className="text-muted">{ghost}</span>
-          <span className="ml-auto rounded bg-chip px-1.5 py-0.5 text-[10px] text-muted">{hint}</span>
+        <div aria-hidden className="mobile-16 pointer-events-none absolute inset-0 flex items-center px-3 font-mono text-sm">
+          <span className="whitespace-pre text-fg">{value}</span><span className="whitespace-pre text-muted">{ghost}</span>
+          <span className="ml-auto rounded bg-chip px-1.5 py-0.5 font-sans text-[10px] text-muted">{hint}</span>
         </div>
       )}
     </div>
@@ -37,6 +37,38 @@ export function EmailInput({ name, value, onChange, hint, className = "" }: { na
 /** 电话：10 位美国号码自动 3-3-4 */
 export function PhoneInput({ name, value, onChange }: { name: string; value: string; onChange: (v: string) => void }) {
   return <input name={name} type="tel" value={value} onChange={(e) => onChange(formatUsPhone(e.target.value))} autoComplete="off" className={`${inputCls} font-mono`} />;
+}
+
+/** 可选可输：候选层用网站主题色；↑↓ 选，Enter 确认，Esc 关 */
+export function SuggestInput({ name, defaultValue = "", options, onChange }: { name: string; defaultValue?: string; options: string[]; onChange?: () => void }) {
+  const [value, setValue] = useState(defaultValue);
+  const [open, setOpen] = useState(false);
+  const [hi, setHi] = useState(0);
+  const q = value.trim().toLowerCase();
+  const list = (q ? options.filter((o) => o.toLowerCase().includes(q)) : options).slice(0, 12);
+  const pick = (x: string) => { setValue(x); setOpen(false); onChange?.(); };
+  return (
+    <div className="relative">
+      <input name={name} value={value} autoComplete="off" onChange={(e) => { setValue(e.target.value); setOpen(true); setHi(0); }}
+        onFocus={() => setOpen(true)} onBlur={() => setTimeout(() => setOpen(false), 120)}
+        onKeyDown={(e) => {
+          if (!open || !list.length) return;
+          if (e.key === "ArrowDown") { e.preventDefault(); setHi((i) => (i + 1) % list.length); }
+          else if (e.key === "ArrowUp") { e.preventDefault(); setHi((i) => (i - 1 + list.length) % list.length); }
+          else if (e.key === "Enter") { e.preventDefault(); pick(list[hi]); }
+          else if (e.key === "Escape") setOpen(false);
+        }}
+        className={inputCls} />
+      {open && list.length > 0 && (
+        <ul role="listbox" className="absolute left-0 right-0 z-20 mt-1 max-h-56 overflow-y-auto rounded-md border border-line bg-surface py-1 shadow-xl">
+          {list.map((x, i) => (
+            <li key={x} role="option" aria-selected={i === hi} onMouseDown={(e) => { e.preventDefault(); pick(x); }} onMouseEnter={() => setHi(i)}
+              className={`cursor-pointer px-3 py-1.5 text-sm ${i === hi ? "bg-accent-soft text-accent-strong" : "text-fg"} ${x === value ? "font-semibold" : ""}`}>{x}</li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
 }
 
 /** 所属公司：只列当前类型对应的公司，列表滚动，底部固定"+ 添加公司"，可当场新建 */
@@ -119,8 +151,7 @@ export function ContactFormClient(p: ContactFormProps) {
   const tagInput = useRef<HTMLInputElement>(null);
   const dirty = () => p.onDirty?.();
   const tagList = tags.split(/[,，、;；]/).map((s) => s.trim()).filter(Boolean);
-  const addTag = (x: string) => { if (!tagList.includes(x)) { setTags([...tagList, x].join(", ")); dirty(); tagInput.current?.focus(); } };
-  const jtId = `jt-${p.formId ?? "c"}-${kind}`;
+  const toggleTag = (x: string) => { setTags((tagList.includes(x) ? tagList.filter((y) => y !== x) : [...tagList, x]).join(", ")); dirty(); tagInput.current?.focus(); };
 
   return (
     <form ref={p.formRef} id={p.formId} action={p.action} onChange={dirty} className="grid gap-3 sm:grid-cols-2">
@@ -130,10 +161,7 @@ export function ContactFormClient(p: ContactFormProps) {
       <F label={p.l.firstName}><input name="first_name" required value={first} onChange={(e) => setFirst(capitalizeName(e.target.value))} autoComplete="off" className={inputCls} /></F>
       <F label={p.l.lastName}><input name="last_name" value={last} onChange={(e) => setLast(capitalizeName(e.target.value))} autoComplete="off" className={inputCls} /></F>
       <F label={p.l.nameZh}><input name="name_zh" defaultValue={v("name_zh")} className={inputCls} /></F>
-      <F label={p.l.jobTitle}>
-        <input name="job_title" list={jtId} defaultValue={v("job_title")} autoComplete="off" className={inputCls} />
-        <datalist id={jtId}>{(p.jobTitles[kind] ?? []).map((x) => <option key={x} value={x} />)}</datalist>
-      </F>
+      <F label={p.l.jobTitle}><SuggestInput key={kind} name="job_title" defaultValue={v("job_title")} options={p.jobTitles[kind] ?? []} onChange={dirty} /></F>
       <F label={p.l.email}><EmailInput name="email" value={email} onChange={setEmail} hint={p.l.emailTabHint} /></F>
       <F label={p.l.phone}><PhoneInput name="phone" value={phone} onChange={setPhone} /></F>
       <F label={p.l.wechat}><input name="wechat" defaultValue={v("wechat")} className={`${inputCls} font-mono`} /></F>
@@ -145,9 +173,10 @@ export function ContactFormClient(p: ContactFormProps) {
         <F label={p.l.tags}><input ref={tagInput} name="tags" value={tags} onChange={(e) => setTags(e.target.value)} autoComplete="off" className={inputCls} /></F>
         <div className="flex items-center gap-1.5 overflow-hidden whitespace-nowrap">
           <span className="shrink-0 text-[11px] text-muted">{p.l.commonTags}</span>
-          {(p.tags[kind] ?? []).filter((x) => !tagList.includes(x)).map((x) => (
-            <button key={x} type="button" onClick={() => addTag(x)} className="shrink-0 rounded-full border border-line-strong bg-surface px-2 py-0.5 text-[11.5px] text-fg hover:border-accent hover:text-accent">{x}</button>
-          ))}
+          {(p.tags[kind] ?? []).map((x) => { const on = tagList.includes(x); return (
+            <button key={x} type="button" onClick={() => toggleTag(x)} aria-pressed={on}
+              className={`shrink-0 rounded-full border px-2 py-0.5 text-[11.5px] ${on ? "border-accent bg-accent text-accent-ink" : "border-line-strong bg-surface text-fg hover:border-accent hover:text-accent"}`}>{x}</button>
+          ); })}
         </div>
       </div>
       {!p.compact && (
@@ -212,15 +241,24 @@ export function ContactCreator({ l, contact, org }: { l: L; contact: Omit<Contac
   type Panel = "contact" | "org";
   const [open, setOpen] = useState<Panel | null>(null);
   const [dirty, setDirty] = useState<Record<Panel, boolean>>({ contact: false, org: false });
-  const [ask, setAsk] = useState<Panel | null>(null); // 想切到哪个
+  const [ask, setAsk] = useState<Panel | null | undefined>(undefined); // 想切到哪个；undefined = 没在问
   const refs = { contact: useRef<HTMLFormElement>(null), org: useRef<HTMLFormElement>(null) };
+  const box = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => { if (box.current && !box.current.contains(e.target as Node)) go(null); };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  });
 
   function go(target: Panel | null) {
     if (open && open !== target && dirty[open]) { setAsk(target); return; }
     setOpen(target === open ? null : target);
   }
-  function discard() { if (open) setDirty((d) => ({ ...d, [open]: false })); setOpen(ask); setAsk(null); }
-  function save() { if (open) refs[open].current?.requestSubmit(); setAsk(null); }
+  // 询问框里的目标可能是 null（= 关闭），所以 ask 用 undefined 表示"没在问"
+
+  function discard() { if (open) setDirty((d) => ({ ...d, [open]: false })); setOpen(ask ?? null); setAsk(undefined); }
+  function save() { if (open) refs[open].current?.requestSubmit(); setAsk(undefined); }
 
   const btn = (panel: Panel, label: string, primary: boolean) => (
     <button type="button" onClick={() => go(panel)} aria-expanded={open === panel}
@@ -228,7 +266,7 @@ export function ContactCreator({ l, contact, org }: { l: L; contact: Omit<Contac
   );
 
   return (
-    <div className="relative flex gap-2">
+    <div ref={box} className="relative flex gap-2">
       {btn("org", l.addOrgButton, false)}
       {btn("contact", l.addContactButton, true)}
       {open && (
@@ -238,13 +276,13 @@ export function ContactCreator({ l, contact, org }: { l: L; contact: Omit<Contac
             : <OrganizationFormClient key="org" {...org} formRef={refs.org} formId="new-org" onDirty={() => setDirty((d) => ({ ...d, org: true }))} />}
         </div>
       )}
-      {ask !== null && (
+      {ask !== undefined && (
         <div className="absolute right-0 top-12 z-20 flex w-80 flex-col gap-3 rounded-ui border border-line bg-surface p-4 text-sm shadow-xl">
           <p>{l.unsaved}</p>
           <div className="flex gap-2">
             <Btn type="button" onClick={save}>{l.unsavedSave}</Btn>
             <Btn type="button" variant="danger" onClick={discard}>{l.unsavedDiscard}</Btn>
-            <Btn type="button" variant="ghost" onClick={() => setAsk(null)}>{l.unsavedCancel}</Btn>
+            <Btn type="button" variant="ghost" onClick={() => setAsk(undefined)}>{l.unsavedCancel}</Btn>
           </div>
         </div>
       )}

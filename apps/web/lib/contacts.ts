@@ -21,7 +21,7 @@ export interface ContactRow {
 
 export type ContactRecord = {
   id: string; kind: string; first_name: string; last_name: string; name_zh: string | null; organization_id: string | null; job_title: string | null;
-  email: string | null; phone: string | null; wechat: string | null; tags: string[]; organizations: { name: string } | { name: string }[] | null;
+  email: string | null; phone: string | null; wechat: string | null; tags: string[]; address_line1: string | null; city: string | null; zip: string | null; organizations: { name: string } | { name: string }[] | null;
 };
 export type OrgRecord = { id: string; kind: string; name: string; email: string | null; phone: string | null };
 
@@ -29,7 +29,7 @@ const one = <T,>(x: T | T[] | null): T | null => (Array.isArray(x) ? x[0] ?? nul
 
 export async function loadContactRows(supabase: SupabaseClient, t: Translator): Promise<ContactRow[]> {
   const [{ data: cs }, { data: os }, { data: ps }] = await Promise.all([
-    supabase.from("contacts").select("id,kind,first_name,last_name,name_zh,organization_id,job_title,email,phone,wechat,tags,organizations!contacts_organization_id_fkey(name)").is("deleted_at", null).order("first_name"),
+    supabase.from("contacts").select("id,kind,first_name,last_name,name_zh,organization_id,job_title,email,phone,wechat,tags,address_line1,city,zip,organizations!contacts_organization_id_fkey(name)").is("deleted_at", null).order("first_name"),
     supabase.from("organizations").select("id,kind,name,email,phone").is("deleted_at", null).order("name"),
     supabase.from("deal_parties").select("contact_id,organization_id,deal_id").is("deleted_at", null),
   ]);
@@ -45,7 +45,7 @@ export async function loadContactRows(supabase: SupabaseClient, t: Translator): 
     return {
       id: c.id, isOrg: false, href: `/contacts/${c.id}`, name, sub, initials: initials(c.first_name, c.last_name),
       kind: c.kind, kindLabel: t(`contactKind.${c.kind}`), orgName, email: c.email, phone: c.phone, deals: dealsOf.get(c.id)?.size ?? 0,
-      search: [name, c.name_zh, c.email, c.phone, c.wechat, orgName, c.job_title, ...c.tags].filter(Boolean).join(" ").toLowerCase(),
+      search: [name, c.name_zh, c.email, c.phone, c.wechat, orgName, c.job_title, c.address_line1, c.city, c.zip, ...c.tags].filter(Boolean).join(" ").toLowerCase(),
     };
   });
   const orgs = ((os ?? []) as OrgRecord[]).map((o): ContactRow => ({

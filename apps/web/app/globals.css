@@ -57,7 +57,9 @@ button, summary, a[role="button"] {
   flex-shrink: 0;
 }
 
-/* 表单控件在手机上至少 44px 高，避免 iOS 自动放大 */
-input, select, textarea, button {
-  font-size: 16px;
+/* 手机上表单控件字号 ≥16px，避免 iOS 聚焦自动放大；桌面保持设计字号。.mobile-16 给需要和输入框对齐的覆盖层用 */
+@media (max-width: 767px) {
+  input, select, textarea, button, .mobile-16 {
+    font-size: 16px;
+  }
 }

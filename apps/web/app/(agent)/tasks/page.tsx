@@ -8,8 +8,8 @@ import { PageHeader } from "@/components/page";
 
 export const dynamic = "force-dynamic";
 
-export default async function TasksPage({ searchParams }: { searchParams: Promise<{ scope?: string }> }) {
-  const { scope } = await searchParams;
+export default async function TasksPage({ searchParams }: { searchParams: Promise<{ scope?: string; q?: string }> }) {
+  const { scope, q = "" } = await searchParams;
   const personalOnly = scope === "personal";
   const supabase = await createClient();
   const t = await getT();
@@ -19,7 +19,9 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
     supabase.from("deals").select("id,title").is("deleted_at", null).not("stage", "in", "(closed,terminated)").order("created_at", { ascending: false }),
   ]);
   type Raw = TaskRow & { deals: { title: string } | { title: string }[] | null };
-  const tasks: TaskRow[] = ((ts ?? []) as unknown as Raw[]).map((x) => ({ ...x, deal_title: Array.isArray(x.deals) ? x.deals[0]?.title : x.deals?.title }));
+  const needle = q.trim().toLowerCase();
+  const tasks: TaskRow[] = ((ts ?? []) as unknown as Raw[]).map((x) => ({ ...x, deal_title: Array.isArray(x.deals) ? x.deals[0]?.title : x.deals?.title }))
+    .filter((x) => !needle || [x.title, x.playbook_rule_id ? t.or(`task.${x.playbook_rule_id}`, x.title) : "", x.deal_title].join(" ").toLowerCase().includes(needle));
   const deals = (ds ?? []) as { id: string; title: string }[];
 
   const personal = tasks.filter((x) => !x.deal_id);
@@ -38,6 +40,12 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
           { href: "/tasks?scope=personal", label: t("tasks.scopePersonal"), count: personal.length, active: personalOnly },
         ]}
         actions={
+          <>
+          <form method="get" className="flex gap-1">
+            {personalOnly && <input type="hidden" name="scope" value="personal" />}
+            <input name="q" defaultValue={q} placeholder={t("tasks.search")} className={`${inputCls} w-56`} />
+            <Button variant="ghost" type="submit">OK</Button>
+          </form>
           <details className="relative">
             <summary className="flex h-10 cursor-pointer list-none items-center rounded-md bg-accent px-3 text-sm font-medium text-accent-ink hover:bg-accent-strong">{t("tasks.add")}</summary>
             <form action={addTask} className="absolute right-0 z-10 mt-2 flex w-[min(90vw,380px)] flex-col gap-2 rounded-ui border border-line bg-surface p-3 shadow-xl">
@@ -50,6 +58,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
               <Button type="submit">{t("tasks.addButton")}</Button>
             </form>
           </details>
+          </>
         }
       />
 
