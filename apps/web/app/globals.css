@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./fonts/misans.css";
 
 /* 颜色只从这些 token 取。各主题的 token 值由根 layout 注入（themeCss()，来自 packages/core/src/themes.ts）；
    这里的 :root 是兜底（白瓷），data-theme 没设时也能看。 */
@@ -40,8 +41,8 @@
   --color-info: var(--info);
   --color-info-bg: var(--info-bg);
   --radius-ui: var(--radius);
-  --font-sans: var(--font-inter), var(--font-noto-sc), ui-sans-serif, system-ui, "PingFang SC", "Microsoft YaHei", sans-serif;
-  --font-mono: var(--font-jetbrains), ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --font-sans: var(--font-manrope), "MiSans", ui-sans-serif, system-ui, "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-mono: var(--font-dm-mono), "MiSans", ui-monospace, "SFMono-Regular", Menlo, monospace;
 }
 
 body {

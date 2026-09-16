@@ -1,15 +1,14 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Noto_Sans_SC, JetBrains_Mono } from "next/font/google";
+import { Manrope, DM_Mono } from "next/font/google";
 import { themeCss, resolveTheme, nextSunEvent, THEME_BY_ID } from "@newbee/core";
 import { getLocale, getT } from "@/lib/i18n";
 import { getThemeSettings } from "@/lib/settings";
 import { ThemeAutoSwitch } from "@/components/theme-auto-switch";
 import "./globals.css";
 
-// 字体：英文 Inter、中文思源黑体、数据 JetBrains Mono；next/font 自托管，不走 Google 运行时请求
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
-const notoSc = Noto_Sans_SC({ subsets: ["latin"], weight: ["400", "500", "600"], variable: "--font-noto-sc", display: "swap", preload: false });
-const jetbrains = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains", display: "swap" });
+// 字体：标题 / 正文 Manrope，数据 DM Mono（next/font 自托管）；中文 MiSans 切片在 public/fonts/misans（见 scripts/fetch-misans.mjs）
+const manrope = Manrope({ subsets: ["latin"], variable: "--font-manrope", display: "swap" });
+const dmMono = DM_Mono({ subsets: ["latin"], weight: ["400", "500"], variable: "--font-dm-mono", display: "swap" });
 
 const THEME_STYLE = themeCss();
 
@@ -35,7 +34,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const next = settings.mode === "auto" ? nextSunEvent(now, settings.lat, settings.lng) : null;
 
   return (
-    <html lang={locale === "zh" ? "zh-CN" : "en"} data-theme={theme.id} className={`${inter.variable} ${notoSc.variable} ${jetbrains.variable}`}>
+    <html lang={locale === "zh" ? "zh-CN" : "en"} data-theme={theme.id} className={`${manrope.variable} ${dmMono.variable}`}>
       <head>
         <style dangerouslySetInnerHTML={{ __html: THEME_STYLE }} />
       </head>
