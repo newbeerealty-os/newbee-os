@@ -102,11 +102,11 @@ export function Sidebar({ items, initialCollapsed, labels, footer, userName, ava
                     <Icon name={item.icon} className={`h-[18px] w-[18px] shrink-0 ${active ? "" : "text-side-muted"}`} />
                     <span className="truncate">{item.label}</span>
                   </Link>
+                  <RedBadge n={item.badge} className={`ml-auto ${item.children ? "" : "mr-2.5"}`} />
                   {item.children && (
                     <button type="button" onClick={() => setOpenKey(open ? null : item.key)} aria-label={labels.toggle} aria-expanded={open}
-                      className={`ml-auto px-1.5 py-2 text-[10px] transition-transform ${open ? "rotate-90" : ""} ${active ? "" : "text-side-muted"}`}>▶</button>
+                      className={`${item.badge ? "" : "ml-auto"} w-8 py-2 text-center text-[10px] transition-transform ${open ? "rotate-90" : ""} ${active ? "" : "text-side-muted"}`}>▶</button>
                   )}
-                  <RedBadge n={item.badge} className={`mr-2.5 ${item.children ? "ml-1" : "ml-auto"}`} />
                 </div>
                 {item.children && open && (
                   <div className="mb-1.5 ml-5 mt-0.5 flex flex-col border-l border-side-line pl-1.5">
