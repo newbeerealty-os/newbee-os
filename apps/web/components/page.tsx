@@ -40,12 +40,12 @@ export interface TabDef { id: string; label: string; count?: number | null }
 export function Tabs({ base, tabs, active, param = "tab" }: { base: string; tabs: TabDef[]; active: string; param?: string }) {
   const sep = base.includes("?") ? "&" : "?";
   return (
-    <div className="-mx-4 flex gap-0.5 overflow-x-auto border-b border-line px-4">
+    <div className="-mx-4 flex gap-0.5 overflow-x-auto overflow-y-hidden px-4 shadow-[inset_0_-1px_0_var(--line)]">
       {tabs.map((tb, i) => {
         const on = tb.id === active;
         return (
           <Link key={tb.id} href={i === 0 ? base : `${base}${sep}${param}=${tb.id}`} aria-current={on ? "page" : undefined}
-            className={`-mb-px flex shrink-0 items-center gap-1.5 border-b-2 px-3 py-2.5 text-[13.5px] font-medium ${on ? "border-accent text-accent" : "border-transparent text-muted hover:text-fg"}`}>
+            className={`flex shrink-0 items-center gap-1.5 border-b-2 px-3 py-2.5 text-[13.5px] font-medium ${on ? "border-accent text-accent" : "border-transparent text-muted hover:text-fg"}`}>
             {tb.label}
             {tb.count !== undefined && tb.count !== null && <span className={`rounded-full px-1.5 py-0.5 font-mono text-[10.5px] leading-none ${on ? "bg-accent text-accent-ink" : "bg-chip text-muted"}`}>{tb.count}</span>}
           </Link>
