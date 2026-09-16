@@ -16,8 +16,8 @@ const TYPE_LABEL: Record<string, string> = { seller: "卖方", buyer: "买方", 
 export default async function DealsPage() {
   const supabase = await createClient();
   const today = todayISO();
-  const { data } = await supabase.from("deals").select("id,title,type,stage,addenda,created_at,milestones(key,label,due_date,status)").is("deleted_at", null).order("created_at", { ascending: false });
-  type Row = { id: string; title: string; type: string; stage: string; addenda: string[]; milestones: { key: string; label: string; due_date: string | null; status: string }[] };
+  const { data } = await supabase.from("deals").select("id,title,type,stage,addenda,created_at,milestones(key,label,due_date,status),tasks(id,done_at,deleted_at)").is("deleted_at", null).order("created_at", { ascending: false });
+  type Row = { id: string; title: string; type: string; stage: string; addenda: string[]; milestones: { key: string; label: string; due_date: string | null; status: string }[]; tasks: { id: string; done_at: string | null; deleted_at: string | null }[] };
   const deals = (data ?? []) as unknown as Row[];
 
   const groups = STAGE_ORDER.map((s) => ({ stage: s, deals: deals.filter((d) => d.stage === s) })).filter((g) => g.deals.length);
@@ -43,6 +43,7 @@ export default async function DealsPage() {
           <ul className="divide-y divide-zinc-100">
             {g.deals.map((d) => {
               const next = d.milestones.filter((m) => m.status === "pending" && m.due_date && m.due_date >= today).sort((a, b) => a.due_date!.localeCompare(b.due_date!))[0];
+              const open = d.tasks.filter((t) => !t.done_at && !t.deleted_at).length;
               return (
                 <li key={d.id} className="py-2">
                   <Link href={`/deals/${d.id}`} className="flex items-center justify-between gap-3">
@@ -51,6 +52,7 @@ export default async function DealsPage() {
                       <div className="mt-0.5 flex flex-wrap gap-1 text-xs text-zinc-500">
                         <Badge>{TYPE_LABEL[d.type] ?? d.type}</Badge>
                         {d.addenda.map((a) => <Badge key={a} tone="blue">{a.replace(/_addendum$/, "")}</Badge>)}
+                        <span>未完成任务 {open} 个</span>
                       </div>
                     </div>
                     {next ? (
