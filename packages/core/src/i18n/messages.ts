@@ -1,0 +1,307 @@
+// 界面词典：屏幕上看得见的文字都从这里出。key 永不改名（和 deal-fields 同规矩）。
+// 字段 / 里程碑 / 任务的 en 直接取注册表和 Playbook，保证一处为准；zh 在这里手写。
+// 后台文本（DB 值、日志、错误、prompt）不走这里，保持英文。
+import { DEAL_FIELDS } from '../schemas/deal-fields';
+import { SELLER_PLAYBOOK } from '../playbooks';
+
+export interface Message {
+  zh: string;
+  en: string;
+}
+
+const UI: Record<string, Message> = {
+  // 语言
+  'locale.zh': { zh: '中文', en: '中文' },
+  'locale.en': { zh: 'EN', en: 'EN' },
+  'meta.description': { zh: '合同即数据的交易操作系统', en: 'Contract-as-data transaction operating system' },
+
+  // 导航
+  'nav.today': { zh: '今天', en: 'Today' },
+  'nav.deals': { zh: '交易', en: 'Deals' },
+  'nav.tasks': { zh: '任务', en: 'Tasks' },
+  'nav.settings': { zh: '设置', en: 'Settings' },
+  'nav.signout': { zh: '退出', en: 'Sign out' },
+
+  // 通用
+  'common.deal': { zh: '交易', en: 'Deal' },
+  'common.empty': { zh: '空', en: 'Nothing here' },
+  'common.save': { zh: '保存', en: 'Save' },
+  'common.reset': { zh: '恢复默认', en: 'Reset' },
+  'common.delete': { zh: '删除', en: 'Delete' },
+  'common.pages': { zh: '{n} 页', en: '{n} pages' },
+  'common.internal': { zh: '(内部)', en: '(internal)' },
+  'common.markDone': { zh: '标记完成', en: 'Mark done' },
+  'common.markUndone': { zh: '标记未完成', en: 'Mark not done' },
+
+  // 相对日期
+  'rel.tbd': { zh: '未定', en: 'TBD' },
+  'rel.today': { zh: '今天', en: 'today' },
+  'rel.tomorrow': { zh: '明天', en: 'tomorrow' },
+  'rel.overdue': { zh: '逾期 {n} 天', en: '{n} days overdue' },
+  'rel.inDays': { zh: '{n} 天后', en: 'in {n} days' },
+
+  // 登录
+  'login.subtitle': { zh: '输入邮箱；有密码就填密码，没有就发登录链接', en: 'Enter your email; add a password to sign in, or leave it blank to get a magic link' },
+  'login.sent': { zh: '邮件已发出，去邮箱点链接。', en: 'Email sent. Open it and click the link.' },
+  'login.passwordPlaceholder': { zh: '密码（可留空，改发登录链接）', en: 'Password (leave blank for a magic link)' },
+  'login.wait': { zh: '请稍候…', en: 'One moment…' },
+  'login.signIn': { zh: '登录', en: 'Sign in' },
+  'login.sendLink': { zh: '发送登录链接', en: 'Send magic link' },
+
+  // /today
+  'today.title': { zh: '今天', en: 'Today' },
+  'today.summary': { zh: '{ms} 个节点 · {tasks} 个任务', en: '{ms} milestones · {tasks} tasks' },
+  'today.overdue': { zh: '逾期', en: 'Overdue' },
+  'today.today': { zh: '今天', en: 'Today' },
+  'today.next7': { zh: '未来 7 天', en: 'Next 7 days' },
+  'today.noOverdue': { zh: '没有逾期，很好。', en: 'Nothing overdue. Nice.' },
+
+  // /deals
+  'deals.title': { zh: '交易', en: 'Deals' },
+  'deals.new': { zh: '新建交易', en: 'New deal' },
+  'deals.titlePlaceholder': { zh: '标题，如：1234 Sample Dr · 卖方', en: 'Title, e.g. 1234 Sample Dr · Seller' },
+  'deals.create': { zh: '创建', en: 'Create' },
+  'deals.none': { zh: '还没有交易。建一个，然后上传合同试试。', en: 'No deals yet. Create one, then upload a contract.' },
+  'deals.next': { zh: '下一节点', en: 'Next' },
+  'deals.noNext': { zh: '无节点', en: 'No milestones' },
+  'deals.openTasks': { zh: '未完成任务 {n} 个', en: '{n} open tasks' },
+
+  // /tasks
+  'tasks.title': { zh: '任务', en: 'Tasks' },
+  'tasks.add': { zh: '添加任务', en: 'Add task' },
+  'tasks.whatToDo': { zh: '要做什么', en: 'What needs doing' },
+  'tasks.personalOption': { zh: '个人任务', en: 'Personal task' },
+  'tasks.addButton': { zh: '添加', en: 'Add' },
+  'tasks.personal': { zh: '个人', en: 'Personal' },
+
+  // /deals/[id]
+  'deal.changeStage': { zh: '改阶段', en: 'Change stage' },
+  'deal.files': { zh: '文件', en: 'Files' },
+  'deal.uploadPdf': { zh: '上传 PDF', en: 'Upload PDF' },
+  'deal.uploadHint': { zh: '上传一份已执行的合同（TREC 1-4、Amendment、Addendum…）', en: 'Upload an executed contract (TREC 1-4, Amendment, Addendum…)' },
+  'deal.extract': { zh: 'AI 抽取', en: 'AI extract' },
+  'deal.retryExtract': { zh: '重试抽取', en: 'Retry extract' },
+  'deal.pending': { zh: '待确认', en: 'To confirm' },
+  'deal.pendingHint': { zh: '确认后才会派生日期', en: 'Dates derive only after confirmation' },
+  'deal.noPending': { zh: '没有待确认的字段', en: 'Nothing to confirm' },
+  'deal.page': { zh: '第 {n} 页', en: 'p. {n}' },
+  'deal.confidence': { zh: '置信度 {n}%', en: 'confidence {n}%' },
+  'deal.confirm': { zh: '确认', en: 'Confirm' },
+  'deal.reject': { zh: '不对', en: 'Wrong' },
+  'deal.fields': { zh: '字段', en: 'Fields' },
+  'deal.derive': { zh: '派生里程碑与任务', en: 'Derive milestones & tasks' },
+  'deal.noFields': { zh: '还没有确认的字段。可以先手动填 effective_date / closing_date / option_period_days 试跑日期引擎。', en: 'No confirmed fields yet. Try entering effective_date / closing_date / option_period_days by hand to run the date engine.' },
+  'deal.valuePlaceholder': { zh: '值：2026-09-01 / 10 / 450000 / 文本', en: 'Value: 2026-09-01 / 10 / 450000 / text' },
+  'deal.manualWrite': { zh: '手动写入', en: 'Set by hand' },
+  'deal.addendaHint': { zh: '附加协议（决定 HOA / 贷款等节点是否生成）：{list}。抽取会自动写入 deals.addenda。', en: 'Addenda (decide whether HOA / financing milestones exist): {list}. Extraction writes deals.addenda automatically.' },
+  'deal.milestones': { zh: '里程碑', en: 'Milestones' },
+  'deal.noMilestones': { zh: '确认字段后点「派生里程碑与任务」', en: 'Confirm fields, then click "Derive milestones & tasks"' },
+  'deal.missingAnchor': { zh: '缺少锚点字段', en: 'Missing anchor field' },
+  'deal.tasks': { zh: '任务 · 未完成 {open} / {total}', en: 'Tasks · {open} open / {total}' },
+  'deal.noTasks': { zh: '派生后这里会按 Playbook 生成任务；已完成的任务不会被重建。', en: 'Deriving creates tasks from the Playbook; completed tasks are never recreated.' },
+  'deal.otherStage': { zh: '其他', en: 'Other' },
+
+  // /settings/language
+  'settings.language': { zh: '语言 / 翻译', en: 'Language / translations' },
+  'settings.languageHint': { zh: '改动只影响显示，存在你的账号下；留空并保存 = 用代码默认值。', en: 'Changes affect display only and are stored under your account; save an empty value to use the code default.' },
+  'settings.filter': { zh: '按 key 或文字过滤', en: 'Filter by key or text' },
+  'settings.key': { zh: 'Key', en: 'Key' },
+  'settings.default': { zh: '默认', en: 'default' },
+  'settings.overridden': { zh: '已覆盖', en: 'overridden' },
+  'settings.stale': { zh: '代码里已不存在的 key', en: 'Keys no longer in code' },
+  'settings.count': { zh: '{n} 条', en: '{n} entries' },
+
+  // 交易阶段 deals.stage
+  'stage.lead': { zh: '线索', en: 'Lead' },
+  'stage.pre': { zh: '准备中', en: 'Preparing' },
+  'stage.active': { zh: '在市', en: 'Active' },
+  'stage.offer': { zh: 'Offer', en: 'Offer' },
+  'stage.under_contract': { zh: '签约中', en: 'Under contract' },
+  'stage.closing': { zh: '过户中', en: 'Closing' },
+  'stage.closed': { zh: '已完成', en: 'Closed' },
+  'stage.terminated': { zh: '已终止', en: 'Terminated' },
+
+  // 交易类型 deals.type
+  'type.seller': { zh: '卖方', en: 'Seller' },
+  'type.buyer': { zh: '买方', en: 'Buyer' },
+  'type.lease_listing': { zh: '出租', en: 'Lease listing' },
+  'type.lease_tenant': { zh: '租客', en: 'Tenant' },
+  'type.property_mgmt': { zh: '托管', en: 'Property mgmt' },
+
+  // 文档状态 documents.status
+  'docStatus.uploaded': { zh: '已上传', en: 'Uploaded' },
+  'docStatus.extracting': { zh: '抽取中', en: 'Extracting' },
+  'docStatus.review': { zh: '待确认', en: 'To confirm' },
+  'docStatus.confirmed': { zh: '已确认', en: 'Confirmed' },
+  'docStatus.failed': { zh: '失败', en: 'Failed' },
+
+  // 字段分组 FieldDef.group
+  'group.parties': { zh: '各方', en: 'Parties' },
+  'group.money': { zh: '价格与资金', en: 'Price & funds' },
+  'group.dates': { zh: '日期', en: 'Dates' },
+  'group.property': { zh: '房屋', en: 'Property' },
+  'group.addenda': { zh: '附加协议', en: 'Addenda' },
+  'group.commission': { zh: '佣金', en: 'Commission' },
+  'group.lease': { zh: '租赁', en: 'Lease' },
+
+  // Playbook 阶段
+  'playbookStage.pre_listing': { zh: '挂牌前', en: 'Pre-listing' },
+  'playbookStage.listing_appt': { zh: '挂牌面谈', en: 'Listing appointment' },
+  'playbookStage.post_listing': { zh: '挂牌后', en: 'Post-listing' },
+  'playbookStage.offers': { zh: 'Offer', en: 'Offers' },
+  'playbookStage.under_contract': { zh: '签约中', en: 'Under contract' },
+  'playbookStage.closing': { zh: '过户', en: 'Closing' },
+  'playbookStage.after_closing': { zh: '过户后', en: 'After closing' },
+};
+
+// 字段名 zh（en = deal-fields.ts 的 label）
+const FIELD_ZH: Record<string, string> = {
+  buyer_names: '买方',
+  seller_names: '卖方',
+  listing_agent: '卖方经纪人',
+  buyer_agent: '买方经纪人',
+  listing_brokerage: '卖方经纪公司',
+  buyer_brokerage: '买方经纪公司',
+  title_company: '产权公司',
+  escrow_officer: '托管专员',
+  lender: '贷款方',
+  sales_price: '成交价 (3C)',
+  cash_portion: '现金部分 (3A)',
+  loan_amount: '贷款额 (3B)',
+  loan_type: '贷款类型',
+  seller_concessions: '卖方让步',
+  earnest_money: '定金 (Earnest Money)',
+  earnest_money_due_days: '定金交付（天）',
+  additional_earnest_money: '追加定金',
+  option_fee: 'Option 费',
+  option_period_days: 'Option 期（天）',
+  buyer_approval_days: '买方贷款审批（天）',
+  appraisal_waiver: '放弃估价条款',
+  first_met: '初次见面',
+  view_house_date: '看房 / 挂牌面谈',
+  listing_date: '挂牌日期',
+  offer_received_date: '收到 Offer',
+  effective_date: '合同生效日',
+  closing_date: '过户日',
+  possession: '交房',
+  survey_days: '测绘图交付（天）',
+  objection_days: '异议期（天）',
+  hoa_docs_delivery_days: 'HOA 文件交付（天）',
+  hoa_termination_days: 'HOA 终止权（天）',
+  lead_paint_days: '含铅油漆检查（天）',
+  property_address: '房产地址',
+  legal_description: '法定描述',
+  exclusions: '不含物品',
+  hoa_yes_no: '属于 HOA',
+  survey_new_or_existing: '测绘图（新 / 现有 T-47）',
+  addenda: '勾选的附加协议',
+  commission_pct: '佣金 %',
+  referral_pct: '推荐费 %',
+  rent: '月租',
+  deposit: '押金',
+  lease_start: '租约开始',
+  lease_end: '租约结束',
+  notice_days: '通知期（天）',
+};
+
+// 里程碑 zh（en = seller.json 的 label）
+const MS_ZH: Record<string, string> = {
+  first_met: '初次见面',
+  view_house: '看房 / 挂牌面谈',
+  listing_date: '挂牌日期',
+  offer_received: '收到 Offer',
+  effective_date: '合同生效日',
+  em_due: 'Option 费 & 定金交付',
+  option_period_end: 'Option 期截止',
+  financing_deadline: '买方贷款审批截止',
+  survey_due: '现有测绘图 & T-47 交付',
+  title_commitment_due: '产权承诺书交付',
+  objection_deadline: '产权 / 测绘异议截止',
+  hoa_docs_due: 'HOA 文件交付',
+  hoa_termination_end: 'HOA 终止权截止',
+  final_walkthrough: '最终看房',
+  closing: '过户',
+  funding: '放款',
+};
+
+// 任务标题 zh（en = seller.json 的 title）
+const TASK_ZH: Record<string, string> = {
+  'pl-01': '个人介绍手册——为什么选我',
+  'pl-02': '准备 CMA、客户待办清单、卖房流程、过户费用单',
+  'pl-03': '市场趋势、社区、可比在售、近一年成交',
+  'pl-04': '打印卖方披露、挂牌协议、FIRPTA、T-47',
+  'pl-05': '取得 HOA 文件：费用、宠物与出租限制、招牌限制、特别摊派',
+  'pl-06': '资料——为什么在售房屋需要布置',
+  'la-01': '了解客户目标',
+  'la-02': '讲解卖房流程（步骤、时间线）',
+  'la-03': '说明如何应对开放日',
+  'la-04': '说明 Option 费、定金与押金的重要性',
+  'la-05': 'FIRPTA（外籍卖方）核查',
+  'la-06': '经纪挂牌协议各方签字',
+  'la-07': '确定需要改善的地方',
+  'la-08': '查看房屋',
+  'la-09': '完成卖方披露',
+  'la-10': '讨论定价与时机策略',
+  'la-11': '建议：油漆、私人物品、照片、清洁、整理',
+  'la-12': '确定看房时间与看房说明',
+  'la-13': '提供摄像头 / 便携 WiFi 保障安全',
+  'po-01': '布置报价',
+  'po-02': '开通并分享客户端给卖方',
+  'po-03': '订购初步产权报告',
+  'po-04': '测绘图 & T-47',
+  'po-05': '录入 MLS，上传披露、Offer 说明、测绘图',
+  'po-06': '专业照片与户型图',
+  'po-07': '打印宣传单',
+  'po-08': '院牌、水、糖果、宣传单、卖方披露、钥匙盒',
+  'po-09': '通过 property blast 向经纪人推广',
+  'po-10': '社交媒体分享',
+  'po-11': '安排开放日',
+  'po-12': '制作 Just Listed & 开放日明信片',
+  'po-13': '关注市场变化、新上 / 成交房源',
+  'po-14': '开放日',
+  'po-15': '跟进看房反馈，提出价格 / 状况建议',
+  'po-16': '联系卖方：市场变化与潜在买家',
+  'of-01': '接收、审阅并比较 Offer',
+  'of-02': '联系买方贷款方核实资质',
+  'of-03': '准备还价（如适用）',
+  'of-04': '签署可接受的合同',
+  'uc-01': '在产权公司开户并递交已签合同',
+  'uc-02': '确认产权公司收到 Option 费与定金',
+  'uc-03': '洪水风险披露（如适用）',
+  'uc-04': '发送含铅油漆披露',
+  'uc-05': '泳池披露（如适用）',
+  'uc-06': '收到产权承诺书初稿 / CC&Rs',
+  'uc-07': 'HOA / 公寓 / PUD 文件已送达买方',
+  'uc-08': '与卖方讨论产权 / 托管流程',
+  'uc-09': '买方对卖方披露的接受 / 拒绝',
+  'uc-10': '审阅产权保险问题 / 除外事项',
+  'uc-11': '向产权公司发送 CDA（佣金分配单）',
+  'uc-12': '修缮完成并收齐收据',
+  'cl-01': '仔细审阅过户文件',
+  'cl-02': '与产权公司约定过户时间',
+  'cl-03': '卖方：预约停水电气',
+  'cl-04': '买方最终看房',
+  'cl-05': '陪卖方过户（带花）',
+  'cl-06': '确认放款',
+  'cl-07': '移交钥匙、遥控器、说明书',
+  'ac-01': 'MLS 标记已售，更新 CRM',
+  'ac-02': '撤除院牌、钥匙盒及其他宣传物',
+  'ac-03': '社交媒体发布成交',
+  'ac-04': '将卖方加入成交后跟进计划',
+  'ac-05': '向产权公司收取佣金',
+  'ac-06': '向经纪公司收取佣金',
+  'ac-07': '请求 Google 评价',
+};
+
+export const MESSAGES: Record<string, Message> = {
+  ...UI,
+  ...Object.fromEntries(DEAL_FIELDS.map((f) => [`field.${f.key}`, { zh: FIELD_ZH[f.key] ?? '', en: f.label }])),
+  ...Object.fromEntries(SELLER_PLAYBOOK.milestones.map((m) => [`ms.${m.key}`, { zh: MS_ZH[m.key] ?? '', en: m.label }])),
+  ...Object.fromEntries(SELLER_PLAYBOOK.tasks.map((t) => [`task.${t.id}`, { zh: TASK_ZH[t.id] ?? '', en: t.title }])),
+};
+
+/** 词典的命名空间（key 里第一个 '.' 之前），给编辑页分组用 */
+export function messageNamespace(key: string): string {
+  const i = key.indexOf('.');
+  return i === -1 ? key : key.slice(0, i);
+}

@@ -10,3 +10,4 @@ export * from './ai/extract';
 export * from './ai/classify';
 export * from './ai/prompts/extract-contract';
 export * from './playbooks';
+export * from './i18n';
