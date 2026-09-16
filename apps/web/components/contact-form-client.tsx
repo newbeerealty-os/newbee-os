@@ -1,7 +1,7 @@
 "use client";
 // 联系人 / 公司表单（客户端）：类型→公司列表联动、下拉底部固定"+ 添加公司"、邮箱域名灰字补全（Tab）、
 // 姓名首字母大写、美国号码 3-3-4、职位候选层、常用标签可点选、未保存提示。文案由服务端算好传进来。
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { ORG_KINDS_FOR, emailCompletion, formatUsPhone, capitalizeName, type ContactKind } from "@newbee/core";
 
 export type Opt = { value: string; label: string };
@@ -171,7 +171,7 @@ export function ContactFormClient(p: ContactFormProps) {
       </div>
       <div className="flex flex-col gap-1 sm:col-span-2">
         <F label={p.l.tags}><input ref={tagInput} name="tags" value={tags} onChange={(e) => setTags(e.target.value)} autoComplete="off" className={inputCls} /></F>
-        <div className="flex items-center gap-1.5 overflow-hidden whitespace-nowrap">
+        <div className="flex max-h-[26px] flex-wrap items-center gap-x-1.5 gap-y-4 overflow-hidden">
           <span className="shrink-0 text-[11px] text-muted">{p.l.commonTags}</span>
           {(p.tags[kind] ?? []).map((x) => { const on = tagList.includes(x); return (
             <button key={x} type="button" onClick={() => toggleTag(x)} aria-pressed={on}
@@ -243,13 +243,6 @@ export function ContactCreator({ l, contact, org }: { l: L; contact: Omit<Contac
   const [dirty, setDirty] = useState<Record<Panel, boolean>>({ contact: false, org: false });
   const [ask, setAsk] = useState<Panel | null | undefined>(undefined); // 想切到哪个；undefined = 没在问
   const refs = { contact: useRef<HTMLFormElement>(null), org: useRef<HTMLFormElement>(null) };
-  const box = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!open) return;
-    const onDown = (e: MouseEvent) => { if (box.current && !box.current.contains(e.target as Node)) go(null); };
-    document.addEventListener("mousedown", onDown);
-    return () => document.removeEventListener("mousedown", onDown);
-  });
 
   function go(target: Panel | null) {
     if (open && open !== target && dirty[open]) { setAsk(target); return; }
@@ -258,6 +251,7 @@ export function ContactCreator({ l, contact, org }: { l: L; contact: Omit<Contac
   // 询问框里的目标可能是 null（= 关闭），所以 ask 用 undefined 表示"没在问"
 
   function discard() { if (open) setDirty((d) => ({ ...d, [open]: false })); setOpen(ask ?? null); setAsk(undefined); }
+  // 保存：提交表单；成功后服务端会跳转到新建的记录，面板随之消失（失败会报错、面板留着）
   function save() { if (open) refs[open].current?.requestSubmit(); setAsk(undefined); }
 
   const btn = (panel: Panel, label: string, primary: boolean) => (
@@ -266,18 +260,19 @@ export function ContactCreator({ l, contact, org }: { l: L; contact: Omit<Contac
   );
 
   return (
-    <div ref={box} className="relative flex gap-2">
+    <div className="relative flex gap-2">
       {btn("org", l.addOrgButton, false)}
       {btn("contact", l.addContactButton, true)}
+      {open && <div className="fixed inset-0 z-10" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); go(null); }} aria-hidden />}
       {open && (
-        <div className={`absolute right-0 top-12 z-10 rounded-ui border border-line bg-surface p-4 shadow-xl ${open === "contact" ? "w-[min(92vw,640px)]" : "w-[min(92vw,520px)]"}`}>
+        <div className={`absolute right-0 top-12 z-20 rounded-ui border border-line bg-surface p-4 shadow-xl ${open === "contact" ? "w-[min(92vw,640px)]" : "w-[min(92vw,520px)]"}`}>
           {open === "contact"
             ? <ContactFormClient key="contact" {...contact} formRef={refs.contact} formId="new-contact" onDirty={() => setDirty((d) => ({ ...d, contact: true }))} />
             : <OrganizationFormClient key="org" {...org} formRef={refs.org} formId="new-org" onDirty={() => setDirty((d) => ({ ...d, org: true }))} />}
         </div>
       )}
       {ask !== undefined && (
-        <div className="absolute right-0 top-12 z-20 flex w-80 flex-col gap-3 rounded-ui border border-line bg-surface p-4 text-sm shadow-xl">
+        <div className="absolute right-0 top-12 z-30 flex w-80 flex-col gap-3 rounded-ui border-2 border-accent bg-surface p-4 text-sm shadow-xl">
           <p>{l.unsaved}</p>
           <div className="flex gap-2">
             <Btn type="button" onClick={save}>{l.unsavedSave}</Btn>
