@@ -1,6 +1,6 @@
 // 联系人总表的数据：人 + 公司合成一种行，按页签 / 搜索过滤；交易数从 deal_parties 数出来。
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { CONTACT_TABS, contactName, initials, type Translator } from "@newbee/core";
+import { CONTACT_TABS, CONTACT_KINDS, JOB_TITLE_PRESETS, TAG_PRESETS, rankSuggestions, contactName, initials, type Translator } from "@newbee/core";
 
 export interface ContactRow {
   id: string;
@@ -54,6 +54,24 @@ export async function loadContactRows(supabase: SupabaseClient, t: Translator): 
     search: [o.name, o.email, o.phone].filter(Boolean).join(" ").toLowerCase(),
   }));
   return [...people, ...orgs].sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/** 职位 / 标签的候选：你用过的按次数在前，房产预设在后（按联系人类型） */
+export async function loadSuggestions(supabase: SupabaseClient): Promise<{ jobTitles: Record<string, string[]>; tags: Record<string, string[]> }> {
+  const { data } = await supabase.from("contacts").select("kind,job_title,tags").is("deleted_at", null);
+  const jt: Record<string, Record<string, number>> = {};
+  const tg: Record<string, Record<string, number>> = {};
+  for (const c of (data ?? []) as { kind: string; job_title: string | null; tags: string[] }[]) {
+    if (c.job_title) (jt[c.kind] ??= {})[c.job_title] = ((jt[c.kind] ??= {})[c.job_title] ?? 0) + 1;
+    for (const x of c.tags ?? []) (tg[c.kind] ??= {})[x] = ((tg[c.kind] ??= {})[x] ?? 0) + 1;
+  }
+  const jobTitles: Record<string, string[]> = {};
+  const tags: Record<string, string[]> = {};
+  for (const k of CONTACT_KINDS) {
+    jobTitles[k] = rankSuggestions(JOB_TITLE_PRESETS[k], jt[k] ?? {});
+    tags[k] = rankSuggestions(TAG_PRESETS[k], tg[k] ?? {});
+  }
+  return { jobTitles, tags };
 }
 
 export function filterRows(rows: ContactRow[], tab: string | null, q: string): ContactRow[] {

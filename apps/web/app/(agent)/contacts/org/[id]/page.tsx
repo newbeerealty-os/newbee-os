@@ -7,7 +7,9 @@ import { getT } from "@/lib/i18n";
 import { updateOrganization, deleteOrganization } from "@/lib/actions/contacts";
 import { Section, Empty, Badge, Button } from "@/components/ui";
 import { PageHeader } from "@/components/page";
-import { OrganizationForm, InitialsAvatar } from "@/components/contact-forms";
+import { InitialsAvatar } from "@/components/contact-forms";
+import { OrganizationFormClient } from "@/components/contact-form-client";
+import { contactFormLabels, contactFormOptions } from "@/lib/contact-form-props";
 
 export const dynamic = "force-dynamic";
 
@@ -61,7 +63,7 @@ export default async function OrganizationPage({ params, searchParams }: { param
 
       {edit ? (
         <Section title={t("contact.edit")}>
-          <OrganizationForm t={t} action={updateOrganization.bind(null, id)} contacts={staff.map((p) => ({ id: p.id, name: contactName(p) }))} values={o} submitLabel={t("contact.save")} />
+          <OrganizationFormClient l={contactFormLabels(t)} orgKindOptions={contactFormOptions(t).orgKindOptions} contacts={staff.map((p) => ({ value: p.id, label: contactName(p) }))} values={o} action={updateOrganization.bind(null, id)} submitLabel={t("contact.save")} />
         </Section>
       ) : (
         <>

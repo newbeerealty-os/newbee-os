@@ -101,6 +101,77 @@ export const PartyInputSchema = z.object({
 }).refine((p) => (p.contact_id === null) !== (p.organization_id === null), { message: 'contact_id or organization_id, exactly one' });
 export type PartyInput = z.infer<typeof PartyInputSchema>;
 
+// ---------- 表单里的预设与输入辅助 ----------
+/** 选了联系人类型后，所属公司下拉只列这些公司类型 */
+export const ORG_KINDS_FOR: Record<ContactKind, OrgKind[]> = {
+  client: ['other', 'property_management', 'hoa', 'vendor'],
+  agent: ['brokerage'],
+  broker: ['brokerage'],
+  title_lending: ['title_company', 'lender'],
+  vendor: ['vendor'],
+  tc: ['brokerage', 'other'],
+  attorney: ['law_firm'],
+  other: ['hoa', 'property_management', 'other', 'vendor', 'brokerage'],
+};
+
+/** 房地产交易里常见的职位，按类型；用得多的会排到前面（rankSuggestions） */
+export const JOB_TITLE_PRESETS: Record<ContactKind, string[]> = {
+  client: ['Investor', 'Homeowner', 'Engineer', 'Physician', 'Business Owner', 'Retired'],
+  agent: ['Realtor', 'Listing Agent', "Buyer's Agent", 'Broker Associate', 'Team Lead', 'Leasing Agent'],
+  broker: ['Broker', 'Managing Broker', 'Designated Broker', 'Broker / Owner'],
+  title_lending: ['Escrow Officer', 'Escrow Assistant', 'Closer', 'Title Examiner', 'Business Development', 'Loan Officer', 'Mortgage Broker', 'Loan Processor', 'Underwriter'],
+  vendor: ['Home Inspector', 'Appraiser', 'Surveyor', 'Photographer', 'Stager', 'General Contractor', 'Handyman', 'Roofer', 'HVAC Technician', 'Plumber', 'Electrician', 'Cleaner', 'Mover', 'Landscaper', 'Insurance Agent', 'Pest Control'],
+  tc: ['Transaction Coordinator', 'Listing Coordinator', 'Closing Coordinator'],
+  attorney: ['Real Estate Attorney', 'Paralegal', 'Legal Assistant'],
+  other: ['HOA Manager', 'Property Manager', 'Community Manager', 'Leasing Agent', 'Assistant'],
+};
+
+export const TAG_PRESETS: Record<ContactKind, string[]> = {
+  client: ['首购', '换房', '投资客', '现金', 'VA', 'FHA', '中文优先', '微信联系', '老客户', '推荐来源', 'Zillow', '开放日', '急', '观望'],
+  agent: ['合作过', '好沟通', '双语', '团队', '对方经纪'],
+  broker: ['自己公司', '对方公司', '双语'],
+  title_lending: ['常用', '中文服务', '快', '远程签约', '双语'],
+  vendor: ['常用', '靠谱', '便宜', '中文服务', '周末可约', '有执照'],
+  tc: ['自己的', '对方的', '双语'],
+  attorney: ['常用', '中文服务', '双语'],
+  other: ['HOA', '物业', '介绍人', '亲友'],
+};
+
+/** 高频邮箱域名（前缀匹配，先命中先用） */
+export const EMAIL_DOMAINS = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'icloud.com', 'qq.com', '163.com', '126.com', 'live.com', 'aol.com', 'msn.com', 'me.com', 'foxmail.com', 'sina.com', 'protonmail.com'];
+
+/** 输入 "1233@g" → 返回还没打的部分 "mail.com"；不该补全时返回 '' */
+export function emailCompletion(value: string): string {
+  const at = value.lastIndexOf('@');
+  if (at === -1) return '';
+  const typed = value.slice(at + 1).toLowerCase();
+  if (!typed) return '';
+  const hit = EMAIL_DOMAINS.find((d) => d.startsWith(typed) && d !== typed);
+  return hit ? hit.slice(typed.length) : '';
+}
+
+/** 美国号码（正好 10 位）→ 3-3-4，边输边格式化；超过 10 位或带 + 的原样返回 */
+export function formatUsPhone(raw: string): string {
+  const s = raw.trim();
+  if (s.startsWith('+')) return s;
+  const digits = s.replace(/\D/g, '');
+  if (digits.length > 10) return digits;
+  return [digits.slice(0, 3), digits.slice(3, 6), digits.slice(6, 10)].filter(Boolean).join('-');
+}
+
+/** 每个词（含 - 和 ' 分隔）首字母大写，其余保留（McDonald 不动） */
+export function capitalizeName(s: string): string {
+  return s.replace(/(^|[\s'-])([a-z])/g, (_, sep: string, ch: string) => sep + ch.toUpperCase());
+}
+
+/** 用过的按次数降序 → 没用过的预设按原顺序；去重 */
+export function rankSuggestions(presets: string[], used: Record<string, number>): string[] {
+  const usedSorted = Object.entries(used).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([k]) => k);
+  const out: string[] = [];
+  for (const x of [...usedSorted, ...presets]) if (!out.includes(x)) out.push(x);
+  return out;
+}
+
 // ---------- 展示辅助 ----------
 const isCjk = (s: string) => /[㐀-鿿]/.test(s);
 

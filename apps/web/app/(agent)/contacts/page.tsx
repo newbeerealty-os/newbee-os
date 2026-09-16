@@ -3,11 +3,13 @@ import Link from "next/link";
 import { CONTACT_TABS } from "@newbee/core";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n";
-import { loadContactRows, filterRows } from "@/lib/contacts";
-import { createContact, createOrganization } from "@/lib/actions/contacts";
+import { loadContactRows, filterRows, loadSuggestions } from "@/lib/contacts";
+import { createContact, createOrganization, createOrganizationInline } from "@/lib/actions/contacts";
+import { contactFormLabels, contactFormOptions, defaultKindsForTab } from "@/lib/contact-form-props";
 import { Section, Empty, Badge, inputCls, Button } from "@/components/ui";
 import { PageHeader, Tabs } from "@/components/page";
-import { ContactForm, OrganizationForm, InitialsAvatar } from "@/components/contact-forms";
+import { InitialsAvatar } from "@/components/contact-forms";
+import { ContactCreator } from "@/components/contact-form-client";
 
 export const dynamic = "force-dynamic";
 
@@ -16,9 +18,12 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
   const tab = CONTACT_TABS.some((x) => x.id === rawTab) ? rawTab! : null;
   const supabase = await createClient();
   const t = await getT();
-  const all = await loadContactRows(supabase, t);
+  const [all, suggestions] = await Promise.all([loadContactRows(supabase, t), loadSuggestions(supabase)]);
   const rows = filterRows(all, tab, q);
-  const orgs = all.filter((r) => r.isOrg).map((r) => ({ id: r.id, name: r.name }));
+  const orgs = all.filter((r) => r.isOrg).map((r) => ({ id: r.id, name: r.name, kind: r.kind }));
+  const l = contactFormLabels(t);
+  const opts = contactFormOptions(t);
+  const defaults = defaultKindsForTab(tab);
 
   const qs = (patch: Record<string, string | null>) => {
     const p = new URLSearchParams();
@@ -47,18 +52,9 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
               <input name="q" defaultValue={q} placeholder={t("contacts.search")} className={`${inputCls} w-64`} />
               <Button variant="ghost" type="submit">OK</Button>
             </form>
-            <details className="relative">
-              <summary className="flex h-10 cursor-pointer list-none items-center rounded-md border border-line-strong bg-surface px-3 text-sm font-medium text-fg hover:bg-chip">{t("contacts.addOrg")}</summary>
-              <div className="absolute right-0 z-10 mt-2 w-[min(92vw,520px)] rounded-ui border border-line bg-surface p-4 shadow-xl">
-                <OrganizationForm t={t} action={createOrganization} submitLabel={t("contacts.addOrg")} compact />
-              </div>
-            </details>
-            <details className="relative">
-              <summary className="flex h-10 cursor-pointer list-none items-center rounded-md bg-accent px-3 text-sm font-medium text-accent-ink hover:bg-accent-strong">{t("contacts.add")}</summary>
-              <div className="absolute right-0 z-10 mt-2 w-[min(92vw,620px)] rounded-ui border border-line bg-surface p-4 shadow-xl">
-                <ContactForm t={t} action={createContact} orgs={orgs} submitLabel={t("contacts.add")} compact />
-              </div>
-            </details>
+            <ContactCreator l={l}
+              contact={{ l, ...opts, orgs, jobTitles: suggestions.jobTitles, tags: suggestions.tags, defaultKind: defaults.contact, action: createContact, submitLabel: t("contacts.add"), compact: true, createOrg: createOrganizationInline }}
+              org={{ l, orgKindOptions: opts.orgKindOptions, defaultKind: defaults.org, action: createOrganization, submitLabel: t("contacts.addOrg"), compact: true }} />
           </>
         }
       />

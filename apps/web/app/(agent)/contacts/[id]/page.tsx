@@ -4,10 +4,13 @@ import { notFound } from "next/navigation";
 import { contactName, initials, CONTACT_TABS } from "@newbee/core";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n";
-import { updateContact, deleteContact } from "@/lib/actions/contacts";
+import { updateContact, deleteContact, createOrganizationInline } from "@/lib/actions/contacts";
+import { loadSuggestions } from "@/lib/contacts";
+import { contactFormLabels, contactFormOptions } from "@/lib/contact-form-props";
+import { ContactFormClient } from "@/components/contact-form-client";
 import { Section, Empty, Badge, Button } from "@/components/ui";
 import { PageHeader, Tabs } from "@/components/page";
-import { ContactForm, InitialsAvatar } from "@/components/contact-forms";
+import { InitialsAvatar } from "@/components/contact-forms";
 
 export const dynamic = "force-dynamic";
 const TABS = ["profile", "deals", "notes"] as const;
@@ -23,10 +26,11 @@ export default async function ContactPage({ params, searchParams }: { params: Pr
   const org = (Array.isArray(c.organizations) ? c.organizations[0] : c.organizations) as { id: string; name: string } | null;
   const referrer = (Array.isArray(c.referrer) ? c.referrer[0] : c.referrer) as { id: string; first_name: string; last_name: string; name_zh: string | null } | null;
 
-  const [{ data: parties }, { data: orgs }, { data: people }] = await Promise.all([
+  const [{ data: parties }, { data: orgs }, { data: people }, suggestions] = await Promise.all([
     supabase.from("deal_parties").select("id,role,side,is_primary,deals(id,title,stage,type)").eq("contact_id", id).is("deleted_at", null),
-    supabase.from("organizations").select("id,name").is("deleted_at", null).order("name"),
+    supabase.from("organizations").select("id,name,kind").is("deleted_at", null).order("name"),
     supabase.from("contacts").select("id,first_name,last_name,name_zh").is("deleted_at", null).neq("id", id).order("first_name"),
+    loadSuggestions(supabase),
   ]);
   type Party = { id: string; role: string; side: string; is_primary: boolean; deals: { id: string; title: string; stage: string; type: string } | { id: string; title: string; stage: string; type: string }[] | null };
   const dealRows = ((parties ?? []) as unknown as Party[]).map((p) => ({ ...p, deal: Array.isArray(p.deals) ? p.deals[0] : p.deals })).filter((p) => p.deal);
@@ -74,9 +78,10 @@ export default async function ContactPage({ params, searchParams }: { params: Pr
 
       {edit ? (
         <Section title={t("contact.edit")}>
-          <ContactForm t={t} action={updateContact.bind(null, id)} orgs={(orgs ?? []) as { id: string; name: string }[]}
-            contacts={((people ?? []) as { id: string; first_name: string; last_name: string; name_zh: string | null }[]).map((p) => ({ id: p.id, name: contactName(p) }))}
-            values={{ ...c, tags: c.tags as string[] }} submitLabel={t("contact.save")} />
+          <ContactFormClient l={contactFormLabels(t)} {...contactFormOptions(t)} orgs={(orgs ?? []) as { id: string; name: string; kind: string }[]}
+            contacts={((people ?? []) as { id: string; first_name: string; last_name: string; name_zh: string | null }[]).map((p) => ({ value: p.id, label: contactName(p) }))}
+            jobTitles={suggestions.jobTitles} tags={suggestions.tags} values={{ ...c, tags: c.tags as string[] }}
+            action={updateContact.bind(null, id)} submitLabel={t("contact.save")} createOrg={createOrganizationInline} />
         </Section>
       ) : (
         <>

@@ -51,6 +51,16 @@ export async function createOrganization(formData: FormData) {
   redirect(`/contacts/org/${data.id}`);
 }
 
+/** 联系人表单里"+ 添加公司"用：建完把 id 回给客户端，不跳转 */
+export async function createOrganizationInline(input: { kind: string; name: string }): Promise<{ id: string; name: string; kind: string }> {
+  const { supabase, userId } = await me();
+  const parsed = OrganizationInputSchema.parse({ kind: input.kind, name: input.name });
+  const { data, error } = await supabase.from("organizations").insert({ ...parsed, agent_id: userId }).select("id,name,kind").single();
+  if (error) throw error;
+  revalidatePath("/contacts");
+  return data as { id: string; name: string; kind: string };
+}
+
 export async function updateOrganization(id: string, formData: FormData) {
   const { supabase } = await me();
   const input = OrganizationInputSchema.parse(obj(formData));
