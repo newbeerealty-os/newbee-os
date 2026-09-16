@@ -18,7 +18,8 @@ export default async function OrganizationPage({ params, searchParams }: { param
   const supabase = await createClient();
   const t = await getT();
 
-  const { data: o } = await supabase.from("organizations").select("*").eq("id", id).is("deleted_at", null).single();
+  const { data: o, error: oErr } = await supabase.from("organizations").select("*").eq("id", id).is("deleted_at", null).maybeSingle();
+  if (oErr) throw new Error(`organization query failed: ${oErr.message}`);
   if (!o) notFound();
   const [{ data: people }, { data: parties }] = await Promise.all([
     supabase.from("contacts").select("id,first_name,last_name,name_zh,job_title,email,phone,kind").eq("organization_id", id).is("deleted_at", null).order("first_name"),

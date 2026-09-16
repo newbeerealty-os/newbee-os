@@ -29,13 +29,19 @@ export default async function ContactPage({ params, searchParams }: { params: Pr
   const today = todayISO();
   const now = new Date();
 
-  const { data: c } = await supabase.from("contacts").select("*, organizations!contacts_organization_id_fkey(id,name), referrer:contacts!contacts_referred_by_contact_id_fkey(id,first_name,last_name,name_zh,kind,job_title)").eq("id", id).is("deleted_at", null).single();
+  const { data: c, error: cErr } = await supabase.from("contacts").select("*").eq("id", id).is("deleted_at", null).maybeSingle();
+  if (cErr) throw new Error(`contact query failed: ${cErr.message}`);
   if (!c) notFound();
-  const org = one(c.organizations) as { id: string; name: string } | null;
-  const referrer = one(c.referrer) as Person | null;
+  const [{ data: orgRow }, { data: refRow }] = await Promise.all([
+    c.organization_id ? supabase.from("organizations").select("id,name").eq("id", c.organization_id).maybeSingle() : Promise.resolve({ data: null }),
+    c.referred_by_contact_id ? supabase.from("contacts").select("id,first_name,last_name,name_zh,kind,job_title").eq("id", c.referred_by_contact_id).maybeSingle() : Promise.resolve({ data: null }),
+  ]);
+  const org = orgRow as { id: string; name: string } | null;
+  const referrer = refRow as Person | null;
 
   // 我参与的交易
-  const { data: myParties } = await supabase.from("deal_parties").select("id,role,side,is_primary,deal_id,deals(id,title,stage,type,updated_at)").eq("contact_id", id).is("deleted_at", null);
+  const { data: myParties, error: pErr } = await supabase.from("deal_parties").select("id,role,side,is_primary,deal_id,deals(id,title,stage,type,updated_at)").eq("contact_id", id).is("deleted_at", null);
+  if (pErr) throw new Error(`deal_parties query failed: ${pErr.message}`);
   type MyParty = { id: string; role: string; side: string; is_primary: boolean; deal_id: string; deals: One<Deal> };
   const mine = ((myParties ?? []) as unknown as MyParty[]).map((p) => ({ ...p, deal: one(p.deals) })).filter((p) => p.deal) as (MyParty & { deal: Deal })[];
   const dealIds = [...new Set(mine.map((p) => p.deal_id))];
