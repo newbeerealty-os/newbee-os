@@ -3,6 +3,7 @@ export * from './schemas/deal-fields';
 export * from './schemas/playbook';
 export * from './schemas/extraction';
 export * from './schemas/contacts';
+export * from './schemas/relations';
 export * from './engines/dates';
 export * from './engines/milestones';
 export * from './engines/playbook';

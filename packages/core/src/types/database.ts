@@ -44,6 +44,64 @@ export type Database = {
         }
         Relationships: []
       }
+      contact_links: {
+        Row: {
+          agent_id: string
+          contact_id: string
+          created_at: string
+          deleted_at: string | null
+          id: string
+          notes: string | null
+          related_contact_id: string
+          relation: Database["public"]["Enums"]["contact_relation"]
+          updated_at: string
+        }
+        Insert: {
+          agent_id: string
+          contact_id: string
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          notes?: string | null
+          related_contact_id: string
+          relation?: Database["public"]["Enums"]["contact_relation"]
+          updated_at?: string
+        }
+        Update: {
+          agent_id?: string
+          contact_id?: string
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          notes?: string | null
+          related_contact_id?: string
+          relation?: Database["public"]["Enums"]["contact_relation"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contact_links_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contact_links_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contact_links_related_contact_id_fkey"
+            columns: ["related_contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contacts: {
         Row: {
           address_line1: string | null
@@ -822,6 +880,17 @@ export type Database = {
         | "attorney"
         | "other"
       contact_language: "zh" | "en"
+      contact_relation:
+        | "spouse"
+        | "partner"
+        | "parent"
+        | "child"
+        | "sibling"
+        | "relative"
+        | "friend"
+        | "assistant"
+        | "colleague"
+        | "other"
       deal_stage:
         | "lead"
         | "pre"
@@ -1014,6 +1083,18 @@ export const Constants = {
         "other",
       ],
       contact_language: ["zh", "en"],
+      contact_relation: [
+        "spouse",
+        "partner",
+        "parent",
+        "child",
+        "sibling",
+        "relative",
+        "friend",
+        "assistant",
+        "colleague",
+        "other",
+      ],
       deal_stage: [
         "lead",
         "pre",
