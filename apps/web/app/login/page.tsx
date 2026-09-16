@@ -14,7 +14,7 @@ export default async function LoginPage() {
         </div>
         <LocaleSwitch />
       </div>
-      <LoginForm labels={{ passwordPlaceholder: t("login.passwordPlaceholder"), wait: t("login.wait"), signIn: t("login.signIn"), sendLink: t("login.sendLink"), sent: t("login.sent") }} />
+      <LoginForm labels={{ passwordPlaceholder: t("login.passwordPlaceholder"), wait: t("login.wait"), signIn: t("login.signIn"), sendLink: t("login.sendLink"), sent: t("login.sent"), emailTabHint: t("contact.emailTabHint") }} />
     </main>
   );
 }

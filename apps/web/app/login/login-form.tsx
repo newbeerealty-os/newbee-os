@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { EmailInput } from "@/components/email-input";
 
 // 两种登录：
 // 1) 邮箱 magic link（无密码）。注意 Supabase 自带邮件有每小时几封的限额，之后换成自定义 SMTP（Resend）。
@@ -12,6 +13,7 @@ export interface LoginLabels {
   signIn: string;
   sendLink: string;
   sent: string;
+  emailTabHint: string;
 }
 
 export function LoginForm({ labels }: { labels: LoginLabels }) {
@@ -41,7 +43,7 @@ export function LoginForm({ labels }: { labels: LoginLabels }) {
   if (state === "sent") return <p className="rounded-md bg-ok-bg p-4 text-ok">{labels.sent}</p>;
   return (
     <form onSubmit={password ? signInPassword : sendLink} className="flex flex-col gap-3">
-      <input id="email" type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className={input} />
+      <EmailInput id="email" name="email" required autoComplete="email" value={email} onChange={setEmail} placeholder="you@example.com" hint={labels.emailTabHint} inputClassName={input} textClassName="text-base" />
       <input id="password" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={labels.passwordPlaceholder} className={input} />
       <button disabled={state === "sending"} className="h-12 rounded-md bg-accent font-medium text-accent-ink disabled:opacity-60">
         {state === "sending" ? labels.wait : password ? labels.signIn : labels.sendLink}

@@ -2,7 +2,8 @@
 // 联系人 / 公司表单（客户端）：类型→公司列表联动、下拉底部固定"+ 添加公司"、邮箱域名灰字补全（Tab）、
 // 姓名首字母大写、美国号码 3-3-4、职位候选层、常用标签可点选、未保存提示。文案由服务端算好传进来。
 import { useMemo, useRef, useState } from "react";
-import { ORG_KINDS_FOR, emailCompletion, formatUsPhone, capitalizeName, type ContactKind } from "@newbee/core";
+import { ORG_KINDS_FOR, formatUsPhone, capitalizeName, type ContactKind } from "@newbee/core";
+import { EmailInput } from "@/components/email-input";
 
 export type Opt = { value: string; label: string };
 export type OrgOpt = { id: string; name: string; kind: string };
@@ -15,24 +16,6 @@ const F = ({ label, children, className = "" }: { label: string; children: React
 const Btn = ({ children, variant = "primary", ...rest }: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "primary" | "ghost" | "danger" }) => (
   <button {...rest} className={`h-10 rounded-md px-3 text-sm font-medium disabled:opacity-50 ${variant === "primary" ? "bg-accent text-accent-ink hover:bg-accent-strong" : variant === "danger" ? "border border-danger/40 text-danger hover:bg-danger-bg" : "border border-line-strong text-fg hover:bg-chip"} ${rest.className ?? ""}`}>{children}</button>
 );
-
-/** 邮箱：@ 后灰字补全，Tab 接受 */
-export function EmailInput({ name, value, onChange, hint, className = "" }: { name: string; value: string; onChange: (v: string) => void; hint: string; className?: string }) {
-  const ghost = emailCompletion(value);
-  return (
-    <div className={`relative ${className}`}>
-      <input name={name} type="email" value={value} onChange={(e) => onChange(e.target.value)} autoComplete="off" spellCheck={false}
-        onKeyDown={(e) => { if (ghost && (e.key === "Tab" || e.key === "ArrowRight")) { e.preventDefault(); onChange(value + ghost); } }}
-        className={`${inputCls} font-mono ${ghost ? "text-transparent caret-fg" : ""}`} />
-      {ghost && (
-        <div aria-hidden className="mobile-16 pointer-events-none absolute inset-0 flex items-center px-3 font-mono text-sm">
-          <span className="whitespace-pre text-fg">{value}</span><span className="whitespace-pre text-muted">{ghost}</span>
-          <span className="ml-auto rounded bg-chip px-1.5 py-0.5 font-sans text-[10px] text-muted">{hint}</span>
-        </div>
-      )}
-    </div>
-  );
-}
 
 /** 电话：10 位美国号码自动 3-3-4 */
 export function PhoneInput({ name, value, onChange }: { name: string; value: string; onChange: (v: string) => void }) {
@@ -162,7 +145,7 @@ export function ContactFormClient(p: ContactFormProps) {
       <F label={p.l.lastName}><input name="last_name" value={last} onChange={(e) => setLast(capitalizeName(e.target.value))} autoComplete="off" className={inputCls} /></F>
       <F label={p.l.nameZh}><input name="name_zh" defaultValue={v("name_zh")} className={inputCls} /></F>
       <F label={p.l.jobTitle}><SuggestInput key={kind} name="job_title" defaultValue={v("job_title")} options={p.jobTitles[kind] ?? []} onChange={dirty} /></F>
-      <F label={p.l.email}><EmailInput name="email" value={email} onChange={setEmail} hint={p.l.emailTabHint} /></F>
+      <F label={p.l.email}><EmailInput name="email" value={email} onChange={setEmail} hint={p.l.emailTabHint} inputClassName={`${inputCls} font-mono`} textClassName="font-mono text-sm" /></F>
       <F label={p.l.phone}><PhoneInput name="phone" value={phone} onChange={setPhone} /></F>
       <F label={p.l.wechat}><input name="wechat" defaultValue={v("wechat")} className={`${inputCls} font-mono`} /></F>
       <div className="grid grid-cols-2 gap-3">
@@ -214,7 +197,7 @@ export function OrganizationFormClient(p: OrganizationFormProps) {
     <form ref={p.formRef} id={p.formId} action={p.action} onChange={() => p.onDirty?.()} className="grid gap-3 sm:grid-cols-2">
       <F label={p.l.kind}><select name="kind" defaultValue={v("kind") || p.defaultKind || "brokerage"} className={inputCls}>{p.orgKindOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></F>
       <F label={p.l.name}><input name="name" required defaultValue={v("name")} className={inputCls} /></F>
-      <F label={p.l.email}><EmailInput name="email" value={email} onChange={setEmail} hint={p.l.emailTabHint} /></F>
+      <F label={p.l.email}><EmailInput name="email" value={email} onChange={setEmail} hint={p.l.emailTabHint} inputClassName={`${inputCls} font-mono`} textClassName="font-mono text-sm" /></F>
       <F label={p.l.phone}><PhoneInput name="phone" value={phone} onChange={setPhone} /></F>
       {!p.compact && (
         <>
