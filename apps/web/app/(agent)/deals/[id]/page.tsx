@@ -1,9 +1,12 @@
 // /deals/[id] —— 一笔交易的全部，按选项卡：概览 / 文件 / 待确认 / 字段 / 里程碑 / 任务
 // 上传 → 抽取 → 确认 → 派生 的闭环都在这一页。
 import { notFound } from "next/navigation";
-import { DEAL_FIELDS, FIELD_BY_KEY, ADDENDA } from "@newbee/core";
+import Link from "next/link";
+import { DEAL_FIELDS, FIELD_BY_KEY, ADDENDA, PARTY_ROLES, PARTY_SIDES, contactName, initials } from "@newbee/core";
 import { createClient } from "@/lib/supabase/server";
 import { uploadDocument, extractDocument, confirmField, rejectField, setField, deriveDeal, setStage } from "@/lib/actions/deals";
+import { addParty, removeParty } from "@/lib/actions/contacts";
+import { InitialsAvatar } from "@/components/contact-forms";
 import { getT } from "@/lib/i18n";
 import { DEAL_STAGES } from "@/lib/nav";
 import { todayISO, relDays, money } from "@/lib/format";
@@ -14,7 +17,7 @@ export const dynamic = "force-dynamic";
 
 const DOC_TONE: Record<string, "zinc" | "blue" | "green" | "amber" | "red"> = { uploaded: "zinc", extracting: "blue", review: "amber", confirmed: "green", failed: "red" };
 const GROUPS = ["parties", "money", "dates", "property", "addenda", "commission", "lease"];
-const TABS = ["overview", "files", "pending", "fields", "milestones", "tasks"] as const;
+const TABS = ["overview", "parties", "files", "pending", "fields", "milestones", "tasks"] as const;
 
 type FieldRow = { id: string; key: string; value_text: string | null; value_num: number | null; value_date: string | null; source_page: number | null; source_quote: string | null; confidence: number | null; confirmed_at: string | null; source_doc_id: string | null };
 type DocRow = { id: string; file_name: string | null; doc_type: string | null; status: string; error: string | null; uploaded_at: string; page_count: number | null };
@@ -37,11 +40,14 @@ export default async function DealPage({ params, searchParams }: { params: Promi
   const { data: deal } = await supabase.from("deals").select("id,title,type,stage,addenda,created_at").eq("id", id).is("deleted_at", null).single();
   if (!deal) notFound();
 
-  const [{ data: docs }, { data: fields }, { data: ms }, { data: ts }] = await Promise.all([
+  const [{ data: docs }, { data: fields }, { data: ms }, { data: ts }, { data: ps }, { data: cs }, { data: os }] = await Promise.all([
     supabase.from("documents").select("id,file_name,doc_type,status,error,uploaded_at,page_count").eq("deal_id", id).is("deleted_at", null).order("uploaded_at", { ascending: false }),
     supabase.from("deal_fields_current").select("id,key,value_text,value_num,value_date,source_page,source_quote,confidence,confirmed_at,source_doc_id").eq("deal_id", id),
     supabase.from("milestones").select("id,key,label,due_date,due_time,status,client_visible").eq("deal_id", id).order("due_date", { ascending: true, nullsFirst: false }),
     supabase.from("tasks").select("id,title,due_date,done_at,deal_id,stage,playbook_rule_id").eq("deal_id", id).is("deleted_at", null).order("due_date", { ascending: true, nullsFirst: false }),
+    supabase.from("deal_parties").select("id,role,side,is_primary,notes,contact_id,organization_id,contacts(id,first_name,last_name,name_zh,email,phone,job_title,organizations!contacts_organization_id_fkey(name)),organizations(id,name,email,phone)").eq("deal_id", id).is("deleted_at", null).order("created_at"),
+    supabase.from("contacts").select("id,first_name,last_name,name_zh,kind").is("deleted_at", null).order("first_name"),
+    supabase.from("organizations").select("id,name,kind").is("deleted_at", null).order("name"),
   ]);
   const documents = (docs ?? []) as DocRow[];
   const allFields = (fields ?? []) as FieldRow[];
@@ -49,6 +55,18 @@ export default async function DealPage({ params, searchParams }: { params: Promi
   const confirmed = allFields.filter((f) => f.confirmed_at);
   const milestones = (ms ?? []) as MsRow[];
   const tasks = (ts ?? []) as (TaskRow & { stage: string | null })[];
+  type One<T> = T | T[] | null;
+  const one = <T,>(x: One<T>): T | null => (Array.isArray(x) ? x[0] ?? null : x);
+  type PartyRow = { id: string; role: string; side: string; is_primary: boolean; notes: string | null; contact_id: string | null; organization_id: string | null;
+    contacts: One<{ id: string; first_name: string; last_name: string; name_zh: string | null; email: string | null; phone: string | null; job_title: string | null; organizations: One<{ name: string }> }>;
+    organizations: One<{ id: string; name: string; email: string | null; phone: string | null }> };
+  const parties = ((ps ?? []) as unknown as PartyRow[]).map((p) => {
+    const c = one(p.contacts); const o = one(p.organizations);
+    return { ...p, name: c ? contactName(c) : o?.name ?? "", sub: c ? [c.name_zh, c.job_title, one(c.organizations)?.name].filter(Boolean).join(" · ") : t("contacts.company"),
+      email: c?.email ?? o?.email ?? null, phone: c?.phone ?? o?.phone ?? null, href: c ? `/contacts/${c.id}` : o ? `/contacts/org/${o.id}` : "#", av: c ? initials(c.first_name, c.last_name) : initials(o?.name ?? "?") };
+  });
+  const people = (cs ?? []) as { id: string; first_name: string; last_name: string; name_zh: string | null; kind: string }[];
+  const orgs = (os ?? []) as { id: string; name: string; kind: string }[];
   const base = `/deals/${id}`;
   const backTo = tab === "overview" ? base : `${base}?tab=${tab}`;
 
@@ -91,6 +109,7 @@ export default async function DealPage({ params, searchParams }: { params: Promi
 
       <Tabs base={base} active={tab} tabs={[
         { id: "overview", label: t("tab.overview") },
+        { id: "parties", label: t("deal.tab.parties"), count: parties.length },
         { id: "files", label: t("deal.files"), count: documents.length },
         { id: "pending", label: t("deal.pending"), count: pending.length },
         { id: "fields", label: t("deal.fields"), count: confirmed.length },
@@ -119,6 +138,56 @@ export default async function DealPage({ params, searchParams }: { params: Promi
             )}
           </Section>
         </>
+      )}
+
+      {tab === "parties" && (
+        <Section title={t("deal.tab.parties")} right={<span className="font-mono text-xs text-muted">{parties.length}</span>}>
+          {parties.length === 0 ? <Empty>{t("parties.none")}</Empty> : (
+            <div className="flex flex-col gap-4">
+              {PARTY_SIDES.map((side) => {
+                const list = parties.filter((p) => p.side === side);
+                if (!list.length) return null;
+                return (
+                  <div key={side}>
+                    <div className="mb-1 font-mono text-[10.5px] font-semibold uppercase tracking-widest text-muted">{t(`partySide.${side}`)}</div>
+                    <ul className="divide-y divide-line">
+                      {list.map((p) => (
+                        <li key={p.id} className="flex flex-wrap items-center gap-3 py-2">
+                          <Link href={p.href} className="flex min-w-0 flex-1 items-center gap-2.5">
+                            <InitialsAvatar text={p.av} size="sm" />
+                            <span className="min-w-0"><span className="block truncate text-sm font-medium text-fg">{p.name}</span>{p.sub && <span className="block truncate text-[11.5px] text-muted">{p.sub}</span>}</span>
+                          </Link>
+                          <Badge tone="blue">{t(`partyRole.${p.role}`)}</Badge>
+                          {p.is_primary && <Badge tone="green">{t("parties.primary")}</Badge>}
+                          <span className="hidden gap-3 font-mono text-xs text-muted md:flex">{p.email && <a href={`mailto:${p.email}`} className="hover:underline">{p.email}</a>}{p.phone && <a href={`tel:${p.phone}`} className="hover:underline">{p.phone}</a>}</span>
+                          <form action={removeParty.bind(null, id, p.id, `${base}?tab=parties`)}><button className="text-xs text-muted hover:text-danger">{t("parties.remove")}</button></form>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          <form action={addParty.bind(null, id)} className="mt-4 grid gap-2 border-t border-line pt-3 sm:grid-cols-[1.6fr_1.2fr_1fr_auto_auto] sm:items-end">
+            <input type="hidden" name="back" value={`${base}?tab=parties`} />
+            <label className="flex flex-col gap-1 text-xs text-muted">{t("parties.who")}
+              <select name="who" required className={inputCls} defaultValue="">
+                <option value="" disabled>—</option>
+                <optgroup label={t("contacts.person")}>{people.map((p) => <option key={p.id} value={`c:${p.id}`}>{contactName(p)}{p.name_zh ? ` · ${p.name_zh}` : ""}</option>)}</optgroup>
+                <optgroup label={t("contacts.company")}>{orgs.map((o) => <option key={o.id} value={`o:${o.id}`}>{o.name}</option>)}</optgroup>
+              </select>
+            </label>
+            <label className="flex flex-col gap-1 text-xs text-muted">{t("parties.role")}
+              <select name="role" className={inputCls} defaultValue="buyer">{PARTY_ROLES.map((r) => <option key={r} value={r}>{t(`partyRole.${r}`)}</option>)}</select>
+            </label>
+            <label className="flex flex-col gap-1 text-xs text-muted">{t("parties.side")}
+              <select name="side" className={inputCls} defaultValue=""><option value="">{t("parties.autoSide")}</option>{PARTY_SIDES.map((sd) => <option key={sd} value={sd}>{t(`partySide.${sd}`)}</option>)}</select>
+            </label>
+            <label className="flex h-10 items-center gap-2 text-sm"><input type="checkbox" name="is_primary" className="accent-accent" />{t("parties.primary")}</label>
+            <Button type="submit">{t("parties.add")}</Button>
+          </form>
+        </Section>
       )}
 
       {tab === "files" && (
