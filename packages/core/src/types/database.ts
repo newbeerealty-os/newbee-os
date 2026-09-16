@@ -401,6 +401,47 @@ export type Database = {
           },
         ]
       }
+      ui_strings: {
+        Row: {
+          agent_id: string
+          created_at: string
+          deleted_at: string | null
+          en: string | null
+          id: string
+          key: string
+          updated_at: string
+          zh: string | null
+        }
+        Insert: {
+          agent_id: string
+          created_at?: string
+          deleted_at?: string | null
+          en?: string | null
+          id?: string
+          key: string
+          updated_at?: string
+          zh?: string | null
+        }
+        Update: {
+          agent_id?: string
+          created_at?: string
+          deleted_at?: string | null
+          en?: string | null
+          id?: string
+          key?: string
+          updated_at?: string
+          zh?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ui_strings_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       deal_fields_current: {
