@@ -29,7 +29,7 @@ const one = <T,>(x: T | T[] | null): T | null => (Array.isArray(x) ? x[0] ?? nul
 
 export async function loadContactRows(supabase: SupabaseClient, t: Translator): Promise<ContactRow[]> {
   const [{ data: cs }, { data: os }, { data: ps }] = await Promise.all([
-    supabase.from("contacts").select("id,kind,first_name,last_name,name_zh,organization_id,job_title,email,phone,wechat,tags,organizations(name)").is("deleted_at", null).order("first_name"),
+    supabase.from("contacts").select("id,kind,first_name,last_name,name_zh,organization_id,job_title,email,phone,wechat,tags,organizations!contacts_organization_id_fkey(name)").is("deleted_at", null).order("first_name"),
     supabase.from("organizations").select("id,kind,name,email,phone").is("deleted_at", null).order("name"),
     supabase.from("deal_parties").select("contact_id,organization_id,deal_id").is("deleted_at", null),
   ]);
