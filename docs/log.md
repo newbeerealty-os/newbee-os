@@ -14,3 +14,8 @@
 - 做了：/deals 每笔交易标题下显示"未完成任务 N 个"（一条查询嵌 tasks，页面内计数）；真机验证显示 62 个；test 25/25、typecheck 通过
 - 卡在：
 - 明天：把 setField / confirmField 的类型判断收回 core（统一走 toFieldColumns + FIELD_BY_KEY），否则 "10 days" 这类输入会静默让 option_period_end 变 null
+
+## Day 3
+- 做了：中英双语全套——core 词典 + makeT + 覆盖测试（34/34）；ui_strings 表（0002 已上线）；cookie + agents.settings.locale 记住选择；导航/登录页切换按钮；5 个页面、字段名、里程碑、任务标题按 key 翻译显示（库里仍英文）；/settings/language 编辑页可改中英并恢复默认；真机手测通过
+- 卡在：
+- 明天：把 setField / confirmField 的类型判断收回 core（统一走 toFieldColumns + FIELD_BY_KEY）；之后加 buyer Playbook 时 i18n 测试会逼着补翻译
