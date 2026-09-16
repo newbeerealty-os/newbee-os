@@ -8,7 +8,7 @@ const NAV = [
   { href: "/today", key: "nav.today" },
   { href: "/deals", key: "nav.deals" },
   { href: "/tasks", key: "nav.tasks" },
-  { href: "/settings/language", key: "nav.settings" },
+  { href: "/settings/theme", key: "nav.settings" },
 ];
 
 export default async function AgentLayout({ children }: { children: React.ReactNode }) {

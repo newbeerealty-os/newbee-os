@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { saveUiString, resetUiString } from "@/lib/actions/ui-strings";
 import { getT } from "@/lib/i18n";
 import { Section, Button, Badge, inputCls } from "@/components/ui";
+import { SettingsTabs } from "@/components/settings-tabs";
 
 export const dynamic = "force-dynamic";
 
@@ -29,11 +30,12 @@ export default async function LanguageSettingsPage({ searchParams }: { searchPar
 
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-4">
+      <h1 className="text-xl font-semibold">{t("settings.title")}</h1>
+      <SettingsTabs active="/settings/language" />
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h1 className="text-xl font-semibold">{t("settings.language")}</h1>
+        <p className="text-sm text-muted">{t("settings.languageHint")}</p>
         <span className="text-xs text-muted">{t("settings.count", { n: keys.length })}</span>
       </div>
-      <p className="text-sm text-muted">{t("settings.languageHint")}</p>
 
       <form method="get" className="flex gap-2">
         <input name="q" defaultValue={q} placeholder={t("settings.filter")} className={inputCls} />
