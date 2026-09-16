@@ -50,6 +50,12 @@ body {
   font-family: var(--font-sans);
 }
 
+/* 按钮文字永不换行、不被 flex 压扁：空间不够就整个按钮换到下一排，而不是字竖排 */
+button, summary, a[role="button"] {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 /* 表单控件在手机上至少 44px 高，避免 iOS 自动放大 */
 input, select, textarea, button {
   font-size: 16px;

@@ -29,7 +29,7 @@ export default async function AgentLayout({ children }: { children: React.ReactN
           userName={agent?.name ?? user.email ?? ""}
           avatarUrl={(user.user_metadata as { avatar_url?: string } | null)?.avatar_url ?? null}
           footer={
-            <div className="flex items-center gap-2">
+            <div className="flex shrink-0 items-center gap-2">
               <LocaleSwitch />
               <form action="/auth/signout" method="post"><button className="text-xs text-side-muted hover:text-side-text">{t("nav.signout")}</button></form>
             </div>
