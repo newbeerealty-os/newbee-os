@@ -12,6 +12,7 @@ export const SIDEBAR_COOKIE = "sidebar"; // "1" = 收起
 const ICONS: Record<NavItem["icon"], React.ReactNode> = {
   today: <><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></>,
   deals: <><path d="M3 7h6l2 2h10v10H3z" /><path d="M3 7V5h6" /></>,
+  contacts: <><circle cx="9" cy="8" r="3.5" /><path d="M2.5 19c0-3.3 2.9-5.5 6.5-5.5s6.5 2.2 6.5 5.5" /><circle cx="17" cy="9" r="2.5" /><path d="M16 13.5c3 0 5.5 1.9 5.5 4.5" /></>,
   tasks: <><rect x="3" y="3" width="18" height="18" rx="3" /><path d="m8 12 3 3 5-6" /></>,
   settings: <><path d="M4 7h10M18 7h2M4 17h4M12 17h8" /><circle cx="16" cy="7" r="2" /><circle cx="10" cy="17" r="2" /></>,
 };
