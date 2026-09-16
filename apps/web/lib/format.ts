@@ -1,4 +1,4 @@
-import { daysUntil } from "@newbee/core";
+import { daysUntil, type Translator } from "@newbee/core";
 
 export function todayISO(tz = process.env.APP_TIMEZONE ?? "America/Chicago"): string {
   // 用本地时区的"今天"，避免 UTC 半夜提前一天
@@ -7,13 +7,13 @@ export function todayISO(tz = process.env.APP_TIMEZONE ?? "America/Chicago"): st
   return `${get("year")}-${get("month")}-${get("day")}`;
 }
 
-export function relDays(date: string | null, today: string): string {
-  if (!date) return "未定";
+export function relDays(date: string | null, today: string, t: Translator): string {
+  if (!date) return t("rel.tbd");
   const n = daysUntil(date, today);
-  if (n === 0) return "今天";
-  if (n === 1) return "明天";
-  if (n < 0) return `逾期 ${-n} 天`;
-  return `${n} 天后`;
+  if (n === 0) return t("rel.today");
+  if (n === 1) return t("rel.tomorrow");
+  if (n < 0) return t("rel.overdue", { n: -n });
+  return t("rel.inDays", { n });
 }
 
 export function money(n: number | null | undefined): string {
