@@ -31,6 +31,7 @@ export async function updateContact(id: string, formData: FormData) {
   if (error) throw error;
   revalidatePath("/contacts");
   revalidatePath(`/contacts/${id}`);
+  redirect(`/contacts/${id}`); // 保存后回到详情页
 }
 
 export async function deleteContact(id: string) {
@@ -68,6 +69,7 @@ export async function updateOrganization(id: string, formData: FormData) {
   if (error) throw error;
   revalidatePath("/contacts");
   revalidatePath(`/contacts/org/${id}`);
+  redirect(`/contacts/org/${id}`);
 }
 
 export async function deleteOrganization(id: string) {
