@@ -97,7 +97,7 @@ export default async function DealPage({ params, searchParams }: { params: Promi
         actions={
           <>
             <form action={setStage.bind(null, id)} className="flex items-center gap-2">
-              <select name="stage" defaultValue={deal.stage} className={`${inputCls} w-36`}>
+              <select key={deal.stage} name="stage" defaultValue={deal.stage} className={`${inputCls} w-36`}>
                 {DEAL_STAGES.map((s) => <option key={s} value={s}>{t(`stage.${s}`)}</option>)}
               </select>
               <Button variant="ghost" type="submit">{t("deal.changeStage")}</Button>
