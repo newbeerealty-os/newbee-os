@@ -58,7 +58,7 @@ export function PlanForm({ initial, l, action }: { initial: CommissionPlan; l: P
       {(["splitMode", "splitPreCap", "splitPostCap", "capAmount", "capYearStart", "perDealFee", "perDealFeeLease", "perDealFeePostCap", "perDealFeeCap", "perDealFeeAfterCap", "eoFee", "eoCap", "royaltyPct", "royaltyCap", "teamPct", "teamCap", "teamBasis"] as const).map((k) => <input key={k} type="hidden" name={k} value={String(plan[k])} />)}
 
       <section className="rounded-ui border border-line bg-surface">
-        <div className="flex items-center justify-between gap-3 px-4 py-2.5"><span className="text-sm font-semibold">{l.presets}</span>{applied && <span className="text-sm text-ok">{l.presetApplied}</span>}</div>
+        <div className="flex items-center justify-between gap-3 px-4 py-2.5"><span className="text-sm font-semibold">{l.presets}</span><span className="flex items-center gap-3 text-sm">{applied && <span className="text-ok">{l.presetApplied}</span>}<Button className="px-4">{l.save}</Button></span></div>
         <div className="grid gap-2 border-t border-line p-3 sm:grid-cols-2 lg:grid-cols-4">
           {PLAN_PRESET_IDS.map((id) => (
             <button key={id} type="button" onClick={() => { setPlan((p) => applyPreset(p, id)); setApplied(id); setDraft({}); }}
@@ -126,7 +126,6 @@ export function PlanForm({ initial, l, action }: { initial: CommissionPlan; l: P
           </div>
         </Mod>
       </div>
-      <div><Button className="px-4">{l.save}</Button></div>
     </form>
   );
 }

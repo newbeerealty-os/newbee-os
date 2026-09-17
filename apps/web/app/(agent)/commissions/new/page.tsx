@@ -33,7 +33,7 @@ export default async function NewCommissionPage({ searchParams }: { searchParams
       <PageHeader crumbs={[{ label: t("nav.commissions"), href: "/commissions" }, { label: kind === "referral" ? t("comm.newReferral") : t("comm.new") }]} title={kind === "referral" ? t("comm.newReferral") : t("comm.new")} />
       <CommissionForm l={commissionLabels(t)} plan={plan} ytd={ytd} kind={kind} sideOptions={sideOptions(t)}
         {...options}
-        values={values} fees={[] as CustomFee[]} action={saveCommission.bind(null, null)} back={sp.back} submitLabel={t("comm.save")} prefillHint={prefillHint} />
+        card={{ title: t("comm.detail") }} values={values} fees={[] as CustomFee[]} action={saveCommission.bind(null, null)} back={sp.back} submitLabel={t("comm.save")} prefillHint={prefillHint} />
     </div>
   );
 }

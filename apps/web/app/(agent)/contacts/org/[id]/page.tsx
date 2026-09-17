@@ -67,9 +67,7 @@ export default async function OrganizationPage({ params, searchParams }: { param
       />
 
       {edit ? (
-        <Section title={t("contact.edit")}>
-          <OrganizationFormClient l={contactFormLabels(t)} orgKindOptions={contactFormOptions(t).orgKindOptions} contacts={staff.map((p) => ({ value: p.id, label: contactName(p) }))} values={o} action={updateOrganization.bind(null, id)} submitLabel={t("contact.save")} />
-        </Section>
+        <OrganizationFormClient card={t("contact.edit")} l={contactFormLabels(t)} orgKindOptions={contactFormOptions(t).orgKindOptions} contacts={staff.map((p) => ({ value: p.id, label: contactName(p) }))} values={o} action={updateOrganization.bind(null, id)} submitLabel={t("contact.save")} />
       ) : (
         <>
           <Section title={t("contact.tab.profile")}>

@@ -452,7 +452,6 @@ const UI: Record<string, Message> = {
   'comm.to': { zh: '到', en: 'To' },
   'comm.both': { zh: '双方', en: 'Both' },
   'comm.detail': { zh: '佣金明细', en: 'Commission detail' },
-  'comm.edit': { zh: '编辑佣金', en: 'Edit commission' },
   'comm.delete': { zh: '删除', en: 'Delete' },
   'comm.deleteConfirm': { zh: '删除这条佣金记录？', en: 'Delete this commission record?' },
   'comm.save': { zh: '保存', en: 'Save' },

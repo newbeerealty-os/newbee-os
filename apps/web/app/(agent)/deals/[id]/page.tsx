@@ -94,23 +94,23 @@ export default async function DealPage({ params, searchParams }: { params: Promi
     const addLabel = other && has(mySide) && !has(other) ? `${t("comm.addOtherSide")} · ${t(`commSide.${other}`)}` : t("comm.new");
     const hrefOf = (c: { id: string }) => `${backTo}&c=${c.id}`;
     const lockDeal = { id, label: `${deal.title} · ${t(`type.${deal.type}`)}` };
+    const card = {
+      title: t("nav.commissions"),
+      right: <span className="font-mono text-sm text-muted">{t("comm.r.nci")} {money(nci)}</span>,
+      above: commissions.length > 0 ? <CommissionChips rows={commissions} selectedId={selected?.id ?? null} hrefOf={hrefOf} addHref={`${backTo}&c=new&side=${addSide}`} addLabel={addLabel} t={t} /> : undefined,
+    };
     let form: React.ReactNode;
     if (selected) {
-      form = <CommissionForm l={l} plan={plan} ytd={ytdBefore(plan, all, selected)} kind={selected.kind} sideOptions={sideOptions(t)} {...options} lockDeal={lockDeal}
+      form = <CommissionForm l={l} plan={plan} ytd={ytdBefore(plan, all, selected)} kind={selected.kind} sideOptions={sideOptions(t)} {...options} lockDeal={lockDeal} card={card}
         values={{ ...selected, deal: undefined, contact: undefined, partner_contact: undefined, partner_org: undefined, computed: undefined, fees: undefined } as unknown as Record<string, string | number | null>}
         fees={selected.fees} action={saveCommission.bind(null, selected.id)} back={hrefOf(selected)} submitLabel={t("comm.save")}
         deleteAction={deleteCommission.bind(null, selected.id, backTo)} deleteLabels={{ delete: t("comm.delete"), confirm: t("comm.deleteConfirm") }} />;
     } else {
       const pre = await prefillFromDeal(supabase, id, deal.type, rawSide || addSide);
-      form = <CommissionForm l={l} plan={plan} ytd={ytdFor(plan, all)} kind="deal" sideOptions={sideOptions(t)} {...options} lockDeal={lockDeal}
+      form = <CommissionForm l={l} plan={plan} ytd={ytdFor(plan, all)} kind="deal" sideOptions={sideOptions(t)} {...options} lockDeal={lockDeal} card={card}
         values={pre.values} fees={[]} action={saveCommission.bind(null, null)} back={backTo} submitLabel={t("comm.save")} prefillHint={pre.prefilled ? t("comm.fromDeal") : undefined} />;
     }
-    commissionTab = (
-      <Section title={t("nav.commissions")} right={<span className="font-mono text-sm text-muted">{t("comm.r.nci")} {money(nci)}</span>}>
-        {commissions.length > 0 && <CommissionChips rows={commissions} selectedId={selected?.id ?? null} hrefOf={hrefOf} addHref={`${backTo}&c=new&side=${addSide}`} addLabel={addLabel} t={t} />}
-        <div className={commissions.length > 0 ? "border-t border-line pt-4" : ""}>{form}</div>
-      </Section>
-    );
+    commissionTab = form;
   }
 
   const openTasks = tasks.filter((x) => !x.done_at);

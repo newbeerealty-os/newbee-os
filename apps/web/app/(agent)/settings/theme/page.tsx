@@ -74,7 +74,7 @@ export default async function ThemeSettingsPage() {
       </div>
 
       <form action={saveTheme} className="flex flex-col gap-4">
-        <Section title={t("settings.mode")}>
+        <Section title={t("settings.mode")} right={<Button type="submit">{t("common.save")}</Button>}>
           <div className="grid gap-2 sm:grid-cols-3">
             {MODES.map((m) => (
               <label key={m} className="flex cursor-pointer items-center gap-2 rounded-ui border border-line px-3 py-2 text-sm has-[:checked]:border-accent has-[:checked]:bg-accent-soft">
@@ -105,7 +105,6 @@ export default async function ThemeSettingsPage() {
           </div>
         </Section>
 
-        <div><Button type="submit">{t("common.save")}</Button></div>
       </form>
     </div>
   );

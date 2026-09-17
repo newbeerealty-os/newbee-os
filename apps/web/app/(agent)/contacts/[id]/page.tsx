@@ -151,12 +151,10 @@ export default async function ContactPage({ params, searchParams }: { params: Pr
         <Section title={pl2.photos}>
           <PhotoGallery contactId={id} photos={photos} avatarPhotoId={c.avatar_photo_id ?? null} hasAvatar={!!c.avatar_path} l={pl2} />
         </Section>
-        <Section title={t("contact.edit")}>
-          <ContactFormClient l={contactFormLabels(t)} {...contactFormOptions(t)} orgs={(orgs ?? []) as { id: string; name: string; kind: string }[]}
+          <ContactFormClient card={t("contact.edit")} l={contactFormLabels(t)} {...contactFormOptions(t)} orgs={(orgs ?? []) as { id: string; name: string; kind: string }[]}
             contacts={((people ?? []) as Person[]).map((p) => ({ value: p.id, label: contactName(p) }))}
             jobTitles={suggestions.jobTitles} tags={suggestions.tags} sources={suggestions.sources} values={{ ...c, tags: c.tags as string[] }}
             action={updateContact.bind(null, id)} submitLabel={t("contact.save")} createOrg={createOrganizationInline} />
-        </Section>
         </>
       ) : (
         <div className="grid gap-4 lg:grid-cols-[1fr_1.15fr]">

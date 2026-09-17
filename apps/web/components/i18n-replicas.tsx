@@ -220,7 +220,7 @@ export const REPLICAS: Record<string, (T: TFn, hidden: string) => React.ReactNod
       </Card>
       <div className="flex flex-wrap items-center gap-2"><b className="text-base">1234 Sample Pl · {T("commSide.listing")}</b><span className="text-xs text-accent">{T("nav.commissions")}</span><span className="flex-1" /><Btn ghost>{T("comm.f.deal")}</Btn><Btn ghost>{T("comm.delete")}</Btn></div>
       <div className="grid gap-3 md:grid-cols-[1fr_1fr]">
-        <Card title={T("comm.detail")}>
+        <Card title={T("comm.detail")} right={<span className="flex items-center gap-2"><span className="text-muted">{T("comm.delete")}</span><Btn>{T("comm.save")}</Btn></span>}>
           <div className="grid grid-cols-[6rem_1fr] items-center gap-x-2 gap-y-1.5 text-xs">
             <span className="text-muted">{T("comm.f.deal")}</span><Input>1234 Sample Pl</Input>
             <span className="text-muted">{T("comm.f.side")}</span><Input>{T("commSide.listing")}</Input>
@@ -236,7 +236,6 @@ export const REPLICAS: Record<string, (T: TFn, hidden: string) => React.ReactNod
             <span className="text-muted">{T("comm.f.paidAt")}</span><Input>—</Input>
             <span className="text-muted">{T("comm.f.notes")}</span><Input>…</Input>
           </div>
-          <div className="mt-2 flex justify-end gap-1"><Btn ghost>{T("comm.edit")}</Btn><Btn>{T("comm.save")}</Btn></div>
         </Card>
         <Card title={T("comm.r.gci")} right="$13,500">
           {[["comm.r.referralOut", "($3,375)"], ["comm.r.brokerSplit", "($3,037.50)"], ["comm.r.brokerPre", "70% · $2,500"], ["comm.r.brokerPost", "100% · $537.50"], ["comm.r.royalty", "($810)"], ["comm.r.team", "($0)"], ["comm.r.perDealFee", "($540)"], ["comm.r.eoFee", "($0)"], ["comm.r.total", "($7,762.50)"]].map(([k, v]) => <div key={k} className="flex justify-between border-b border-line py-1 text-xs"><span>{T(k)}</span><span className="font-mono">{v}</span></div>)}
@@ -245,10 +244,9 @@ export const REPLICAS: Record<string, (T: TFn, hidden: string) => React.ReactNod
           <div className="flex justify-between text-xs text-muted"><span>{T("comm.r.capAfter")}</span><span className="font-mono">$10,600 / $16,000</span></div>
         </Card>
       </div>
-      <Card title={T("nav.commissions")} right={<>{T("comm.r.nci")} $8,910</>}>
+      <Card title={T("nav.commissions")} right={<span className="flex items-center gap-2"><span>{T("comm.r.nci")} $8,910</span><span className="text-muted">{T("comm.delete")}</span><Btn>{T("comm.save")}</Btn></span>}>
         <div className="flex flex-wrap gap-2 border-b border-line pb-2 text-xs"><span className="rounded-full bg-accent px-3 py-1 font-medium text-accent-ink">● {T("commSide.listing")} · 3% · $8,910 · {T("commStatus.pending")}</span><span className="rounded-full border border-dashed border-line-strong px-3 py-1 text-muted">+ {T("comm.addOtherSide")} · {T("commSide.buyer")}</span><span className="rounded-full border border-dashed border-line-strong px-3 py-1 text-muted">+ {T("comm.new")}</span></div>
         <div className="mt-2 grid grid-cols-[6rem_1fr] items-center gap-x-2 gap-y-1.5 text-xs"><span className="text-muted">{T("comm.f.deal")}</span><Input>1234 Sample Pl · {T("type.seller")}</Input><span className="text-muted">{T("comm.f.side")}</span><Input>{T("commSide.listing")}</Input></div>
-        <div className="mt-2 flex items-center justify-between"><Btn>{T("comm.save")}</Btn><span className="text-xs text-muted">{T("comm.delete")}</span></div>
       </Card>
       <Card title={T("comm.referralsOf")} right={T("comm.newReferral")}><div className="py-2 text-center text-muted">{T("comm.noReferrals")}</div></Card>
       <Hidden title={h} items={[T("comm.none"), T("comm.deleteConfirm")]} />
@@ -258,7 +256,7 @@ export const REPLICAS: Record<string, (T: TFn, hidden: string) => React.ReactNod
     <div className="flex flex-col gap-3">
       <Tabs items={[T("settings.commission"), T("settings.language"), T("settings.theme")]} />
       <div className="text-xs text-muted">{T("plan.hint")}</div>
-      <Card title={T("plan.presets")} right={T("plan.presetApplied")}>
+      <Card title={T("plan.presets")} right={<span className="flex items-center gap-2"><span className="text-ok">{T("plan.presetApplied")}</span><Btn>{T("common.save")}</Btn></span>}>
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">{["perDeal", "annual", "exp", "kw", "real", "fathom", "tiered", "remax"].map((id, i) => <div key={id} className={`rounded-md border px-2 py-1.5 ${i === 0 ? "border-accent bg-accent-soft" : "border-line-strong"}`}><div className="text-xs font-medium">{T(`plan.preset.${id}`)}</div><div className="text-[11px] text-muted">{T(`plan.preset.${id}.desc`)}</div></div>)}</div>
       </Card>
       <Card title={T("plan.perDeal")} right={<Chip tone="info">{T("plan.module.on")}</Chip>}><div className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">{[["plan.perDealFee", "$540"], ["plan.perDealFeeLease", "$125"], ["plan.perDealFeePostCap", "$0"], ["plan.perDealFeeCap", "$0"], ["plan.perDealFeeAfterCap", "$0"], ["plan.eoFee", "$0"], ["plan.eoCap", "$0"]].map(([k, v]) => <label key={k} className="flex flex-col gap-1"><span className="text-muted">{T(k)}</span><Input>{v}</Input></label>)}</div></Card>
@@ -278,8 +276,7 @@ export const REPLICAS: Record<string, (T: TFn, hidden: string) => React.ReactNod
         <Card title={T("plan.team")} right={<Chip>{T("plan.module.off")}</Chip>}><div className="grid grid-cols-2 gap-2 text-xs">{[["plan.teamPct", "0 %"], ["plan.teamCap", "$0"]].map(([k, v]) => <label key={k} className="flex flex-col gap-1"><span className="text-muted">{T(k)}</span><Input>{v}</Input></label>)}<label className="flex flex-col gap-1"><span className="text-muted">{T("plan.teamBasis")}</span><span className="flex gap-1"><Chip tone="info">{T("plan.teamBasis.gci")}</Chip><Chip>{T("plan.teamBasis.after_broker")}</Chip></span></label></div></Card>
       </div>
       <Card title={T("comm.period")} right={T("comm.capPeriod", { start: "2026-01-01", end: "2026-12-31" })}><div className="flex justify-between text-xs"><span>{T("comm.stat.fixed")}</span><span className="font-mono">$3,000</span></div></Card>
-      <div className="flex items-center gap-2"><Btn>{T("common.save")}</Btn><span className="text-xs text-ok">{T("plan.saved")}</span></div>
-      <Hidden title={h} items={[T("plan.period")]} />
+      <Hidden title={h} items={[T("plan.period"), T("plan.saved")]} />
     </div>
   ),
   login: (T, h) => (

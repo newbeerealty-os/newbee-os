@@ -2,6 +2,7 @@
 // 联系人 / 公司表单（客户端）：类型→公司列表联动、下拉底部固定"+ 添加公司"、邮箱域名灰字补全（Tab）、
 // 姓名首字母大写、美国号码 3-3-4、职位候选层、常用标签可点选、未保存提示。文案由服务端算好传进来。
 import { Button } from "@/components/button";
+import { Section } from "@/components/ui";
 import { useMemo, useRef, useState } from "react";
 import { ORG_KINDS_FOR, formatUsPhone, capitalizeName, type ContactKind } from "@newbee/core";
 import { EmailInput } from "@/components/email-input";
@@ -20,6 +21,9 @@ const FI = ({ icon, label, children, className = "" }: { icon: string; label: st
   <label className={`flex flex-col gap-1 text-xs text-muted ${className}`}><span className="flex items-center gap-1"><ChannelIcon kind={icon} className="h-3.5 w-3.5" />{label}</span>{children}</label>
 );
 const Btn = Button;
+/** 编辑页：包一张卡，保存按钮在标题栏右侧；弹窗里（没标题）就什么都不包 */
+const Card = ({ title, save, children }: { title?: string; save: string; children: React.ReactNode }) =>
+  title ? <Section title={title} right={<Btn type="submit">{save}</Btn>}>{children}</Section> : <>{children}</>;
 
 /** 电话：10 位美国号码自动 3-3-4 */
 export function PhoneInput({ name, value, onChange }: { name: string; value: string; onChange: (v: string) => void }) {
@@ -150,6 +154,8 @@ export interface ContactFormProps {
   action: (formData: FormData) => void | Promise<void>; submitLabel: string; compact?: boolean;
   createOrg: (input: { kind: string; name: string }) => Promise<OrgOpt>;
   onDirty?: () => void; formRef?: React.RefObject<HTMLFormElement | null>; formId?: string;
+  /** 给了标题就自己画卡片，保存按钮放标题栏右侧（编辑页）；不给就是裸表单（弹窗里用） */
+  card?: string;
 }
 
 export function ContactFormClient(p: ContactFormProps) {
@@ -168,7 +174,9 @@ export function ContactFormClient(p: ContactFormProps) {
   const toggleTag = (x: string) => { setTags((tagList.includes(x) ? tagList.filter((y) => y !== x) : [...tagList, x]).join(", ")); dirty(); tagInput.current?.focus(); };
 
   return (
-    <form ref={p.formRef} id={p.formId} action={p.action} onChange={dirty} className="grid gap-3 sm:grid-cols-2">
+    <form ref={p.formRef} id={p.formId} action={p.action} onChange={dirty}>
+    <Card title={p.card} save={p.submitLabel}>
+    <div className="grid gap-3 sm:grid-cols-2">
       <F label={p.l.kind}><select name="kind" value={kind} onChange={(e) => { setKind(e.target.value as ContactKind); setOrgId(""); }} className={inputCls}>{p.kindOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></F>
       <F label={p.l.organization}><OrgPicker l={p.l} kind={kind} orgs={orgs} value={orgId} onChange={(id) => { setOrgId(id); dirty(); }} orgKindOptions={p.orgKindOptions}
         onCreate={async (input) => { const o = await p.createOrg(input); setOrgs((xs) => [...xs, o].sort((a, b) => a.name.localeCompare(b.name))); return o; }} /></F>
@@ -217,7 +225,9 @@ export function ContactFormClient(p: ContactFormProps) {
           <F label={p.l.notes} className="sm:col-span-2"><textarea name="notes" rows={4} defaultValue={v("notes")} className={`${inputCls} h-auto py-2`} /></F>
         </>
       )}
-      <div className="sm:col-span-2"><Btn type="submit">{p.submitLabel}</Btn></div>
+      {!p.card && <div className="sm:col-span-2"><Btn type="submit">{p.submitLabel}</Btn></div>}
+    </div>
+    </Card>
     </form>
   );
 }
@@ -226,6 +236,8 @@ export interface OrganizationFormProps {
   l: L; orgKindOptions: Opt[]; contacts?: Opt[]; values?: Record<string, string | null | undefined>; defaultKind?: string;
   action: (formData: FormData) => void | Promise<void>; submitLabel: string; compact?: boolean;
   onDirty?: () => void; formRef?: React.RefObject<HTMLFormElement | null>; formId?: string;
+  /** 给了标题就自己画卡片，保存按钮放标题栏右侧（编辑页）；不给就是裸表单（弹窗里用） */
+  card?: string;
 }
 
 export function OrganizationFormClient(p: OrganizationFormProps) {
@@ -233,7 +245,9 @@ export function OrganizationFormClient(p: OrganizationFormProps) {
   const [email, setEmail] = useState(v("email"));
   const [phone, setPhone] = useState(v("phone"));
   return (
-    <form ref={p.formRef} id={p.formId} action={p.action} onChange={() => p.onDirty?.()} className="grid gap-3 sm:grid-cols-2">
+    <form ref={p.formRef} id={p.formId} action={p.action} onChange={() => p.onDirty?.()}>
+    <Card title={p.card} save={p.submitLabel}>
+    <div className="grid gap-3 sm:grid-cols-2">
       <F label={p.l.kind}><select name="kind" defaultValue={v("kind") || p.defaultKind || "brokerage"} className={inputCls}>{p.orgKindOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></F>
       <F label={p.l.name}><input name="name" required defaultValue={v("name")} className={inputCls} /></F>
       <FI icon="email" label={p.l.email}><EmailInput name="email" value={email} onChange={setEmail} hint={p.l.emailTabHint} inputClassName={`${inputCls} font-mono`} textClassName="font-mono text-sm" /></FI>
@@ -253,7 +267,9 @@ export function OrganizationFormClient(p: OrganizationFormProps) {
           <F label={p.l.notes} className="sm:col-span-2"><textarea name="notes" rows={4} defaultValue={v("notes")} className={`${inputCls} h-auto py-2`} /></F>
         </>
       )}
-      <div className="sm:col-span-2"><Btn type="submit">{p.submitLabel}</Btn></div>
+      {!p.card && <div className="sm:col-span-2"><Btn type="submit">{p.submitLabel}</Btn></div>}
+    </div>
+    </Card>
     </form>
   );
 }

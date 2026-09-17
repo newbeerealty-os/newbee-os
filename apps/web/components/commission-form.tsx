@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { Button } from "@/components/button";
 import { MoneyInput } from "@/components/money-input";
+import { Section } from "@/components/ui";
 import { computeCommission, type CommissionPlan, type CommissionSide, type CustomFee, type YearToDate } from "@newbee/core";
 
 export type Opt = { value: string; label: string };
@@ -40,8 +41,10 @@ export interface CommissionFormProps {
   values: Record<string, string | number | null | undefined>;
   /** 放在交易详情里时交易已定：不显示下拉，只读一行 */
   lockDeal?: { id: string; label: string };
-  /** 编辑模式：底部右侧"删除"（确认后执行） */
+  /** 编辑模式："删除"（确认后执行），放在标题栏 */
   deleteAction?: () => Promise<void>; deleteLabels?: { delete: string; confirm: string };
+  /** 卡片：标题 + 标题栏右侧内容（保存按钮总在最右）+ 标题栏下方的一行（比如胶囊页签） */
+  card: { title: string; right?: React.ReactNode; above?: React.ReactNode };
   fees: CustomFee[];
   action: (formData: FormData) => void | Promise<void>;
   back?: string;
@@ -70,12 +73,29 @@ export function CommissionForm(p: CommissionFormProps) {
   const lineLabel = (id: string, name: string) => (id.startsWith("custom:") ? name : p.l[`r_${id}`] ?? name);
 
   return (
-    <form action={p.action} className="grid gap-4 lg:grid-cols-[1fr_1fr]">
+    <form action={p.action}>
+      <Section title={p.card.title} right={
+        <>
+          {p.card.right}
+          {p.deleteAction && p.deleteLabels && (
+            <details className="relative">
+              <summary className="flex h-10 cursor-pointer list-none items-center px-2 text-sm text-muted hover:text-danger">{p.deleteLabels.delete}</summary>
+              <div className="absolute right-0 top-12 z-10 flex w-72 flex-col gap-2 rounded-ui border border-line bg-surface p-3 text-sm shadow-xl">
+                <p className="text-muted">{p.deleteLabels.confirm}</p>
+                <Button variant="danger" type="button" onClick={() => p.deleteAction!()}>{p.deleteLabels.delete}</Button>
+              </div>
+            </details>
+          )}
+          <Button>{p.submitLabel}</Button>
+        </>
+      }>
+      {p.card.above}
+      <div className={`grid gap-4 lg:grid-cols-[1fr_1fr] ${p.card.above ? "border-t border-line pt-4" : ""}`}>
       <input type="hidden" name="kind" value={p.kind} />
       {p.back && <input type="hidden" name="back" value={p.back} />}
       <input type="hidden" name="fees" value={JSON.stringify(fees)} />
       <input type="hidden" name="price" value={price} />
-      <div className="flex flex-col gap-3 rounded-ui border border-line bg-surface p-4">
+      <div className="flex flex-col gap-3">
         {p.kind === "deal" ? (
           <>
             {p.lockDeal
@@ -124,21 +144,9 @@ export function CommissionForm(p: CommissionFormProps) {
           <F label={p.l.paidAt}><input type="date" name="paid_at" value={paidAt} onChange={(e) => setPaidAt(e.target.value)} className={inputCls} /></F>
         </div>
         <F label={p.l.notes}><textarea name="notes" rows={2} defaultValue={v("notes")} className={`${inputCls} h-auto py-2`} /></F>
-        <div className="flex items-center justify-between gap-3">
-          <Button>{p.submitLabel}</Button>
-          {p.deleteAction && p.deleteLabels && (
-            <details className="relative">
-              <summary className="flex h-10 cursor-pointer list-none items-center px-2 text-sm text-muted hover:text-danger">{p.deleteLabels.delete}</summary>
-              <div className="absolute bottom-12 right-0 z-10 flex w-72 flex-col gap-2 rounded-ui border border-line bg-surface p-3 text-sm shadow-xl">
-                <p className="text-muted">{p.deleteLabels.confirm}</p>
-                <Button variant="danger" type="button" formNoValidate onClick={() => p.deleteAction!()}>{p.deleteLabels.delete}</Button>
-              </div>
-            </details>
-          )}
-        </div>
       </div>
 
-      <div className="flex flex-col rounded-ui border border-line bg-surface p-4">
+      <div className="flex flex-col rounded-ui bg-chip/50 p-4">
         <Row label={p.l.r_gci} amount={result.gci} strong />
         {result.lines.map((ln) => <Row key={ln.id} label={lineLabel(ln.id, ln.name)} amount={ln.amount} neg sub={ln.id === "brokerSplit" ? [p.l.r_agentPct.replace("{pct}", String(result.agentPct)), result.brokerPostCap > 0 ? `${p.l.r_brokerPre} ${fmt(result.brokerPreCap)} · ${p.l.r_brokerPost} ${fmt(result.brokerPostCap)}` : ""].filter(Boolean).join(" · ") : undefined} />)}
         <Row label={p.l.r_total} amount={result.totalDeductions} neg />
@@ -150,6 +158,8 @@ export function CommissionForm(p: CommissionFormProps) {
           </div>
         )}
       </div>
+      </div>
+      </Section>
     </form>
   );
 }
