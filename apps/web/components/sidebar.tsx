@@ -1,5 +1,5 @@
 "use client";
-// 侧栏（方案 A）：展开 250px / 收起 76px；标题固定、菜单区滚动、底部固定；手风琴只展开当前分组；
+// 侧栏（方案 A）：展开 208px / 收起 76px；标题固定、菜单区滚动、底部固定；手风琴只展开当前分组；
 // 收起态图标上文字下，悬停时文字隐藏、图标放大、右侧弹出该组子菜单；手机变底部 tab。
 // 收起状态存 cookie（服务端按它渲染初始状态，不闪）。
 import Link from "next/link";
@@ -59,7 +59,7 @@ export function Sidebar({ items, initialCollapsed, labels, footer, localeRow, lo
   return (
     <>
       {/* 桌面侧栏 */}
-      <aside className={`sticky top-0 hidden h-dvh shrink-0 flex-col border-r border-side-line bg-side transition-[width] duration-200 md:flex ${collapsed ? "w-[76px]" : "w-[250px]"}`}>
+      <aside className={`sticky top-0 hidden h-dvh shrink-0 flex-col border-r border-side-line bg-side transition-[width] duration-200 md:flex ${collapsed ? "w-[76px]" : "w-[208px]"}`}>
         <div className={`flex h-[52px] shrink-0 items-center border-b border-side-line ${collapsed ? "justify-center" : "justify-between pl-4 pr-3"}`}>
           {!collapsed && <b className="truncate text-[15px] font-semibold text-side-text">New<span className="text-accent">Bee</span> OS</b>}
           <button type="button" onClick={toggleCollapsed} title={collapsed ? labels.expand : labels.collapse} aria-label={collapsed ? labels.expand : labels.collapse}
