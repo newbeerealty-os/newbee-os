@@ -38,7 +38,7 @@ function Avatar({ name, src }: { name: string; src?: string | null }) {
 
 export interface SidebarLabels { collapse: string; expand: string; toggle: string }
 
-export function Sidebar({ items, initialCollapsed, labels, footer, userName, avatarUrl }: { items: NavItem[]; initialCollapsed: boolean; labels: SidebarLabels; footer: React.ReactNode; userName: string; avatarUrl?: string | null }) {
+export function Sidebar({ items, initialCollapsed, labels, footer, localeRow, localeIcon, userName, avatarUrl }: { items: NavItem[]; initialCollapsed: boolean; labels: SidebarLabels; footer: React.ReactNode; localeRow: React.ReactNode; localeIcon: React.ReactNode; userName: string; avatarUrl?: string | null }) {
   const pathname = usePathname();
   const search = useSearchParams().toString();
   const current = search ? `${pathname}?${search}` : pathname;
@@ -123,6 +123,8 @@ export function Sidebar({ items, initialCollapsed, labels, footer, userName, ava
           })}
         </nav>
 
+        {/* 语言切换：主菜单最下面、个人信息那条横线上面 */}
+        <div className={`shrink-0 ${collapsed ? "flex justify-center pb-1" : "px-2 pb-1"}`}>{collapsed ? localeIcon : localeRow}</div>
         {collapsed ? (
           <div className="group relative flex shrink-0 justify-center border-t border-side-line py-2">
             <Avatar name={userName} src={avatarUrl} />

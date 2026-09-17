@@ -28,12 +28,9 @@ export default async function AgentLayout({ children }: { children: React.ReactN
           labels={{ collapse: t("nav.collapse"), expand: t("nav.expand"), toggle: t("nav.toggleGroup") }}
           userName={agent?.name ?? user.email ?? ""}
           avatarUrl={(user.user_metadata as { avatar_url?: string } | null)?.avatar_url ?? null}
-          footer={
-            <div className="flex shrink-0 items-center gap-2">
-              <LocaleSwitch />
-              <form action="/auth/signout" method="post"><button className="text-xs text-side-muted hover:text-side-text">{t("nav.signout")}</button></form>
-            </div>
-          }
+          localeRow={<LocaleSwitch />}
+          localeIcon={<LocaleSwitch compact />}
+          footer={<form action="/auth/signout" method="post"><button className="shrink-0 text-xs text-side-muted hover:text-side-text">{t("nav.signout")}</button></form>}
         />
       </Suspense>
       <main className="min-w-0 flex-1 p-4 pb-24 md:px-8 md:py-6 md:pb-8">{children}</main>

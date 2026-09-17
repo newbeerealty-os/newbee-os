@@ -12,7 +12,7 @@ export interface Message {
 const UI: Record<string, Message> = {
   // 语言
   'locale.zh': { zh: '中文', en: '中文' },
-  'locale.en': { zh: 'EN', en: 'EN' },
+  'locale.en': { zh: 'English', en: 'English' },
   'meta.description': { zh: '合同即数据的交易操作系统', en: 'Contract-as-data transaction operating system' },
 
   // 导航
