@@ -157,6 +157,10 @@ const UI: Record<string, Message> = {
   'settings.tr.save': { zh: '保存', en: 'Save' },
   'settings.tr.cancel': { zh: '取消', en: 'Cancel' },
   'settings.tr.reset': { zh: '恢复默认', en: 'Reset to default' },
+  'settings.tr.g.pages': { zh: '页面', en: 'Pages' },
+  'settings.tr.g.deals': { zh: '交易', en: 'Deals' },
+  'settings.tr.g.contacts': { zh: '联系人', en: 'Contacts' },
+  'settings.tr.g.names': { zh: '名称库', en: 'Name lists' },
   'settings.tr.en': { zh: '英文', en: 'English' },
 
   // /settings/theme

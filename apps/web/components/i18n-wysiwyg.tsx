@@ -12,6 +12,14 @@ type Vars = Record<string, string | number>;
 
 const fill = (s: string, vars?: Vars) => (vars ? s.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? String(vars[k]) : m)) : s);
 
+/** 页签分组：不滚动，分几行显示 */
+const GROUPS: { label: string; ids: string[] }[] = [
+  { label: "pages", ids: ["nav", "today", "tasks", "settings", "login"] },
+  { label: "deals", ids: ["deals", "deal"] },
+  { label: "contacts", ids: ["contacts", "contact", "form"] },
+  { label: "names", ids: ["field", "ms", "task"] },
+];
+
 export function I18nWysiwyg({ overrides, locale, labels, tabNames }: { overrides: Overrides; locale: Locale; labels: Record<string, string>; tabNames: Record<string, string> }) {
   const router = useRouter();
   const [ov, setOv] = useState<Overrides>(overrides);
@@ -43,7 +51,6 @@ export function I18nWysiwyg({ overrides, locale, labels, tabNames }: { overrides
   }
   async function reset(k: string) { await resetUiString(k); setOv((o) => ({ ...o, [k]: {} })); setEditing(null); router.refresh(); }
 
-  const tabs = [...ORDER, ...(others.length ? ["other"] : [])];
   return (
     <div className="flex flex-col gap-3" onClick={() => setEditing(null)}>
       <div className="flex flex-wrap items-center gap-2">
@@ -51,11 +58,16 @@ export function I18nWysiwyg({ overrides, locale, labels, tabNames }: { overrides
         <span className="flex-1" />
         <button type="button" onClick={() => setDim(!dim)} className={`flex h-9 items-center gap-2 rounded-md border px-3 text-sm ${dim ? "border-accent bg-accent-soft text-accent-strong" : "border-line-strong text-fg hover:bg-chip"}`}>{labels.changedOnly}<span className={`rounded-full px-1.5 py-0.5 font-mono text-[10.5px] ${dim ? "bg-accent text-accent-ink" : "bg-chip text-muted"}`}>{changedCount}</span></button>
       </div>
-      <div className="-mx-1 flex gap-0.5 overflow-x-auto overflow-y-hidden px-1 shadow-[inset_0_-1px_0_var(--line)]">
-        {tabs.map((id) => { const n = id === "other" ? others.length : placed[id].size; const c = (id === "other" ? others : [...placed[id]]).filter(isChanged).length; return (
-          <button key={id} type="button" onClick={() => { setPage(id); setEditing(null); }} className={`flex shrink-0 items-center gap-1.5 border-b-2 px-3 py-2 text-[13.5px] font-medium ${page === id ? "border-accent text-accent" : "border-transparent text-muted hover:text-fg"}`}>
-            {id === "other" ? labels.other : tabNames[id] ?? id}<span className={`rounded-full px-1.5 py-0.5 font-mono text-[10.5px] leading-none ${c ? "bg-accent text-accent-ink" : "bg-chip text-muted"}`}>{c ? `${c}/${n}` : n}</span>
-          </button>); })}
+      <div className="flex flex-col gap-1.5 rounded-ui border border-line bg-surface p-3">
+        {[...GROUPS, ...(others.length ? [{ label: "other", ids: ["other"] }] : [])].map((g) => (
+          <div key={g.label} className="flex flex-wrap items-center gap-1.5">
+            <span className="w-16 shrink-0 text-xs font-medium text-muted">{g.label === "other" ? labels.other : labels[`g_${g.label}`]}</span>
+            {g.ids.map((id) => { const n = id === "other" ? others.length : placed[id].size; const c = (id === "other" ? others : [...placed[id]]).filter(isChanged).length; const on = page === id; return (
+              <button key={id} type="button" onClick={() => { setPage(id); setEditing(null); }} className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-[13px] font-medium ${on ? "border-accent bg-accent text-accent-ink" : "border-line-strong bg-surface text-fg hover:border-accent hover:text-accent"}`}>
+                {id === "other" ? labels.other : tabNames[id] ?? id}<span className={`rounded-full px-1.5 py-0.5 font-mono text-[10.5px] leading-none ${on ? "bg-white/25 text-accent-ink" : c ? "bg-accent text-accent-ink" : "bg-chip text-muted"}`}>{c ? `${c}/${n}` : n}</span>
+              </button>); })}
+          </div>
+        ))}
       </div>
       <div ref={host} className="relative rounded-ui border border-line bg-bg p-4">
         {page === "other"
