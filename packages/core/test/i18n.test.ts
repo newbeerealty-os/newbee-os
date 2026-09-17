@@ -74,3 +74,18 @@ describe('makeT', () => {
     expect(LOCALES).toEqual(['zh', 'en']);
   });
 });
+
+describe('翻译编辑页的场景树', () => {
+  it('每条文案都能归到某个场景 › 区块，且不是兜底', async () => {
+    const { SCENES, sceneOf } = await import('../src/i18n/scenes');
+    const fallback = SCENES.find((x) => x.id === 'common')!.sections[0];
+    for (const key of Object.keys(MESSAGES)) {
+      const { section } = sceneOf(key);
+      const matched = section.prefixes.some((p) => key.startsWith(p));
+      expect(matched, `${key} → ${section.id}`).toBe(true);
+      if (!key.startsWith('common.')) expect(section, key).not.toBe(fallback);
+    }
+    const ids = SCENES.map((x) => x.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+});

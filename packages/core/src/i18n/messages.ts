@@ -147,6 +147,17 @@ const UI: Record<string, Message> = {
   'settings.overridden': { zh: '已覆盖', en: 'overridden' },
   'settings.stale': { zh: '代码里已不存在的 key', en: 'Keys no longer in code' },
   'settings.count': { zh: '{n} 条', en: '{n} entries' },
+  'settings.tr.intro': { zh: '左边选页面和区块，右边点一条文字就能改中英文。改动只影响显示、只在你的账号下。', en: 'Pick a page and section on the left; click any text on the right to edit both languages. Changes affect display only, under your account.' },
+  'settings.tr.changedOnly': { zh: '只看已修改', en: 'Changed only' },
+  'settings.tr.all': { zh: '全部', en: 'All' },
+  'settings.tr.search': { zh: '搜文字（中文或英文）', en: 'Search text (Chinese or English)' },
+  'settings.tr.results': { zh: '搜索结果', en: 'Search results' },
+  'settings.tr.noResults': { zh: '没有匹配的文字。', en: 'No matching text.' },
+  'settings.tr.where': { zh: '显示位置', en: 'Shown at' },
+  'settings.tr.changed': { zh: '已修改', en: 'Changed' },
+  'settings.tr.defaultIs': { zh: '默认：{v}', en: 'Default: {v}' },
+  'settings.tr.zh': { zh: '中文', en: 'Chinese' },
+  'settings.tr.en': { zh: '英文', en: 'English' },
 
   // /settings/theme
   'settings.theme': { zh: '主题', en: 'Theme' },

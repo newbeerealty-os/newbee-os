@@ -3,6 +3,7 @@
 import { MESSAGES, type Message } from './messages';
 
 export * from './messages';
+export * from './scenes';
 
 export const LOCALES = ['zh', 'en'] as const;
 export type Locale = (typeof LOCALES)[number];
