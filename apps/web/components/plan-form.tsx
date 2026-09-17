@@ -9,33 +9,40 @@ const inputCls = "h-10 w-full rounded-md border border-line-strong bg-surface px
 const fmt = (n: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 }).format(n);
 const toNum = (s: string) => { const n = Number(String(s).replace(/[$,\s%]/g, "")); return Number.isFinite(n) ? n : 0; };
 
+// 小组件放在 PlanForm 外面：定义在渲染函数里的组件每次渲染都是"新组件"，React 会整个重建 → 输入框一打字就失焦
+const F = ({ label, children, hint }: { label: string; children: React.ReactNode; hint?: string }) => (
+  <label className="flex flex-col gap-1 text-xs text-muted">{label}{children}{hint && <span className="text-[11px]">{hint}</span>}</label>
+);
+/** 一个模块 = 标题行带开关，关掉时正文折叠 */
+function Mod({ on, title, onLabel, offLabel, onToggle, children }: { on: boolean; title: string; onLabel: string; offLabel: string; onToggle: () => void; children: React.ReactNode }) {
+  return (
+    <section className={`rounded-ui border bg-surface ${on ? "border-line" : "border-dashed border-line-strong"}`}>
+      <div className="flex items-center justify-between gap-3 px-4 py-2.5">
+        <span className={`text-sm font-semibold ${on ? "" : "text-muted"}`}>{title}</span>
+        <button type="button" role="switch" aria-checked={on} onClick={onToggle} className="flex items-center gap-2 text-sm text-muted">
+          <span>{on ? onLabel : offLabel}</span>
+          <span className={`relative h-5 w-9 rounded-full transition-colors ${on ? "bg-accent" : "bg-chip"}`}><span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all ${on ? "left-[18px]" : "left-0.5"}`} /></span>
+        </button>
+      </div>
+      {on && <div className="border-t border-line px-4 py-3">{children}</div>}
+    </section>
+  );
+}
+
 export function PlanForm({ initial, l, action }: { initial: CommissionPlan; l: PlanLabels; action: (fd: FormData) => Promise<void> }) {
   const [plan, setPlan] = useState<CommissionPlan>(initial);
   const [applied, setApplied] = useState<PlanPresetId | null>(null);
+  // 数字框保留用户敲的原文（"5." / 空），数值另存；套预设时清掉草稿让框显示新值
+  const [draft, setDraft] = useState<Record<string, string>>({});
   const set = <K extends keyof CommissionPlan>(k: K, v: CommissionPlan[K]) => setPlan((p) => ({ ...p, [k]: v }));
   const toggle = (m: PlanModule) => setPlan((p) => ({ ...p, modules: { ...p.modules, [m]: !p.modules[m] } }));
   const num = (k: keyof CommissionPlan, step = "1") => (
-    <input value={String(plan[k] ?? "")} inputMode="decimal" step={step} onChange={(e) => set(k, toNum(e.target.value) as never)} className={`${inputCls} font-mono`} />
+    <input value={draft[k] ?? String(plan[k] ?? "")} inputMode="decimal" step={step}
+      onChange={(e) => { setDraft((d) => ({ ...d, [k]: e.target.value })); set(k, toNum(e.target.value) as never); }}
+      onBlur={() => setDraft((d) => { const { [k]: _, ...rest } = d; return rest; })}
+      className={`${inputCls} font-mono`} />
   );
-  const F = ({ label, children, hint }: { label: string; children: React.ReactNode; hint?: string }) => (
-    <label className="flex flex-col gap-1 text-xs text-muted">{label}{children}{hint && <span className="text-[11px]">{hint}</span>}</label>
-  );
-  // 一个模块 = 标题行带开关，关掉时正文折叠
-  const Mod = ({ id, title, children }: { id: PlanModule; title: string; children: React.ReactNode }) => {
-    const on = plan.modules[id];
-    return (
-      <section className={`rounded-ui border bg-surface ${on ? "border-line" : "border-dashed border-line-strong"}`}>
-        <div className="flex items-center justify-between gap-3 px-4 py-2.5">
-          <span className={`text-sm font-semibold ${on ? "" : "text-muted"}`}>{title}</span>
-          <button type="button" role="switch" aria-checked={on} onClick={() => toggle(id)} className="flex items-center gap-2 text-sm text-muted">
-            <span>{on ? l.on : l.off}</span>
-            <span className={`relative h-5 w-9 rounded-full transition-colors ${on ? "bg-accent" : "bg-chip"}`}><span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all ${on ? "left-[18px]" : "left-0.5"}`} /></span>
-          </button>
-        </div>
-        {on && <div className="border-t border-line px-4 py-3">{children}</div>}
-      </section>
-    );
-  };
+  const mod = (id: PlanModule) => ({ on: plan.modules[id], onLabel: l.on, offLabel: l.off, onToggle: () => toggle(id) });
 
   return (
     <form action={action} className="flex flex-col gap-4">
@@ -49,7 +56,7 @@ export function PlanForm({ initial, l, action }: { initial: CommissionPlan; l: P
         <div className="flex items-center justify-between gap-3 px-4 py-2.5"><span className="text-sm font-semibold">{l.presets}</span>{applied && <span className="text-sm text-ok">{l.presetApplied}</span>}</div>
         <div className="grid gap-2 border-t border-line p-3 sm:grid-cols-2 lg:grid-cols-4">
           {PLAN_PRESET_IDS.map((id) => (
-            <button key={id} type="button" onClick={() => { setPlan((p) => applyPreset(p, id)); setApplied(id); }}
+            <button key={id} type="button" onClick={() => { setPlan((p) => applyPreset(p, id)); setApplied(id); setDraft({}); }}
               className={`flex min-w-0 flex-col items-start gap-0.5 whitespace-normal rounded-md border px-3 py-2 text-left hover:border-accent ${applied === id ? "border-accent bg-accent-soft" : "border-line-strong"}`}>
               <span className="text-sm font-medium text-fg">{l[`preset_${id}`]}</span>
               <span className="text-xs leading-snug text-muted">{l[`preset_${id}_desc`]}</span>
@@ -58,7 +65,7 @@ export function PlanForm({ initial, l, action }: { initial: CommissionPlan; l: P
         </div>
       </section>
 
-      <Mod id="perDeal" title={l.perDeal}>
+      <Mod {...mod("perDeal")} title={l.perDeal}>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <F label={l.perDealFee}>{num("perDealFee")}</F>
           <F label={l.perDealFeeLease}>{num("perDealFeeLease")}</F>
@@ -69,14 +76,14 @@ export function PlanForm({ initial, l, action }: { initial: CommissionPlan; l: P
           <F label={l.eoCap}>{num("eoCap")}</F>
         </div>
       </Mod>
-      <Mod id="recurring" title={l.recurring}>
+      <Mod {...mod("recurring")} title={l.recurring}>
         <RecurringFeesEditor rows={plan.recurringFees} onChange={(rows) => set("recurringFees", rows)} l={l} />
         <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-muted">
           <span>{l.recurringTotal.replace("{amount}", fmt(recurringPerPeriod(plan)))}</span>
           <label className="flex items-center gap-2">{l.capYearStart}<input value={plan.capYearStart} onChange={(e) => set("capYearStart", e.target.value)} placeholder="01-01" className={`${inputCls} w-24 font-mono`} /></label>
         </div>
       </Mod>
-      <Mod id="split" title={l.split}>
+      <Mod {...mod("split")} title={l.split}>
         <div className="flex flex-col gap-3">
           <div className="flex flex-wrap items-center gap-2 text-xs text-muted">{l.splitMode}
             <div className="flex overflow-hidden rounded-md border border-line-strong">
@@ -91,20 +98,20 @@ export function PlanForm({ initial, l, action }: { initial: CommissionPlan; l: P
           {plan.modules.cap && <F label={l.splitPostCap}>{num("splitPostCap", "0.5")}</F>}
         </div>
       </Mod>
-      <Mod id="cap" title={l.cap}>
+      <Mod {...mod("cap")} title={l.cap}>
         <div className="grid gap-3 sm:grid-cols-2">
           <F label={l.capAmount} hint={l.capHint}>{num("capAmount")}</F>
           <F label={l.capYearStart}><input value={plan.capYearStart} onChange={(e) => set("capYearStart", e.target.value)} placeholder="01-01" className={`${inputCls} font-mono`} /></F>
         </div>
       </Mod>
       <div className="grid gap-4 sm:grid-cols-2">
-        <Mod id="royalty" title={l.royalty}>
+        <Mod {...mod("royalty")} title={l.royalty}>
           <div className="grid gap-3">
             <F label={l.royaltyPct}>{num("royaltyPct", "0.1")}</F>
             <F label={l.royaltyCap}>{num("royaltyCap")}</F>
           </div>
         </Mod>
-        <Mod id="team" title={l.team}>
+        <Mod {...mod("team")} title={l.team}>
           <div className="grid gap-3">
             <F label={l.teamPct}>{num("teamPct", "0.5")}</F>
             <F label={l.teamCap}>{num("teamCap")}</F>

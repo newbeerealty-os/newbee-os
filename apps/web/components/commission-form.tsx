@@ -10,6 +10,12 @@ const inputCls = "h-10 w-full rounded-md border border-line-strong bg-surface px
 const fmt = (n: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 }).format(n);
 const toNum = (s: string) => { const n = Number(String(s).replace(/[$,\s%]/g, "")); return Number.isFinite(n) ? n : 0; };
 
+// 小组件放在表单组件外面：定义在渲染函数里的组件每次渲染都是"新组件"，输入框会一打字就失焦
+const F = ({ label, children, className = "" }: { label: string; children: React.ReactNode; className?: string }) => <label className={`flex flex-col gap-1 text-xs text-muted ${className}`}>{label}{children}</label>;
+const Row = ({ label, amount, sub, strong, neg }: { label: string; amount: number; sub?: string; strong?: boolean; neg?: boolean }) => (
+  <div className={`flex items-baseline justify-between gap-3 py-1.5 ${strong ? "border-t border-line pt-2 text-base font-semibold" : "text-sm"}`}><span className={strong ? "" : "text-muted"}>{label}{sub && <span className="ml-1 text-xs text-muted">{sub}</span>}</span><span className={`font-mono ${neg ? "text-danger" : ""}`}>{neg ? `(${fmt(amount)})` : fmt(amount)}</span></div>
+);
+
 /** $ / % 切换的金额输入 */
 function AmountInput({ basis, onBasis, value, onValue, name, l }: { basis: "pct" | "flat"; onBasis: (b: "pct" | "flat") => void; value: string; onValue: (v: string) => void; name: string; l: L }) {
   return (
@@ -54,10 +60,6 @@ export function CommissionForm(p: CommissionFormProps) {
     referralInPct: p.kind === "referral" ? toNum(ro) || null : null,
   }, p.plan, p.ytd), [p.kind, side, price, basis, amount, fees, ro, roBasis, p.plan, p.ytd]);
 
-  const F = ({ label, children, className = "" }: { label: string; children: React.ReactNode; className?: string }) => <label className={`flex flex-col gap-1 text-xs text-muted ${className}`}>{label}{children}</label>;
-  const Row = ({ label, amount, sub, strong, neg }: { label: string; amount: number; sub?: string; strong?: boolean; neg?: boolean }) => (
-    <div className={`flex items-baseline justify-between gap-3 py-1.5 ${strong ? "border-t border-line pt-2 text-base font-semibold" : "text-sm"}`}><span className={strong ? "" : "text-muted"}>{label}{sub && <span className="ml-1 text-xs text-muted">{sub}</span>}</span><span className={`font-mono ${neg ? "text-danger" : ""}`}>{neg ? `(${fmt(amount)})` : fmt(amount)}</span></div>
-  );
   const lineLabel = (id: string, name: string) => (id.startsWith("custom:") ? name : p.l[`r_${id}`] ?? name);
 
   return (
