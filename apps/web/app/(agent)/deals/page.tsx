@@ -48,8 +48,9 @@ export default async function DealsPage({ searchParams }: { searchParams: Promis
   const needle = q.trim();
   const searchable = (id: string) => ({ text: (index.get(id) ?? []).join(" "), nums: nums.get(id) ?? [] });
   const hit = (id: string) => matchesQuery(needle, searchable(id));
-  // 搜索候选：命中的交易（地址 / 相关人 / 金额都算 key），显示交易标题
-  const searchItems = all.map((d) => ({ label: d.title, ...searchable(d.id) }));
+  // 搜索候选：只在当前阶段范围内找（阶段页只列该阶段的交易；地址 / 相关人 / 金额都算 key），显示交易标题
+  const inScope = stageFilter ? all.filter((d) => d.stage === stageFilter) : all;
+  const searchItems = inScope.map((d) => ({ label: d.title, ...searchable(d.id) }));
   const filtered = all.filter((d) => (!stageFilter || d.stage === stageFilter) && hit(d.id));
   // 每行先算出下一节点和未完成数，再按表头排序（默认 = 数据库的显示优先级）
   const rows = filtered.map((d) => {
