@@ -5,7 +5,6 @@ import { saveUiString, resetUiString } from "@/lib/actions/ui-strings";
 import { getT } from "@/lib/i18n";
 import { Section, Button, Badge, inputCls } from "@/components/ui";
 import { SettingsTabs } from "@/components/settings-tabs";
-import { PageHeader } from "@/components/page";
 import { SearchBox } from "@/components/search-box";
 
 export const dynamic = "force-dynamic";
@@ -32,7 +31,6 @@ export default async function LanguageSettingsPage({ searchParams }: { searchPar
 
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-4">
-      <PageHeader crumbs={[{ label: t("nav.settings") }, { label: t("settings.language") }]} title={t("settings.language")} />
       <SettingsTabs active="/settings/language" />
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <p className="text-sm text-muted">{t("settings.languageHint")}</p>

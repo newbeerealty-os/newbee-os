@@ -138,6 +138,7 @@ const UI: Record<string, Message> = {
 
   // /settings/language
   'settings.title': { zh: '设置', en: 'Settings' },
+  'settings.langTheme': { zh: '语言 · 主题', en: 'Language · Theme' },
   'settings.language': { zh: '语言 / 翻译', en: 'Language / translations' },
   'settings.languageHint': { zh: '改动只影响显示，存在你的账号下；留空并保存 = 用代码默认值。', en: 'Changes affect display only and are stored under your account; save an empty value to use the code default.' },
   'settings.filter': { zh: '按 key 或文字过滤', en: 'Filter by key or text' },

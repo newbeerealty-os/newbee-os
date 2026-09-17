@@ -72,11 +72,8 @@ export function buildNav(t: Translator, c: NavCounts): NavItem[] {
       ],
     },
     {
-      key: "settings", href: "/settings/theme", icon: "settings", label: t("nav.settings"),
-      children: [
-        { href: "/settings/language", label: t("settings.language") },
-        { href: "/settings/theme", label: t("settings.theme") },
-      ],
+      key: "settings", href: "/settings/language", icon: "settings", label: t("nav.settings"),
+      children: [{ href: "/settings/language", label: t("settings.langTheme") }],
     },
   ];
 }
