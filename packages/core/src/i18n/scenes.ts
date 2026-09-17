@@ -35,6 +35,16 @@ export const SCENES: Scene[] = [
     s('page', '详情页文字', 'Detail page text', ['contact.'], '相关交易、相关联系人、紧密关系、备注、编辑 / 删除等', 'Related deals, related people, close relationships, notes, edit / delete'),
     s('photo', '照片与头像', 'Photos & avatar', ['photo.'], '头像裁剪器和照片库', 'Avatar cropper and photo gallery'),
   ] },
+  { id: 'commissions', zh: '佣金', en: 'Commissions', where: { zh: '"佣金"列表、佣金明细 / 编辑页、交易详情的"佣金"选项卡', en: 'The Commissions list, the commission detail / edit page, the Commission tab on a deal' }, sections: [
+    s('cols', '表头与统计', 'Columns & stats', ['comm.col.', 'comm.stat.'], '列表表头、顶部统计卡', 'Table headers and stat cards'),
+    s('form', '表单字段', 'Form fields', ['comm.f.'], '添加 / 编辑佣金的输入框', 'Inputs on the add / edit commission form'),
+    s('breakdown', '明细', 'Breakdown', ['comm.r.'], '右侧实时算出来的逐项明细', 'The live breakdown on the right'),
+    s('page', '页面文字', 'Page text', ['comm.'], '标题、筛选、按钮、cap 进度、空状态', 'Title, filters, buttons, cap progress, empty states'),
+    s('labels', '分类与状态', 'Types & statuses', ['commKind.', 'commSide.', 'commStatus.'], '交易佣金 / 推荐费、卖方 / 买方…、预计 / 待收 / 已收…', 'Deal / referral, listing / buyer…, projected / pending / paid…'),
+  ] },
+  { id: 'plan', zh: '佣金方案', en: 'Commission plan', where: { zh: '设置 › 佣金方案', en: 'Settings › Commission plan' }, sections: [
+    s('all', '方案设置', 'Plan settings', ['plan.', 'settings.commission'], '分成、cap、每笔费、加盟费、团队、月固定费', 'Split, cap, per-deal fees, royalty, team, monthly fees'),
+  ] },
   { id: 'tasks', zh: '任务', en: 'Tasks', where: { zh: '"任务"页面和任务行', en: 'The Tasks page and task rows' }, sections: [
     s('page', '页面文字', 'Page text', ['tasks.', 'common.markDone', 'common.markUndone'], '标题、添加任务表单、勾选按钮', 'Title, add-task form, check buttons'),
   ] },

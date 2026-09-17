@@ -1,36 +1,161 @@
-// 佣金：合同价 × 比例 − 各项费用。费用表放 agents.settings.brokerFees，随 broker 政策改。
-export type Fee = { name: string; amount: number };
-export type FeeRule = { name: string; type: 'flat' | 'pct_of_gci' | 'pct_of_price'; value: number; cap?: number };
+// 佣金引擎：GCI → 推荐费付出 → broker 抽成（cap 前后拆段）→ 加盟费（年度封顶）→ 团队 → 每笔费 / E&O → 自定义扣费 → NCI。
+// 方案（CommissionPlan）存 agents.settings.commissionPlan；本周期已付的 broker / 加盟 / 团队额由调用方从已 closed 记录汇总后传入。
+import { z } from 'zod';
 
-export interface CommissionInput {
-  price: number;
-  /** 百分比，如 3 表示 3% */
-  pct: number;
-  brokerFees?: FeeRule[];
-  /** 推荐费占 GCI 的百分比 */
-  referralPct?: number;
-  /** 其他固定扣除（transaction fee 等） */
-  extraFees?: Fee[];
+export const COMMISSION_KINDS = ['deal', 'referral'] as const;
+export const COMMISSION_SIDES = ['listing', 'buyer', 'landlord', 'tenant', 'management', 'referral'] as const;
+export const COMMISSION_STATUSES = ['projected', 'pending', 'closed', 'paid', 'cancelled'] as const;
+export type CommissionKind = (typeof COMMISSION_KINDS)[number];
+export type CommissionSide = (typeof COMMISSION_SIDES)[number];
+export type CommissionStatus = (typeof COMMISSION_STATUSES)[number];
+
+const pct = (d: number, max = 100) => z.coerce.number().min(0).max(max).catch(d);
+const money = (d: number) => z.coerce.number().min(0).catch(d);
+
+/** Broker 分成方案 */
+export const CommissionPlanSchema = z.object({
+  /** cap 前我拿的比例 */
+  splitPreCap: pct(70),
+  /** cap 后我拿的比例 */
+  splitPostCap: pct(100),
+  /** 每个周期 broker 抽成上限；0 = 没有 cap */
+  capAmount: money(0),
+  /** 周期起点 MM-DD（入职纪念日） */
+  capYearStart: z.string().regex(/^\d{2}-\d{2}$/).catch('01-01'),
+  /** 每笔固定费（cap 前 / 后） */
+  perDealFee: money(0),
+  perDealFeePostCap: money(0),
+  /** 每笔 E&O */
+  eoFee: money(0),
+  /** 加盟费：% of GCI，年度封顶（0 = 无） */
+  royaltyPct: pct(0),
+  royaltyCap: money(0),
+  /** 团队抽成：% + 封顶（0 = 无）+ 基数 */
+  teamPct: pct(0),
+  teamCap: money(0),
+  teamBasis: z.enum(['gci', 'after_broker']).catch('after_broker'),
+  /** 月固定费（desk / tech / MLS …），不进单笔，进报表 */
+  monthlyFees: z.array(z.object({ name: z.string().min(1), amount: z.coerce.number().min(0) })).catch([]),
+});
+export type CommissionPlan = z.infer<typeof CommissionPlanSchema>;
+export const DEFAULT_PLAN: CommissionPlan = CommissionPlanSchema.parse({});
+
+export const CustomFeeSchema = z.object({ name: z.string().min(1), basis: z.enum(['flat', 'pct_of_gci', 'pct_of_price']), value: z.coerce.number().min(0) });
+export type CustomFee = z.infer<typeof CustomFeeSchema>;
+
+export interface CommissionRecordInput {
+  kind: CommissionKind;
+  price: number | null;
+  basis: 'pct' | 'flat';
+  pct: number | null;
+  flat: number | null;
+  fees: CustomFee[];
+  /** 付出去的推荐费（交易佣金） */
+  referral_out_basis?: 'pct' | 'flat' | null;
+  referral_out_pct?: number | null;
+  referral_out_flat?: number | null;
+  /** 收进来的推荐费比例（推荐费记录）：对方佣金 × 这个比例 = 我的 GCI */
+  referralInPct?: number | null;
 }
 
+/** 本周期已经付掉的（从已 closed / paid 记录的 computed 汇总） */
+export interface YearToDate { brokerPaid: number; royaltyPaid: number; teamPaid: number }
+
+export interface CommissionLine { id: string; name: string; amount: number; custom?: boolean }
 export interface CommissionResult {
   gci: number;
-  fees: Fee[];
+  referralOut: number;
+  brokerSplit: number;
+  /** broker 抽成里落在 cap 内 / cap 外的部分 */
+  brokerPreCap: number;
+  brokerPostCap: number;
+  capHit: boolean;
+  capProgressAfter: number;
+  royalty: number;
+  team: number;
+  lines: CommissionLine[];
+  totalDeductions: number;
   nci: number;
 }
 
-const round2 = (n: number) => Math.round(n * 100) / 100;
+const r2 = (n: number) => Math.round(n * 100) / 100;
 
-export function commission(input: CommissionInput): CommissionResult {
-  const gci = round2((input.price * input.pct) / 100);
-  const fees: Fee[] = [];
-  if (input.referralPct) fees.push({ name: 'Referral', amount: round2((gci * input.referralPct) / 100) });
-  for (const r of input.brokerFees ?? []) {
-    let amt = r.type === 'flat' ? r.value : r.type === 'pct_of_gci' ? (gci * r.value) / 100 : (input.price * r.value) / 100;
-    if (r.cap !== undefined) amt = Math.min(amt, r.cap);
-    fees.push({ name: r.name, amount: round2(amt) });
+export function computeCommission(rec: CommissionRecordInput, plan: CommissionPlan, ytd: YearToDate): CommissionResult {
+  const price = rec.price ?? 0;
+  let gci = rec.basis === 'flat' ? (rec.flat ?? 0) : (price * (rec.pct ?? 0)) / 100;
+  if (rec.kind === 'referral' && rec.referralInPct) gci = (gci * rec.referralInPct) / 100;
+  gci = r2(gci);
+
+  const referralOut = rec.kind === 'deal'
+    ? r2(rec.referral_out_basis === 'flat' ? (rec.referral_out_flat ?? 0) : rec.referral_out_basis === 'pct' ? (gci * (rec.referral_out_pct ?? 0)) / 100 : 0)
+    : 0;
+  const netGci = gci - referralOut;
+
+  // broker 抽成：cap 前按 (100 - splitPreCap)%，到 cap 后按 (100 - splitPostCap)%
+  const brokerPctPre = (100 - plan.splitPreCap) / 100;
+  const brokerPctPost = (100 - plan.splitPostCap) / 100;
+  const capRemaining = plan.capAmount > 0 ? Math.max(0, plan.capAmount - ytd.brokerPaid) : Infinity;
+  let brokerPreCap = 0, brokerPostCap = 0;
+  const fullPre = netGci * brokerPctPre;
+  if (fullPre <= capRemaining) brokerPreCap = fullPre;
+  else {
+    brokerPreCap = capRemaining;
+    const gciCovered = brokerPctPre > 0 ? capRemaining / brokerPctPre : 0;
+    brokerPostCap = Math.max(0, netGci - gciCovered) * brokerPctPost;
   }
-  for (const f of input.extraFees ?? []) fees.push({ name: f.name, amount: round2(f.amount) });
-  const nci = round2(gci - fees.reduce((s, f) => s + f.amount, 0));
-  return { gci, fees, nci };
+  brokerPreCap = r2(brokerPreCap); brokerPostCap = r2(brokerPostCap);
+  const brokerSplit = r2(brokerPreCap + brokerPostCap);
+  const capProgressAfter = plan.capAmount > 0 ? r2(Math.min(plan.capAmount, ytd.brokerPaid + brokerPreCap)) : 0;
+  const capHit = plan.capAmount > 0 && capProgressAfter >= plan.capAmount;
+
+  // 加盟费（年度封顶）
+  let royalty = plan.royaltyPct > 0 ? (netGci * plan.royaltyPct) / 100 : 0;
+  if (plan.royaltyCap > 0) royalty = Math.min(royalty, Math.max(0, plan.royaltyCap - ytd.royaltyPaid));
+  royalty = r2(royalty);
+
+  // 团队
+  const teamBase = plan.teamBasis === 'gci' ? netGci : netGci - brokerSplit - royalty;
+  let team = plan.teamPct > 0 ? (teamBase * plan.teamPct) / 100 : 0;
+  if (plan.teamCap > 0) team = Math.min(team, Math.max(0, plan.teamCap - ytd.teamPaid));
+  team = r2(team);
+
+  const lines: CommissionLine[] = [];
+  if (referralOut) lines.push({ id: 'referralOut', name: 'referralOut', amount: referralOut });
+  if (brokerSplit) lines.push({ id: 'brokerSplit', name: 'brokerSplit', amount: brokerSplit });
+  if (royalty) lines.push({ id: 'royalty', name: 'royalty', amount: royalty });
+  if (team) lines.push({ id: 'team', name: 'team', amount: team });
+  if (rec.kind === 'deal') {
+    const perDeal = capHit || capRemaining === 0 ? plan.perDealFeePostCap : plan.perDealFee;
+    if (perDeal) lines.push({ id: 'perDealFee', name: 'perDealFee', amount: r2(perDeal) });
+    if (plan.eoFee) lines.push({ id: 'eoFee', name: 'eoFee', amount: r2(plan.eoFee) });
+  }
+  for (const f of rec.fees ?? []) {
+    const amt = f.basis === 'flat' ? f.value : f.basis === 'pct_of_gci' ? (gci * f.value) / 100 : (price * f.value) / 100;
+    lines.push({ id: `custom:${f.name}`, name: f.name, amount: r2(amt), custom: true });
+  }
+  const totalDeductions = r2(lines.reduce((s, l) => s + l.amount, 0));
+  return { gci, referralOut, brokerSplit, brokerPreCap, brokerPostCap, capHit, capProgressAfter, royalty, team, lines, totalDeductions, nci: r2(gci - totalDeductions) };
+}
+
+/** 状态跟着交易阶段走；填了收到日期就是 paid */
+export function statusFromStage(stage: string, paidAt: string | null): CommissionStatus {
+  if (paidAt) return 'paid';
+  if (stage === 'closed') return 'closed';
+  if (stage === 'terminated') return 'cancelled';
+  if (stage === 'under_contract' || stage === 'closing') return 'pending';
+  return 'projected';
+}
+
+/** 某个日期属于哪个 cap 周期（起点 MM-DD） */
+export function capYearOf(dateISO: string, startMMDD: string): { start: string; end: string } {
+  const [y, m, d] = dateISO.split('-').map(Number);
+  const [sm, sd] = startMMDD.split('-').map(Number);
+  const before = m < sm || (m === sm && d < sd);
+  const startYear = before ? y - 1 : y;
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const start = `${startYear}-${pad(sm)}-${pad(sd)}`;
+  // 周期结束 = 下一周期起点前一天
+  const endDate = new Date(Date.UTC(startYear + 1, sm - 1, sd) - 86_400_000);
+  const end = `${endDate.getUTCFullYear()}-${pad(endDate.getUTCMonth() + 1)}-${pad(endDate.getUTCDate())}`;
+  return { start, end };
 }
