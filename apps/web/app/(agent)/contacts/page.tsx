@@ -61,7 +61,7 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
               <Link href={qs({ view: null })} className={`px-3 py-2 ${view !== "cards" ? "bg-accent text-accent-ink" : "bg-surface text-muted hover:bg-chip"}`}>{t("contacts.viewTable")}</Link>
               <Link href={qs({ view: "cards" })} className={`px-3 py-2 ${view === "cards" ? "bg-accent text-accent-ink" : "bg-surface text-muted hover:bg-chip"}`}>{t("contacts.viewCards")}</Link>
             </div>
-            <SearchBox placeholder={t("contacts.search")} label={t("common.search")} items={filterRows(all, tab, "").map((r) => ({ label: r.name, text: r.search }))} />
+            <SearchBox placeholder={t("contacts.search")} label={t("common.search")} allLabel={t("common.searchAll")} items={filterRows(all, tab, "").map((r) => ({ label: r.name, text: r.search }))} />
             <ContactCreator l={l}
               contact={{ l, ...opts, orgs, jobTitles: suggestions.jobTitles, tags: suggestions.tags, sources: suggestions.sources, defaultKind: defaults.contact, action: createContact, submitLabel: t("contacts.add"), compact: true, createOrg: createOrganizationInline }}
               org={{ l, orgKindOptions: opts.orgKindOptions, defaultKind: defaults.org, action: createOrganization, submitLabel: t("contacts.addOrg"), compact: true }} />

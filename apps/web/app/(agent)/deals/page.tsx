@@ -85,7 +85,7 @@ export default async function DealsPage({ searchParams }: { searchParams: Promis
       <PageHeader crumbs={[{ label: t("nav.deals"), href: "/deals" }, { label: stageFilter ? t(`stage.${stageFilter}`) : t("deals.stageAll") }]} title={title} subnav={subnav}
         actions={
           <>
-          <SearchBox placeholder={t("deals.search")} label={t("common.search")} items={searchItems} />
+          <SearchBox placeholder={t("deals.search")} label={t("common.search")} allLabel={t("common.searchAll")} items={searchItems} />
           <details className="relative">
             <summary className="flex h-10 cursor-pointer list-none items-center rounded-md bg-accent px-3 text-sm font-medium text-accent-ink hover:bg-accent-strong">{t("deals.new")}</summary>
             <form action={createDeal} className="absolute right-0 z-10 mt-2 flex w-[min(90vw,380px)] flex-col gap-2 rounded-ui border border-line bg-surface p-3 shadow-xl">

@@ -44,7 +44,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
         ]}
         actions={
           <>
-          <SearchBox placeholder={t("tasks.search")} label={t("common.search")} items={suggestions.map((label) => ({ label }))} widthClass="w-56" />
+          <SearchBox placeholder={t("tasks.search")} label={t("common.search")} allLabel={t("common.searchAll")} items={suggestions.map((label) => ({ label }))} widthClass="w-56" />
           <details className="relative">
             <summary className="flex h-10 cursor-pointer list-none items-center rounded-md bg-accent px-3 text-sm font-medium text-accent-ink hover:bg-accent-strong">{t("tasks.add")}</summary>
             <form action={addTask} className="absolute right-0 z-10 mt-2 flex w-[min(90vw,380px)] flex-col gap-2 rounded-ui border border-line bg-surface p-3 shadow-xl">
