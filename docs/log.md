@@ -24,3 +24,8 @@
 - 做了：主题（10 套、日出日落自动）· 导航方案 A（可收起侧栏 / 红圈 / 选项卡 / 搜索）· 字体 Manrope + DM Mono + MiSans · 联系人模块（人 / 公司 / 交易各方 / 紧密关系 / 详情页强度排序）· 22 个 commit，test 66/66，build 通过；版本说明见 docs/CHANGELOG.md，打 tag v0.2.0
 - 卡在：
 - 明天：抽取结果 → 联系人匹配建议；然后把 setField / confirmField 的类型判断收回 core
+
+## Day 5
+- 做了：佣金模块全套——0008_commissions 表（已 push、类型已生成）· core 引擎（GCI → 推荐费 → broker 分成 cap 前后 → 加盟费 → 团队 → 每笔费 → 自定义扣费 → NCI；按业绩阶梯分成、每笔费 / E&O 年度封顶；"截至这笔之前"按日期累计）· 设置 › 佣金方案（8 个预设 + 6 个模块开关，对照前 25 家经纪公司的分成方式）· /commissions 列表 / 新建 / 明细 · 交易详情"佣金"选项卡 · 联系人"推荐费"卡 · 侧栏"佣金" · 出租拆成放租 / 寻租；全站反馈机制（setFlash 提示贴按钮下方、Button 转圈、出错页）；MoneyInput 金额框（$ 格式 + "x 万"）；照片 / 头像；联系人详情 404 与若干表单修复。test 99 + 3，typecheck、build 通过
+- 卡在：Jason 说的"家里的文件"没听明白，明天先问清楚
+- 明天：首页佣金统计报告（本周期 GCI / NCI / 固定费用 / cap 进度）；抽取结果 → 联系人匹配建议；setField / confirmField 的类型判断收回 core
