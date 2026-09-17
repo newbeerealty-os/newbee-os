@@ -176,6 +176,7 @@ export type Database = {
           last_contacted_at: string | null
           last_name: string
           license_no: string | null
+          license_type: Database["public"]["Enums"]["license_type"]
           name_zh: string | null
           notes: string | null
           organization_id: string | null
@@ -211,6 +212,7 @@ export type Database = {
           last_contacted_at?: string | null
           last_name?: string
           license_no?: string | null
+          license_type?: Database["public"]["Enums"]["license_type"]
           name_zh?: string | null
           notes?: string | null
           organization_id?: string | null
@@ -246,6 +248,7 @@ export type Database = {
           last_contacted_at?: string | null
           last_name?: string
           license_no?: string | null
+          license_type?: Database["public"]["Enums"]["license_type"]
           name_zh?: string | null
           notes?: string | null
           organization_id?: string | null
@@ -943,7 +946,6 @@ export type Database = {
       contact_kind:
         | "client"
         | "agent"
-        | "broker"
         | "title_lending"
         | "vendor"
         | "tc"
@@ -977,6 +979,7 @@ export type Database = {
         | "lease_tenant"
         | "property_mgmt"
       doc_status: "uploaded" | "extracting" | "review" | "confirmed" | "failed"
+      license_type: "sales_agent" | "broker" | "broker_associate"
       ms_status: "pending" | "done" | "overdue" | "na"
       org_kind:
         | "brokerage"
@@ -1145,7 +1148,6 @@ export const Constants = {
       contact_kind: [
         "client",
         "agent",
-        "broker",
         "title_lending",
         "vendor",
         "tc",
@@ -1183,6 +1185,7 @@ export const Constants = {
         "property_mgmt",
       ],
       doc_status: ["uploaded", "extracting", "review", "confirmed", "failed"],
+      license_type: ["sales_agent", "broker", "broker_associate"],
       ms_status: ["pending", "done", "overdue", "na"],
       org_kind: [
         "brokerage",

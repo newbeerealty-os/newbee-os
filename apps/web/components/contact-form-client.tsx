@@ -113,7 +113,7 @@ function OrgPicker({ l, kind, orgs, value, onChange, orgKindOptions, onCreate }:
 }
 
 export interface ContactFormProps {
-  l: L; kindOptions: Opt[]; orgKindOptions: Opt[]; channelOptions: Opt[]; languageOptions: Opt[];
+  l: L; kindOptions: Opt[]; orgKindOptions: Opt[]; channelOptions: Opt[]; languageOptions: Opt[]; licenseTypeOptions: Opt[];
   orgs: OrgOpt[]; contacts?: Opt[]; jobTitles: Record<string, string[]>; tags: Record<string, string[]>; sources: string[];
   values?: Record<string, string | string[] | null | undefined>; defaultKind?: string;
   action: (formData: FormData) => void | Promise<void>; submitLabel: string; compact?: boolean;
@@ -144,7 +144,14 @@ export function ContactFormClient(p: ContactFormProps) {
       <F label={p.l.firstName}><input name="first_name" required value={first} onChange={(e) => setFirst(capitalizeName(e.target.value))} autoComplete="off" className={inputCls} /></F>
       <F label={p.l.lastName}><input name="last_name" value={last} onChange={(e) => setLast(capitalizeName(e.target.value))} autoComplete="off" className={inputCls} /></F>
       <F label={p.l.nameZh}><input name="name_zh" defaultValue={v("name_zh")} className={inputCls} /></F>
-      <F label={p.l.jobTitle}><SuggestInput key={kind} name="job_title" defaultValue={v("job_title")} options={p.jobTitles[kind] ?? []} onChange={dirty} /></F>
+      {kind === "agent" ? (
+        <div className="grid grid-cols-2 gap-3">
+          <F label={p.l.jobTitle}><SuggestInput key={kind} name="job_title" defaultValue={v("job_title")} options={p.jobTitles[kind] ?? []} onChange={dirty} /></F>
+          <F label={p.l.licenseType}><select name="license_type" defaultValue={v("license_type") || "sales_agent"} className={inputCls}>{p.licenseTypeOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></F>
+        </div>
+      ) : (
+        <F label={p.l.jobTitle}><SuggestInput key={kind} name="job_title" defaultValue={v("job_title")} options={p.jobTitles[kind] ?? []} onChange={dirty} /></F>
+      )}
       <F label={p.l.email}><EmailInput name="email" value={email} onChange={setEmail} hint={p.l.emailTabHint} inputClassName={`${inputCls} font-mono`} textClassName="font-mono text-sm" /></F>
       <F label={p.l.phone}><PhoneInput name="phone" value={phone} onChange={setPhone} /></F>
       <F label={p.l.wechat}><input name="wechat" defaultValue={v("wechat")} className={`${inputCls} font-mono`} /></F>

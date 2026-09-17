@@ -18,7 +18,7 @@ export async function createDeal(formData: FormData) {
   const title = String(formData.get("title") ?? "").trim();
   if (!title) throw new Error("title required");
   const { data, error } = await supabase.from("deals").insert({ agent_id: userId, type, title, stage: "lead" }).select("id").single();
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   redirect(`/deals/${data.id}`);
 }
 
@@ -30,9 +30,9 @@ export async function uploadDocument(dealId: string, formData: FormData) {
   const docId = crypto.randomUUID();
   const path = `${userId}/${dealId}/${docId}.pdf`;
   const { error: upErr } = await supabase.storage.from("deal-docs").upload(path, file, { contentType: "application/pdf", upsert: false });
-  if (upErr) throw upErr;
+  if (upErr) throw new Error(upErr.message);
   const { error } = await supabase.from("documents").insert({ id: docId, deal_id: dealId, agent_id: userId, storage_path: path, file_name: file.name, status: "uploaded" });
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   revalidatePath(`/deals/${dealId}`);
 }
 
@@ -56,7 +56,7 @@ export async function setField(dealId: string, formData: FormData) {
   };
   await supabase.from("deal_fields").update({ superseded_at: new Date().toISOString() }).eq("deal_id", dealId).eq("key", key).is("superseded_at", null);
   const { error } = await supabase.from("deal_fields").insert(row);
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   revalidatePath(`/deals/${dealId}`);
 }
 
@@ -84,7 +84,7 @@ export async function deriveDeal(dealId: string) {
   const r = reconcile((existing ?? []).map((t) => ({ id: t.id, playbookRuleId: t.playbook_rule_id, title: t.title, dueDate: t.due_date, doneAt: t.done_at })), drafts);
   if (r.create.length) {
     const { error } = await supabase.from("tasks").insert(r.create.map((d) => ({ deal_id: dealId, agent_id: userId, title: d.title, stage: d.stage, due_date: d.dueDate, anchor_milestone_key: d.anchorMilestoneKey, offset_days: d.offsetDays, playbook_rule_id: d.playbookRuleId, client_visible: d.clientVisible })));
-    if (error) throw error;
+    if (error) throw new Error(error.message);
   }
   for (const u of r.update) await supabase.from("tasks").update({ due_date: u.dueDate }).eq("id", u.id);
 
@@ -122,7 +122,7 @@ export async function confirmField(dealId: string, fieldId: string, formData: Fo
   // 同 key 其他"已确认"的旧行作废
   await supabase.from("deal_fields").update({ superseded_at: new Date().toISOString() }).eq("deal_id", dealId).eq("key", f.key).neq("id", fieldId).is("superseded_at", null);
   const { error } = await supabase.from("deal_fields").update(patch).eq("id", fieldId);
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   revalidatePath(`/deals/${dealId}`);
 }
 
@@ -130,7 +130,7 @@ export async function confirmField(dealId: string, fieldId: string, formData: Fo
 export async function rejectField(dealId: string, fieldId: string) {
   const { supabase } = await me();
   const { error } = await supabase.from("deal_fields").update({ superseded_at: new Date().toISOString() }).eq("id", fieldId);
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   revalidatePath(`/deals/${dealId}`);
 }
 
@@ -139,7 +139,7 @@ export async function setStage(dealId: string, formData: FormData) {
   const stage = String(formData.get("stage") ?? "");
   if (!stage) return;
   const { error } = await supabase.from("deals").update({ stage }).eq("id", dealId);
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   revalidatePath(`/deals/${dealId}`);
   revalidatePath("/deals");
 }
@@ -147,7 +147,7 @@ export async function setStage(dealId: string, formData: FormData) {
 export async function toggleTask(taskId: string, done: boolean, backTo = "/today") {
   const { supabase } = await me();
   const { error } = await supabase.from("tasks").update({ done_at: done ? new Date().toISOString() : null }).eq("id", taskId);
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   revalidatePath(backTo);
   revalidatePath("/today");
 }
@@ -159,7 +159,7 @@ export async function addTask(formData: FormData) {
   const dealId = String(formData.get("deal_id") ?? "") || null;
   if (!title) return;
   const { error } = await supabase.from("tasks").insert({ agent_id: userId, deal_id: dealId, title, due_date: due });
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   revalidatePath("/tasks");
   revalidatePath("/today");
 }

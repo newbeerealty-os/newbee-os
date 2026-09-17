@@ -20,13 +20,13 @@ export async function saveUiString(formData: FormData) {
   const { error } = zh === null && en === null
     ? await supabase.from("ui_strings").delete().eq("key", key)
     : await supabase.from("ui_strings").upsert({ agent_id: userId, key, zh, en, deleted_at: null }, { onConflict: "agent_id,key" });
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   revalidatePath("/", "layout");
 }
 
 export async function resetUiString(key: string) {
   const { supabase } = await me();
   const { error } = await supabase.from("ui_strings").delete().eq("key", key);
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   revalidatePath("/", "layout");
 }

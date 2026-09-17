@@ -19,7 +19,7 @@ export async function createContact(formData: FormData) {
   const { supabase, userId } = await me();
   const input = ContactInputSchema.parse(obj(formData));
   const { data, error } = await supabase.from("contacts").insert({ ...input, agent_id: userId }).select("id").single();
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   revalidatePath("/contacts");
   redirect(`/contacts/${data.id}`);
 }
@@ -28,7 +28,7 @@ export async function updateContact(id: string, formData: FormData) {
   const { supabase } = await me();
   const input = ContactInputSchema.parse(obj(formData));
   const { error } = await supabase.from("contacts").update(input).eq("id", id);
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   revalidatePath("/contacts");
   revalidatePath(`/contacts/${id}`);
   redirect(`/contacts/${id}`); // 保存后回到详情页
@@ -37,7 +37,7 @@ export async function updateContact(id: string, formData: FormData) {
 export async function deleteContact(id: string) {
   const { supabase } = await me();
   const { error } = await supabase.from("contacts").update({ deleted_at: new Date().toISOString() }).eq("id", id);
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   revalidatePath("/contacts");
   redirect("/contacts");
 }
@@ -47,7 +47,7 @@ export async function createOrganization(formData: FormData) {
   const { supabase, userId } = await me();
   const input = OrganizationInputSchema.parse(obj(formData));
   const { data, error } = await supabase.from("organizations").insert({ ...input, agent_id: userId }).select("id").single();
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   revalidatePath("/contacts");
   redirect(`/contacts/org/${data.id}`);
 }
@@ -57,7 +57,7 @@ export async function createOrganizationInline(input: { kind: string; name: stri
   const { supabase, userId } = await me();
   const parsed = OrganizationInputSchema.parse({ kind: input.kind, name: input.name });
   const { data, error } = await supabase.from("organizations").insert({ ...parsed, agent_id: userId }).select("id,name,kind").single();
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   revalidatePath("/contacts");
   return data as { id: string; name: string; kind: string };
 }
@@ -66,7 +66,7 @@ export async function updateOrganization(id: string, formData: FormData) {
   const { supabase } = await me();
   const input = OrganizationInputSchema.parse(obj(formData));
   const { error } = await supabase.from("organizations").update(input).eq("id", id);
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   revalidatePath("/contacts");
   revalidatePath(`/contacts/org/${id}`);
   redirect(`/contacts/org/${id}`);
@@ -75,7 +75,7 @@ export async function updateOrganization(id: string, formData: FormData) {
 export async function deleteOrganization(id: string) {
   const { supabase } = await me();
   const { error } = await supabase.from("organizations").update({ deleted_at: new Date().toISOString() }).eq("id", id);
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   revalidatePath("/contacts");
   redirect("/contacts");
 }
@@ -85,7 +85,7 @@ export async function saveContactNotes(id: string, formData: FormData) {
   const { supabase } = await me();
   const notes = String(formData.get("notes") ?? "").trim() || null;
   const { error } = await supabase.from("contacts").update({ notes }).eq("id", id);
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   revalidatePath(`/contacts/${id}`);
 }
 
@@ -95,7 +95,7 @@ export async function addContactLink(id: string, formData: FormData) {
   const relation = String(formData.get("relation") ?? "other");
   if (!related || related === id || !(CONTACT_RELATIONS as readonly string[]).includes(relation)) return;
   const { error } = await supabase.from("contact_links").insert({ agent_id: userId, contact_id: id, related_contact_id: related, relation });
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   revalidatePath(`/contacts/${id}`);
   revalidatePath(`/contacts/${related}`);
 }
@@ -103,7 +103,7 @@ export async function addContactLink(id: string, formData: FormData) {
 export async function removeContactLink(id: string, linkId: string) {
   const { supabase } = await me();
   const { error } = await supabase.from("contact_links").update({ deleted_at: new Date().toISOString() }).eq("id", linkId);
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   revalidatePath(`/contacts/${id}`);
 }
 
@@ -126,7 +126,7 @@ export async function addParty(dealId: string, formData: FormData) {
     if (deal) side = roleSide(input.role, deal.type as DealType);
   }
   const { error } = await supabase.from("deal_parties").insert({ ...input, side, agent_id: userId, deal_id: dealId });
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   // 主客户：第一个标为 primary 的买方 / 卖方 / 租客 / 房东写进 deals.primary_contact_id
   if (input.is_primary && input.contact_id && ["buyer", "seller", "tenant", "landlord"].includes(input.role)) {
     await supabase.from("deals").update({ primary_contact_id: input.contact_id }).eq("id", dealId);
@@ -137,6 +137,6 @@ export async function addParty(dealId: string, formData: FormData) {
 export async function removeParty(dealId: string, partyId: string, backTo: string) {
   const { supabase } = await me();
   const { error } = await supabase.from("deal_parties").update({ deleted_at: new Date().toISOString() }).eq("id", partyId);
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   revalidatePath(backTo || `/deals/${dealId}`);
 }

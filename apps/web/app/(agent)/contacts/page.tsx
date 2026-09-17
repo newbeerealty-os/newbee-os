@@ -33,6 +33,9 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
     return s ? `/contacts?${s}` : "/contacts";
   };
   const tabLabel = tab ? t(`contactTab.${tab}`) : t("contacts.all");
+  const showLicense = tab === "agent";
+  const cols = showLicense ? "md:grid-cols-[1.8fr_1.1fr_1.5fr_1.1fr_.9fr_.9fr_.5fr]" : "md:grid-cols-[1.8fr_1.1fr_1.5fr_1.1fr_.9fr_.5fr]";
+  const LicenseTag = ({ r }: { r: { licenseType: string | null } }) => r.licenseType === "broker" || r.licenseType === "broker_associate" ? <Badge tone="blue">{t(`licenseType.${r.licenseType}`)}</Badge> : null;
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-4">
@@ -81,7 +84,7 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
                 {r.phone && <span>{r.phone}</span>}
               </div>
               <div className="mt-auto flex items-center justify-between text-xs">
-                <Badge tone={r.isOrg ? "zinc" : "blue"}>{r.kindLabel}</Badge>
+                <span className="flex gap-1"><Badge tone={r.isOrg ? "zinc" : "blue"}>{r.kindLabel}</Badge><LicenseTag r={r} /></span>
                 <span className="text-muted">{t("contacts.deals", { n: r.deals })}</span>
               </div>
             </Link>
@@ -90,13 +93,13 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
       ) : (
         <Section title={tabLabel} right={<span className="font-mono text-xs text-muted">{rows.length}</span>}>
           <div className="-mx-4 -my-4">
-            <div className="hidden grid-cols-[1.8fr_1.1fr_1.5fr_1.1fr_.9fr_.5fr] gap-3 border-b border-line bg-chip/40 px-4 py-2 text-[11.5px] font-semibold text-muted md:grid">
-              <span>{t("contacts.col.name")}</span><span>{t("contacts.col.org")}</span><span>{t("contacts.col.email")}</span><span>{t("contacts.col.phone")}</span><span>{t("contacts.col.kind")}</span><span className="text-right">{t("contacts.col.deals")}</span>
+            <div className={`hidden gap-3 border-b border-line bg-chip/40 px-4 py-2 text-[11.5px] font-semibold text-muted md:grid ${cols}`}>
+              <span>{t("contacts.col.name")}</span><span>{t("contacts.col.org")}</span><span>{t("contacts.col.email")}</span><span>{t("contacts.col.phone")}</span><span>{t("contacts.col.kind")}</span>{showLicense && <span>{t("contacts.col.licenseType")}</span>}<span className="text-right">{t("contacts.col.deals")}</span>
             </div>
             <ul className="divide-y divide-line">
               {rows.map((r) => (
                 <li key={r.id}>
-                  <Link href={r.href} className="grid gap-1 px-4 py-2.5 hover:bg-chip/40 md:grid-cols-[1.8fr_1.1fr_1.5fr_1.1fr_.9fr_.5fr] md:items-center md:gap-3">
+                  <Link href={r.href} className={`grid gap-1 px-4 py-2.5 hover:bg-chip/40 md:items-center md:gap-3 ${cols}`}>
                     <div className="flex min-w-0 items-center gap-2.5">
                       <ContactAvatar initials={r.initials} avatarUrl={r.avatarUrl} photoUrl={r.photoUrl} size="sm" />
                       <div className="min-w-0">
@@ -107,7 +110,8 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
                     <div className="truncate text-sm text-fg">{r.orgName ?? <span className="text-muted">—</span>}</div>
                     <div className="truncate font-mono text-xs">{r.email ?? <span className="text-muted">—</span>}</div>
                     <div className="font-mono text-xs">{r.phone ?? <span className="text-muted">—</span>}</div>
-                    <div><Badge tone={r.isOrg ? "zinc" : "blue"}>{r.kindLabel}</Badge></div>
+                    <div className="flex gap-1"><Badge tone={r.isOrg ? "zinc" : "blue"}>{r.kindLabel}</Badge>{!showLicense && <LicenseTag r={r} />}</div>
+                    {showLicense && <div className="text-xs">{r.licenseType ? (r.licenseType === "sales_agent" ? <span className="text-muted">{t("licenseType.sales_agent")}</span> : <LicenseTag r={r} />) : <span className="text-muted">—</span>}</div>}
                     <div className="hidden text-right font-mono text-sm md:block">{r.deals}</div>
                   </Link>
                 </li>

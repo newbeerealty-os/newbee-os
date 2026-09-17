@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { CONTACT_KINDS, ORG_KINDS, PARTY_ROLES, PARTY_SIDES, CONTACT_TABS, ContactInputSchema, OrganizationInputSchema, PartyInputSchema, initials, contactName, roleSide } from '../src/schemas/contacts';
+import { CONTACT_KINDS, ORG_KINDS, PARTY_ROLES, PARTY_SIDES, CONTACT_TABS, LICENSE_TYPES, ContactInputSchema, OrganizationInputSchema, PartyInputSchema, initials, contactName, roleSide } from '../src/schemas/contacts';
 import { MESSAGES } from '../src/i18n';
 
 describe('contacts 枚举与词典', () => {
@@ -9,6 +9,9 @@ describe('contacts 枚举与词典', () => {
     for (const r of PARTY_ROLES) expect(MESSAGES[`partyRole.${r}`], `partyRole.${r}`).toBeDefined();
     for (const s of PARTY_SIDES) expect(MESSAGES[`partySide.${s}`], `partySide.${s}`).toBeDefined();
     for (const tab of CONTACT_TABS) expect(MESSAGES[`contactTab.${tab.id}`], `contactTab.${tab.id}`).toBeDefined();
+    for (const l of LICENSE_TYPES) expect(MESSAGES[`licenseType.${l}`], `licenseType.${l}`).toBeDefined();
+    expect(CONTACT_KINDS).not.toContain('broker');
+    expect(CONTACT_TABS.map((x) => x.id)).not.toContain('broker');
   });
 
   it('页签覆盖全部人类型和公司类型，且不重复', () => {
@@ -30,6 +33,8 @@ describe('contacts 表单校验', () => {
     expect(c.phone).toBe('(972) 654-3552');
     expect(c.tags).toEqual(['首购', '中文优先', '微信']);
     expect(c.preferred_language).toBe('zh');
+    expect(c.license_type).toBe('sales_agent');
+    expect(ContactInputSchema.parse({ kind: 'agent', first_name: 'A', license_type: 'broker' }).license_type).toBe('broker');
   });
 
   it('ContactInput：邮箱格式错 / 没名字 / 类型不对 → 报错', () => {

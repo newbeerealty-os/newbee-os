@@ -156,6 +156,7 @@ export default async function ContactPage({ params, searchParams }: { params: Pr
                 {(org || c.job_title) && <div className="truncate text-sm text-muted">{c.job_title}{c.job_title && org ? " · " : ""}{org && <Link href={`/contacts/org/${org.id}`} className="text-accent hover:underline">{org.name}</Link>}</div>}
                 <div className="mt-1 flex flex-wrap gap-1">
                   <Badge tone="blue">{t(`contactKind.${c.kind}`)}</Badge>
+                  {c.kind === "agent" && (c.license_type === "broker" || c.license_type === "broker_associate") && <Badge tone="blue">{t(`licenseType.${c.license_type}`)}</Badge>}
                   {(c.tags as string[]).map((x) => <Badge key={x}>{x}</Badge>)}
                 </div>
               </div>
@@ -168,6 +169,7 @@ export default async function ContactPage({ params, searchParams }: { params: Pr
                 {c.wechat && <Row k={t("contact.f.wechat")}><span className="rounded bg-chip px-2 py-0.5 font-mono">{c.wechat}</span><CopyButton text={c.wechat} label={t("contact.copy")} doneLabel={t("contact.copied")} /></Row>}
                 {address && <Row k={t("contact.f.address")}><span>{address}</span></Row>}
                 <Row k={t("contact.f.preferredChannel")}><span className="text-muted">{c.preferred_channel ? t(`channel.${c.preferred_channel}`) : "—"} · {t(`language.${c.preferred_language}`)}</span></Row>
+                {c.kind === "agent" && <Row k={t("contact.f.licenseType")}><span>{t(`licenseType.${c.license_type ?? "sales_agent"}`)}</span></Row>}
                 {c.license_no && <Row k={t("contact.f.licenseNo")}><span className="font-mono">{c.license_no}</span></Row>}
                 {c.source && <Row k={t("contact.f.source")}><span>{c.source}</span></Row>}
                 {referrer && <Row k={t("contact.f.referredBy")}><Link href={`/contacts/${referrer.id}`} className="text-accent hover:underline">{pl(referrer)}</Link></Row>}

@@ -3,8 +3,12 @@
 import { z } from 'zod';
 import type { DealType } from '../types/domain';
 
-export const CONTACT_KINDS = ['client', 'agent', 'broker', 'title_lending', 'vendor', 'tc', 'attorney', 'other'] as const;
+export const CONTACT_KINDS = ['client', 'agent', 'title_lending', 'vendor', 'tc', 'attorney', 'other'] as const;
 export type ContactKind = (typeof CONTACT_KINDS)[number];
+
+/** 经纪人的执照类型（Broker 不是分类，是执照） */
+export const LICENSE_TYPES = ['sales_agent', 'broker', 'broker_associate'] as const;
+export type LicenseType = (typeof LICENSE_TYPES)[number];
 
 export const ORG_KINDS = ['brokerage', 'title_company', 'lender', 'law_firm', 'vendor', 'hoa', 'property_management', 'other'] as const;
 export type OrgKind = (typeof ORG_KINDS)[number];
@@ -30,7 +34,6 @@ export const CONTACT_TABS: ContactTab[] = [
   { id: 'client', kinds: ['client'], orgKinds: [] },
   { id: 'agent', kinds: ['agent'], orgKinds: [] },
   { id: 'brokerage', kinds: [], orgKinds: ['brokerage'] },
-  { id: 'broker', kinds: ['broker'], orgKinds: [] },
   { id: 'title_lending', kinds: ['title_lending'], orgKinds: ['title_company', 'lender'] },
   { id: 'vendor', kinds: ['vendor'], orgKinds: ['vendor'] },
   { id: 'tc', kinds: ['tc'], orgKinds: [] },
@@ -60,6 +63,7 @@ export const ContactInputSchema = z.object({
   wechat: blankToNull.default(null),
   preferred_channel: z.preprocess((v) => (v === '' ? null : v ?? null), z.enum(CONTACT_CHANNELS).nullable()).default(null),
   preferred_language: z.enum(CONTACT_LANGUAGES).default('zh'),
+  license_type: z.enum(LICENSE_TYPES).default('sales_agent'),
   license_no: blankToNull.default(null),
   address_line1: blankToNull.default(null),
   address_line2: blankToNull.default(null),
@@ -106,7 +110,6 @@ export type PartyInput = z.infer<typeof PartyInputSchema>;
 export const ORG_KINDS_FOR: Record<ContactKind, OrgKind[]> = {
   client: ['other', 'property_management', 'hoa', 'vendor'],
   agent: ['brokerage'],
-  broker: ['brokerage'],
   title_lending: ['title_company', 'lender'],
   vendor: ['vendor'],
   tc: ['brokerage', 'other'],
@@ -117,8 +120,7 @@ export const ORG_KINDS_FOR: Record<ContactKind, OrgKind[]> = {
 /** 房地产交易里常见的职位，按类型；用得多的会排到前面（rankSuggestions） */
 export const JOB_TITLE_PRESETS: Record<ContactKind, string[]> = {
   client: ['Investor', 'Homeowner', 'Engineer', 'Physician', 'Business Owner', 'Retired'],
-  agent: ['Realtor', 'Listing Agent', "Buyer's Agent", 'Broker Associate', 'Team Lead', 'Leasing Agent'],
-  broker: ['Broker', 'Managing Broker', 'Designated Broker', 'Broker / Owner'],
+  agent: ['Realtor', 'Listing Agent', "Buyer's Agent", 'Team Lead', 'Leasing Agent', 'Broker Associate', 'Managing Broker', 'Designated Broker', 'Broker / Owner'],
   title_lending: ['Escrow Officer', 'Escrow Assistant', 'Closer', 'Title Examiner', 'Business Development', 'Loan Officer', 'Mortgage Broker', 'Loan Processor', 'Underwriter'],
   vendor: ['Home Inspector', 'Appraiser', 'Surveyor', 'Photographer', 'Stager', 'General Contractor', 'Handyman', 'Roofer', 'HVAC Technician', 'Plumber', 'Electrician', 'Cleaner', 'Mover', 'Landscaper', 'Insurance Agent', 'Pest Control'],
   tc: ['Transaction Coordinator', 'Listing Coordinator', 'Closing Coordinator'],
@@ -128,8 +130,7 @@ export const JOB_TITLE_PRESETS: Record<ContactKind, string[]> = {
 
 export const TAG_PRESETS: Record<ContactKind, string[]> = {
   client: ['首购', '换房', '投资客', '现金', 'VA', 'FHA', '中文优先', '微信联系', '老客户', '推荐来源', 'Zillow', '开放日', '急', '观望'],
-  agent: ['合作过', '好沟通', '双语', '团队', '对方经纪'],
-  broker: ['自己公司', '对方公司', '双语'],
+  agent: ['合作过', '好沟通', '双语', '团队', '对方经纪', '自己公司', '对方公司'],
   title_lending: ['常用', '中文服务', '快', '远程签约', '双语'],
   vendor: ['常用', '靠谱', '便宜', '中文服务', '周末可约', '有执照'],
   tc: ['自己的', '对方的', '双语'],
