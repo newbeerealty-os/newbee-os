@@ -8,16 +8,19 @@ export function PageHeader({ crumbs, title, actions, subnav }: { crumbs: Crumb[]
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-3">
-        <div className="min-w-0 flex-1">
-          <div className="text-xs text-muted">
-            {crumbs.map((c, i) => (
-              <span key={i}>
-                {i > 0 && " / "}
-                {c.href ? <Link href={c.href} className="text-accent hover:underline">{c.label}</Link> : <span className={i === crumbs.length - 1 ? "font-medium text-fg" : ""}>{c.label}</span>}
-              </span>
-            ))}
-          </div>
+        {/* 标题 + 上级路径同一行：当前层级不显示，上级倒序，用 ← 分隔（联系人 / 经纪人 / 张三 → 张三  经纪人 ← 联系人） */}
+        <div className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-3 gap-y-0.5">
           <h1 className="truncate text-xl font-semibold tracking-tight">{title}</h1>
+          {crumbs.length > 1 && (
+            <span className="flex flex-wrap items-baseline gap-x-1.5 text-sm text-muted">
+              {crumbs.slice(0, -1).reverse().map((c, i) => (
+                <span key={i} className="flex items-baseline gap-x-1.5">
+                  {i > 0 && <span aria-hidden>←</span>}
+                  {c.href ? <Link href={c.href} className="text-accent hover:underline">{c.label}</Link> : <span>{c.label}</span>}
+                </span>
+              ))}
+            </span>
+          )}
         </div>
         {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
       </div>
