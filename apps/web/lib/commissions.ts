@@ -1,6 +1,6 @@
 // 佣金：读方案、读记录、算本周期已付（cap 进度）。计算本身在 core（computeCommission）。
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { CommissionPlanSchema, computeCommission, capYearOf, statusFromStage, type CommissionPlan, type CommissionResult, type CustomFee, type YearToDate } from "@newbee/core";
+import { CommissionPlanSchema, computeCommission, capYearOf, statusFromStage, type CommissionPlan, type CommissionSide, type CommissionResult, type CustomFee, type YearToDate } from "@newbee/core";
 import { getAgentSettings } from "@/lib/settings";
 import { todayISO } from "@/lib/format";
 
@@ -62,7 +62,7 @@ export function ytdFor(plan: CommissionPlan, rows: CommissionRow[], excludeId?: 
 /** 重算一条记录的快照与状态 */
 export function recompute(r: CommissionRow, plan: CommissionPlan, ytd: YearToDate) {
   const computed = computeCommission({
-    kind: r.kind, price: r.price, basis: r.basis, pct: r.pct, flat: r.flat, fees: r.fees,
+    kind: r.kind, side: r.side as CommissionSide, price: r.price, basis: r.basis, pct: r.pct, flat: r.flat, fees: r.fees,
     referral_out_basis: r.referral_out_basis, referral_out_pct: r.referral_out_pct, referral_out_flat: r.referral_out_flat,
     referralInPct: r.kind === "referral" ? r.referral_out_pct : null,
   }, plan, ytd);

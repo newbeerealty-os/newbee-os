@@ -9,11 +9,37 @@ export type CommissionKind = (typeof COMMISSION_KINDS)[number];
 export type CommissionSide = (typeof COMMISSION_SIDES)[number];
 export type CommissionStatus = (typeof COMMISSION_STATUSES)[number];
 
+const r2 = (n: number) => Math.round(n * 100) / 100;
 const pct = (d: number, max = 100) => z.coerce.number().min(0).max(max).catch(d);
 const money = (d: number) => z.coerce.number().min(0).catch(d);
 
+/** 方案的六个模块，关掉 = 计算时按 0；没写默认全开（老数据兼容） */
+export const PLAN_MODULES = ['split', 'cap', 'perDeal', 'royalty', 'team', 'recurring'] as const;
+export type PlanModule = (typeof PLAN_MODULES)[number];
+const ModulesSchema = z.object({
+  split: z.boolean().catch(true),
+  cap: z.boolean().catch(true),
+  perDeal: z.boolean().catch(true),
+  royalty: z.boolean().catch(true),
+  team: z.boolean().catch(true),
+  recurring: z.boolean().catch(true),
+}).catch({ split: true, cap: true, perDeal: true, royalty: true, team: true, recurring: true });
+
+export const RECURRING_PERIODS = ['monthly', 'quarterly', 'yearly'] as const;
+export type RecurringPeriod = (typeof RECURRING_PERIODS)[number];
+export const RecurringFeeSchema = z.object({ name: z.string().min(1), amount: z.coerce.number().min(0), period: z.enum(RECURRING_PERIODS).catch('monthly') });
+export type RecurringFee = z.infer<typeof RecurringFeeSchema>;
+
 /** Broker 分成方案 */
-export const CommissionPlanSchema = z.object({
+export const CommissionPlanSchema = z.preprocess((raw) => {
+  // 旧字段 monthlyFees → recurringFees(monthly)
+  if (raw && typeof raw === 'object' && !('recurringFees' in raw) && Array.isArray((raw as { monthlyFees?: unknown }).monthlyFees)) {
+    const { monthlyFees, ...rest } = raw as { monthlyFees: { name: string; amount: number }[] };
+    return { ...rest, recurringFees: monthlyFees.map((f) => ({ ...f, period: 'monthly' })) };
+  }
+  return raw;
+}, z.object({
+  modules: ModulesSchema,
   /** cap 前我拿的比例 */
   splitPreCap: pct(70),
   /** cap 后我拿的比例 */
@@ -22,8 +48,9 @@ export const CommissionPlanSchema = z.object({
   capAmount: money(0),
   /** 周期起点 MM-DD（入职纪念日） */
   capYearStart: z.string().regex(/^\d{2}-\d{2}$/).catch('01-01'),
-  /** 每笔固定费（cap 前 / 后） */
+  /** 每笔固定费：买卖 / 出租（放租、寻租、托管）/ cap 后 */
   perDealFee: money(0),
+  perDealFeeLease: money(0),
   perDealFeePostCap: money(0),
   /** 每笔 E&O */
   eoFee: money(0),
@@ -34,17 +61,59 @@ export const CommissionPlanSchema = z.object({
   teamPct: pct(0),
   teamCap: money(0),
   teamBasis: z.enum(['gci', 'after_broker']).catch('after_broker'),
-  /** 月固定费（desk / tech / MLS …），不进单笔，进报表 */
-  monthlyFees: z.array(z.object({ name: z.string().min(1), amount: z.coerce.number().min(0) })).catch([]),
-});
+  /** 固定周期费（年费 / desk / tech / MLS …），不进单笔 NCI，进周期统计 */
+  recurringFees: z.array(RecurringFeeSchema).catch([]),
+}));
 export type CommissionPlan = z.infer<typeof CommissionPlanSchema>;
 export const DEFAULT_PLAN: CommissionPlan = CommissionPlanSchema.parse({});
+
+/** 一键预设：把开关和典型数值填好，之后随便改 */
+export const PLAN_PRESET_IDS = ['perDeal', 'annual', 'capSplit', 'splitOnly'] as const;
+export type PlanPresetId = (typeof PLAN_PRESET_IDS)[number];
+const OFF = { split: false, cap: false, perDeal: false, royalty: false, team: false, recurring: false };
+export function applyPreset(plan: CommissionPlan, id: PlanPresetId): CommissionPlan {
+  switch (id) {
+    case 'perDeal': return { ...plan, modules: { ...OFF, perDeal: true }, perDealFee: 540, perDealFeeLease: 125, perDealFeePostCap: 0, eoFee: 0 };
+    case 'annual': return { ...plan, modules: { ...OFF, recurring: true }, recurringFees: [{ name: 'Annual fee', amount: 3000, period: 'yearly' }] };
+    case 'capSplit': return { ...plan, modules: { ...OFF, split: true, cap: true, perDeal: true, royalty: true }, splitPreCap: 70, splitPostCap: 100, capAmount: 16000, perDealFee: 540, perDealFeeLease: 540, perDealFeePostCap: 250, royaltyPct: 6, royaltyCap: 3000 };
+    case 'splitOnly': return { ...plan, modules: { ...OFF, split: true }, splitPreCap: 70, splitPostCap: 70 };
+  }
+}
+
+/** 固定周期费折算到一个周期（年）：年 ×1、季 ×4、月 ×12 */
+export function recurringPerPeriod(plan: CommissionPlan): number {
+  if (!plan.modules.recurring) return 0;
+  return r2(plan.recurringFees.reduce((s, f) => s + f.amount * (f.period === 'yearly' ? 1 : f.period === 'quarterly' ? 4 : 12), 0));
+}
+
+/** 把关掉的模块折成 0，计算只看这个 */
+export function effectivePlan(plan: CommissionPlan): CommissionPlan {
+  const m = plan.modules;
+  return {
+    ...plan,
+    splitPreCap: m.split ? plan.splitPreCap : 100,
+    splitPostCap: m.split ? plan.splitPostCap : 100,
+    capAmount: m.cap ? plan.capAmount : 0,
+    perDealFee: m.perDeal ? plan.perDealFee : 0,
+    perDealFeeLease: m.perDeal ? plan.perDealFeeLease : 0,
+    perDealFeePostCap: m.perDeal ? plan.perDealFeePostCap : 0,
+    eoFee: m.perDeal ? plan.eoFee : 0,
+    royaltyPct: m.royalty ? plan.royaltyPct : 0,
+    royaltyCap: m.royalty ? plan.royaltyCap : 0,
+    teamPct: m.team ? plan.teamPct : 0,
+    teamCap: m.team ? plan.teamCap : 0,
+    recurringFees: m.recurring ? plan.recurringFees : [],
+  };
+}
+const LEASE_SIDES: readonly string[] = ['landlord', 'tenant', 'management'];
 
 export const CustomFeeSchema = z.object({ name: z.string().min(1), basis: z.enum(['flat', 'pct_of_gci', 'pct_of_price']), value: z.coerce.number().min(0) });
 export type CustomFee = z.infer<typeof CustomFeeSchema>;
 
 export interface CommissionRecordInput {
   kind: CommissionKind;
+  /** 决定每笔费按买卖还是出租 */
+  side?: CommissionSide | null;
   price: number | null;
   basis: 'pct' | 'flat';
   pct: number | null;
@@ -78,9 +147,8 @@ export interface CommissionResult {
   nci: number;
 }
 
-const r2 = (n: number) => Math.round(n * 100) / 100;
-
-export function computeCommission(rec: CommissionRecordInput, plan: CommissionPlan, ytd: YearToDate): CommissionResult {
+export function computeCommission(rec: CommissionRecordInput, rawPlan: CommissionPlan, ytd: YearToDate): CommissionResult {
+  const plan = effectivePlan(rawPlan);
   const price = rec.price ?? 0;
   let gci = rec.basis === 'flat' ? (rec.flat ?? 0) : (price * (rec.pct ?? 0)) / 100;
   if (rec.kind === 'referral' && rec.referralInPct) gci = (gci * rec.referralInPct) / 100;
@@ -125,7 +193,8 @@ export function computeCommission(rec: CommissionRecordInput, plan: CommissionPl
   if (royalty) lines.push({ id: 'royalty', name: 'royalty', amount: royalty });
   if (team) lines.push({ id: 'team', name: 'team', amount: team });
   if (rec.kind === 'deal') {
-    const perDeal = capHit || capRemaining === 0 ? plan.perDealFeePostCap : plan.perDealFee;
+    const base = LEASE_SIDES.includes(rec.side ?? '') ? plan.perDealFeeLease : plan.perDealFee;
+    const perDeal = capHit || capRemaining === 0 ? plan.perDealFeePostCap : base;
     if (perDeal) lines.push({ id: 'perDealFee', name: 'perDealFee', amount: r2(perDeal) });
     if (plan.eoFee) lines.push({ id: 'eoFee', name: 'eoFee', amount: r2(plan.eoFee) });
   }

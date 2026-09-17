@@ -69,9 +69,8 @@ export async function deleteCommission(id: string, backTo?: string) {
 
 export async function savePlan(formData: FormData) {
   const raw = Object.fromEntries(formData.entries()) as Record<string, unknown>;
-  let monthlyFees: unknown = [];
-  try { monthlyFees = JSON.parse(String(raw.monthlyFees ?? "[]")); } catch { monthlyFees = []; }
-  const plan = CommissionPlanSchema.parse({ ...raw, monthlyFees });
+  const json = (k: string, fallback: unknown) => { try { return JSON.parse(String(raw[k] ?? "")); } catch { return fallback; } };
+  const plan = CommissionPlanSchema.parse({ ...raw, modules: json("modules", undefined), recurringFees: json("recurringFees", []) });
   await patchAgentSettings({ commissionPlan: plan });
   await recomputeAll();
   revalidatePath("/settings/commission");

@@ -4,7 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { CONTACT_TABS, type Translator } from "@newbee/core";
 import { todayISO } from "@/lib/format";
 
-export const COMMISSION_FILTERS = ["all", "listing", "buyer", "both", "lease", "referral", "pending", "paid"] as const;
+export const COMMISSION_FILTERS = ["all", "listing", "buyer", "both", "landlord", "tenant", "referral", "pending", "paid"] as const;
 export const DEAL_STAGES = ["lead", "pre", "active", "offer", "under_contract", "closing", "closed", "terminated"] as const;
 
 export interface NavChild { href: string; label: string; count?: number }
@@ -89,7 +89,8 @@ export function commissionFilterLabel(t: Translator, f: string): string {
     case "listing": return t("commSide.listing");
     case "buyer": return t("commSide.buyer");
     case "both": return t("comm.filter.both");
-    case "lease": return t("comm.filter.lease");
+    case "landlord": return t("commSide.landlord");
+    case "tenant": return t("commSide.tenant");
     case "referral": return t("commKind.referral");
     case "pending": return t("comm.filter.pending");
     case "paid": return t("comm.filter.paid");

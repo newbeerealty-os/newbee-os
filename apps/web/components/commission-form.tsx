@@ -1,8 +1,7 @@
 "use client";
 // 佣金表单：左边输入（$ / % 切换、推荐费付出、自定义扣费），右边实时明细（core computeCommission）。
-// 方案里的月固定费列表编辑器也在这里（设置页用）。
 import { useMemo, useState } from "react";
-import { computeCommission, type CommissionPlan, type CustomFee, type YearToDate } from "@newbee/core";
+import { computeCommission, type CommissionPlan, type CommissionSide, type CustomFee, type YearToDate } from "@newbee/core";
 
 export type Opt = { value: string; label: string };
 export type L = Record<string, string>;
@@ -49,10 +48,10 @@ export function CommissionForm(p: CommissionFormProps) {
   const [paidAt, setPaidAt] = useState(v("paid_at"));
 
   const result = useMemo(() => computeCommission({
-    kind: p.kind, price: toNum(price), basis, pct: basis === "pct" ? toNum(amount) : null, flat: basis === "flat" ? toNum(amount) : null, fees,
+    kind: p.kind, side: side as CommissionSide, price: toNum(price), basis, pct: basis === "pct" ? toNum(amount) : null, flat: basis === "flat" ? toNum(amount) : null, fees,
     referral_out_basis: p.kind === "deal" && ro ? roBasis : null, referral_out_pct: roBasis === "pct" ? toNum(ro) : null, referral_out_flat: roBasis === "flat" ? toNum(ro) : null,
     referralInPct: p.kind === "referral" ? toNum(ro) || null : null,
-  }, p.plan, p.ytd), [p.kind, price, basis, amount, fees, ro, roBasis, p.plan, p.ytd]);
+  }, p.plan, p.ytd), [p.kind, side, price, basis, amount, fees, ro, roBasis, p.plan, p.ytd]);
 
   const F = ({ label, children, className = "" }: { label: string; children: React.ReactNode; className?: string }) => <label className={`flex flex-col gap-1 text-xs text-muted ${className}`}>{label}{children}</label>;
   const Row = ({ label, amount, sub, strong, neg }: { label: string; amount: number; sub?: string; strong?: boolean; neg?: boolean }) => (
@@ -130,19 +129,3 @@ export function CommissionForm(p: CommissionFormProps) {
   );
 }
 
-export function MonthlyFeesEditor({ initial, labels }: { initial: { name: string; amount: number }[]; labels: { add: string; name: string; amount: string; remove: string } }) {
-  const [rows, setRows] = useState(initial);
-  return (
-    <div className="flex flex-col gap-2">
-      <input type="hidden" name="monthlyFees" value={JSON.stringify(rows.filter((r) => r.name.trim()))} />
-      {rows.map((r, i) => (
-        <div key={i} className="grid grid-cols-[1.5fr_1fr_auto] gap-2">
-          <input value={r.name} placeholder={labels.name} onChange={(e) => setRows(rows.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))} className={inputCls} />
-          <input value={r.amount} inputMode="decimal" placeholder={labels.amount} onChange={(e) => setRows(rows.map((x, j) => (j === i ? { ...x, amount: toNum(e.target.value) } : x)))} className={`${inputCls} font-mono`} />
-          <button type="button" onClick={() => setRows(rows.filter((_, j) => j !== i))} className="text-muted hover:text-danger" title={labels.remove}>✕</button>
-        </div>
-      ))}
-      <button type="button" onClick={() => setRows([...rows, { name: "", amount: 0 }])} className="self-start text-sm text-accent hover:underline">{labels.add}</button>
-    </div>
-  );
-}

@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { computeCommission, CommissionPlanSchema, DEFAULT_PLAN, statusFromStage, capYearOf, COMMISSION_SIDES, COMMISSION_STATUSES, COMMISSION_KINDS } from '../src/engines/commission';
+import { computeCommission, CommissionPlanSchema, DEFAULT_PLAN, statusFromStage, capYearOf, applyPreset, recurringPerPeriod, PLAN_PRESET_IDS, COMMISSION_SIDES, COMMISSION_STATUSES, COMMISSION_KINDS } from '../src/engines/commission';
 import { MESSAGES } from '../src/i18n';
 
 // 典型方案：70/30，cap 16,000，每笔 540，cap 后每笔 250，E&O 45
 const plan = CommissionPlanSchema.parse({ splitPreCap: 70, splitPostCap: 100, capAmount: 16000, capYearStart: '03-01', perDealFee: 540, perDealFeePostCap: 250, eoFee: 45 });
-const deal = (over: Partial<Parameters<typeof computeCommission>[0]> = {}) => ({ kind: 'deal' as const, price: 450000, basis: 'pct' as const, pct: 3, flat: null, fees: [], ...over });
+const deal = (over: Partial<Parameters<typeof computeCommission>[0]> = {}) => ({ kind: 'deal' as const, side: 'listing' as const, price: 450000, basis: 'pct' as const, pct: 3, flat: null, fees: [], ...over });
 
 describe('computeCommission：交易佣金', () => {
   it('cap 前：GCI 13,500 → broker 30% 4,050 → 每笔 540 + E&O 45 → NCI 8,865', () => {
@@ -85,5 +85,48 @@ describe('方案 / 状态 / 周期', () => {
     for (const s of COMMISSION_SIDES) expect(MESSAGES[`commSide.${s}`], s).toBeDefined();
     for (const s of COMMISSION_STATUSES) expect(MESSAGES[`commStatus.${s}`], s).toBeDefined();
     for (const k of COMMISSION_KINDS) expect(MESSAGES[`commKind.${k}`], k).toBeDefined();
+  });
+});
+
+describe('方案模块开关 / 预设 / 固定周期费', () => {
+  const ytd0 = { brokerPaid: 0, royaltyPaid: 0, teamPaid: 0 };
+  it('模块关掉就当 0：关分成 + 关 cap → broker 0；关每笔费 → 没有 perDealFee / eoFee', () => {
+    const p = CommissionPlanSchema.parse({ ...plan, modules: { split: false, cap: false, perDeal: false, royalty: false, team: false, recurring: false } });
+    const r = computeCommission(deal(), p, ytd0);
+    expect(r.brokerSplit).toBe(0);
+    expect(r.capHit).toBe(false);
+    expect(r.lines).toEqual([]);
+    expect(r.nci).toBe(13500);
+  });
+  it('每笔费按类型：买卖 540，放租 / 寻租 / 托管 125', () => {
+    const p = CommissionPlanSchema.parse({ modules: { split: false, cap: false, perDeal: true, royalty: false, team: false, recurring: false }, perDealFee: 540, perDealFeeLease: 125 });
+    expect(computeCommission(deal({ side: 'listing' }), p, ytd0).nci).toBe(13500 - 540);
+    expect(computeCommission(deal({ side: 'buyer' }), p, ytd0).nci).toBe(13500 - 540);
+    expect(computeCommission(deal({ side: 'landlord', price: 2400, pct: 50 }), p, ytd0).nci).toBe(1200 - 125);
+    expect(computeCommission(deal({ side: 'tenant', price: 2400, pct: 50 }), p, ytd0).nci).toBe(1200 - 125);
+    expect(computeCommission(deal({ side: 'management', price: 2400, pct: 10 }), p, ytd0).nci).toBe(240 - 125);
+  });
+  it('预设：每笔固定费型 = 只开每笔费 540 / 125；年费型 = 只开固定周期费 3,000 / 年；分成 + Cap 型开分成、cap、每笔费、加盟费', () => {
+    const a = applyPreset(DEFAULT_PLAN, 'perDeal');
+    expect(a.modules).toEqual({ split: false, cap: false, perDeal: true, royalty: false, team: false, recurring: false });
+    expect([a.perDealFee, a.perDealFeeLease]).toEqual([540, 125]);
+    const b = applyPreset(DEFAULT_PLAN, 'annual');
+    expect(b.modules.recurring).toBe(true);
+    expect(b.modules.perDeal).toBe(false);
+    expect(b.recurringFees).toEqual([{ name: 'Annual fee', amount: 3000, period: 'yearly' }]);
+    const c = applyPreset(DEFAULT_PLAN, 'capSplit');
+    expect(c.modules).toMatchObject({ split: true, cap: true, perDeal: true, royalty: true });
+    expect(computeCommission(deal(), c, ytd0).brokerSplit).toBe(4050);
+    for (const id of PLAN_PRESET_IDS) expect(MESSAGES[`plan.preset.${id}`], id).toBeDefined();
+  });
+  it('固定周期费换算到一个周期：年 ×1、季 ×4、月 ×12；模块关了就是 0', () => {
+    const p = CommissionPlanSchema.parse({ modules: { recurring: true }, recurringFees: [{ name: 'Annual', amount: 3000, period: 'yearly' }, { name: 'MLS', amount: 150, period: 'quarterly' }, { name: 'Desk', amount: 50, period: 'monthly' }] });
+    expect(recurringPerPeriod(p)).toBe(3000 + 600 + 600);
+    expect(recurringPerPeriod({ ...p, modules: { ...p.modules, recurring: false } })).toBe(0);
+  });
+  it('旧的 monthlyFees 自动迁成 recurringFees(monthly)；模块没写默认全开', () => {
+    const p = CommissionPlanSchema.parse({ monthlyFees: [{ name: 'Tech', amount: 85 }] });
+    expect(p.recurringFees).toEqual([{ name: 'Tech', amount: 85, period: 'monthly' }]);
+    expect(p.modules).toEqual({ split: true, cap: true, perDeal: true, royalty: true, team: true, recurring: true });
   });
 });

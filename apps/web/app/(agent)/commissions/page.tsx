@@ -1,6 +1,6 @@
 // /commissions —— 佣金列表：统计卡 + cap 进度 + 可拖可排的表；?f= 过滤（all / listing / buyer / both / lease / referral / pending / paid）；?from=&to=
 import Link from "next/link";
-import { matchesQuery, sortRows, compareText, compareNumber, compareDate } from "@newbee/core";
+import { matchesQuery, sortRows, compareText, compareNumber, compareDate, recurringPerPeriod } from "@newbee/core";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n";
 import { money } from "@/lib/format";
@@ -14,6 +14,7 @@ import { SearchBox } from "@/components/search-box";
 import { DataTable } from "@/components/data-table";
 import { StageDot } from "@/components/stage";
 import { COMMISSION_STATUS_TONE as STATUS_TONE } from "@/components/commission-list";
+import { PeriodCard } from "@/components/period-card";
 
 export const dynamic = "force-dynamic";
 
@@ -34,7 +35,8 @@ export default async function CommissionsPage({ searchParams }: { searchParams: 
       case "listing": return r.kind === "deal" && r.side === "listing";
       case "buyer": return r.kind === "deal" && r.side === "buyer";
       case "both": return isBothSides(r, all);
-      case "lease": return r.side === "landlord" || r.side === "tenant" || r.side === "management";
+      case "landlord": return r.kind === "deal" && r.side === "landlord";
+      case "tenant": return r.kind === "deal" && r.side === "tenant";
       case "referral": return r.kind === "referral";
       case "pending": return r.status === "pending" || r.status === "closed";
       case "paid": return r.status === "paid";
@@ -49,7 +51,6 @@ export default async function CommissionsPage({ searchParams }: { searchParams: 
   const inPeriod = all.filter((r) => { const d = effectiveDate(r); return d >= ytd.period.start && d <= ytd.period.end && r.status !== "cancelled"; });
   const sum = (xs: CommissionRow[], k: "gci" | "nci") => xs.reduce((s, r) => s + (r.computed?.[k] ?? 0), 0);
   const stats = { gci: sum(inPeriod, "gci"), nci: sum(inPeriod, "nci"), paid: sum(inPeriod.filter((r) => r.status === "paid"), "nci"), pending: sum(inPeriod.filter((r) => r.status === "pending" || r.status === "closed"), "nci") };
-  const capPct = plan.capAmount > 0 ? Math.min(100, Math.round((ytd.brokerPaid / plan.capAmount) * 100)) : 0;
 
   const items = rows.map((r) => ({ r, what: whatOf(r, t), date: effectiveDate(r), both: isBothSides(r, all) }));
   const sorted = sort === "date" ? sortRows(items, (x) => x.date, compareDate, dir)
@@ -89,14 +90,7 @@ export default async function CommissionsPage({ searchParams }: { searchParams: 
         <Stat label={t("comm.stat.paid")} value={money(stats.paid)} />
         <Stat label={t("comm.stat.pending")} value={money(stats.pending)} tone={stats.pending ? "warn" : undefined} />
       </StatGrid>
-      <Section title={t("comm.cap")} right={<span className="font-mono text-sm text-muted">{t("comm.capPeriod", { start: ytd.period.start, end: ytd.period.end })}</span>}>
-        {plan.capAmount > 0 ? (
-          <div className="flex flex-col gap-2">
-            <div className="flex items-baseline justify-between text-sm"><span className="font-mono">{money(ytd.brokerPaid)} / {money(plan.capAmount)}</span><span className="text-muted">{capPct}%{capPct >= 100 && ` · ${t("comm.capHit")}`}</span></div>
-            <div className="h-2.5 overflow-hidden rounded-full bg-chip"><div className="h-full rounded-full bg-accent" style={{ width: `${capPct}%` }} /></div>
-          </div>
-        ) : <p className="text-sm text-muted">{t("comm.capNone")} · <Link href="/settings/commission" className="text-accent hover:underline">{t("settings.commission")}</Link></p>}
-      </Section>
+      <PeriodCard t={t} plan={plan} ytd={ytd} fixed={recurringPerPeriod(plan)} money={money} />
 
       <div className="hidden md:block">
         <Tabs base={href("all")} param="f" active={f} tabs={FILTERS.map((x) => ({ id: x, label: fLabel(x), count: all.filter((r) => inFilter(r, x)).length }))} />
