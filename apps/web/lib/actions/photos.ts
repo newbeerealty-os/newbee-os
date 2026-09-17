@@ -1,5 +1,6 @@
 "use server";
 // 联系人照片：上传（多张）、删除；头像：从某张照片（或新上传的图）裁出圆形小图存起来
+import { setFlash } from "@/lib/flash";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -27,6 +28,7 @@ export async function uploadContactPhotos(contactId: string, formData: FormData)
   const { supabase, userId } = await me();
   const files = formData.getAll("photos").filter((f): f is File => f instanceof File && f.size > 0);
   for (const f of files) await storePhoto(supabase, userId, contactId, f);
+  await setFlash("uploaded");
   revalidatePath(`/contacts/${contactId}`);
 }
 
@@ -38,6 +40,7 @@ export async function deleteContactPhoto(contactId: string, photoId: string) {
   if (error) throw error;
   // 如果删的是头像的来源，头像一起清掉
   await supabase.from("contacts").update({ avatar_path: null, avatar_photo_id: null, avatar_crop: null }).eq("id", contactId).eq("avatar_photo_id", photoId);
+  await setFlash("deleted");
   revalidatePath(`/contacts/${contactId}`);
   revalidatePath("/contacts");
 }
@@ -64,6 +67,7 @@ export async function setContactAvatar(contactId: string, formData: FormData) {
   const { error } = await supabase.from("contacts").update({ avatar_path: avatarPath, avatar_photo_id: photoId, avatar_crop: crop }).eq("id", contactId);
   if (error) throw error;
   if (prev?.avatar_path) await supabase.storage.from(PHOTO_BUCKET).remove([prev.avatar_path]);
+  await setFlash("saved");
   revalidatePath(`/contacts/${contactId}`);
   revalidatePath("/contacts");
 }
@@ -74,6 +78,7 @@ export async function removeContactAvatar(contactId: string) {
   const { error } = await supabase.from("contacts").update({ avatar_path: null, avatar_photo_id: null, avatar_crop: null }).eq("id", contactId);
   if (error) throw error;
   if (prev?.avatar_path) await supabase.storage.from(PHOTO_BUCKET).remove([prev.avatar_path]);
+  await setFlash("saved");
   revalidatePath(`/contacts/${contactId}`);
   revalidatePath("/contacts");
 }

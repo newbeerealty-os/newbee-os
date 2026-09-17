@@ -1,5 +1,6 @@
 "use server";
 // 佣金的写操作：保存（新建 / 编辑，同时算快照和状态）、删除、保存方案、重算本周期
+import { setFlash } from "@/lib/flash";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { CommissionInputSchema, CommissionPlanSchema } from "@newbee/core";
@@ -31,6 +32,7 @@ export async function saveCommission(id: string | null, formData: FormData) {
     recordId = data.id;
   }
   await recomputeOne(supabase, recordId!);
+  await setFlash(id ? "saved" : "created");
   revalidatePath("/commissions"); revalidatePath("/", "layout");
   redirect(back ?? `/commissions/${recordId}`);
 }
@@ -63,6 +65,7 @@ export async function deleteCommission(id: string, backTo?: string) {
   const { supabase } = await me();
   const { error } = await supabase.from("commissions").update({ deleted_at: new Date().toISOString() }).eq("id", id);
   if (error) throw new Error(error.message);
+  await setFlash("deleted");
   revalidatePath("/commissions");
   redirect(backTo || "/commissions");
 }
@@ -73,6 +76,7 @@ export async function savePlan(formData: FormData) {
   const plan = CommissionPlanSchema.parse({ ...raw, modules: json("modules", undefined), recurringFees: json("recurringFees", []), splitTiers: json("splitTiers", []) });
   await patchAgentSettings({ commissionPlan: plan });
   await recomputeAll();
+  await setFlash("saved");
   revalidatePath("/settings/commission");
   revalidatePath("/commissions");
 }

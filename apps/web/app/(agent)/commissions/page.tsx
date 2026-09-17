@@ -8,7 +8,7 @@ import { getAgentSettings } from "@/lib/settings";
 import { getPlan, loadCommissions, ytdFor, effectiveDate, type CommissionRow } from "@/lib/commissions";
 import { whatOf, isBothSides } from "@/lib/commission-props";
 import { COMMISSION_FILTERS as FILTERS, commissionFilterLabel } from "@/lib/nav";
-import { Section, Empty, Badge, inputCls } from "@/components/ui";
+import { Section, Empty, Badge, Button, inputCls } from "@/components/ui";
 import { PageHeader, Tabs, Stat, StatGrid, SortHeader, readSort } from "@/components/page";
 import { SearchBox } from "@/components/search-box";
 import { DataTable } from "@/components/data-table";
@@ -76,7 +76,7 @@ export default async function CommissionsPage({ searchParams }: { searchParams: 
             <form method="get" className="flex items-center gap-1 text-xs text-muted">
               {f !== "all" && <input type="hidden" name="f" value={f} />}
               {t("comm.from")}<input type="date" name="from" defaultValue={sp.from ?? ""} className={`${inputCls} w-36`} />{t("comm.to")}<input type="date" name="to" defaultValue={sp.to ?? ""} className={`${inputCls} w-36`} />
-              <button type="submit" className="h-10 rounded-md border border-line-strong px-3 text-sm font-medium text-fg hover:bg-chip">OK</button>
+              <Button variant="ghost">OK</Button>
             </form>
             <SearchBox placeholder={t("comm.search")} label={t("common.search")} allLabel={t("common.searchAll")} items={all.map((r) => ({ label: whatOf(r, t), ...text(r) }))} widthClass="w-56" />
             <Link href="/commissions/new?kind=referral" className="flex h-10 items-center rounded-md border border-line-strong bg-surface px-3 text-sm font-medium text-fg hover:bg-chip">{t("comm.newReferral")}</Link>

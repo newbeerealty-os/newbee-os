@@ -1,5 +1,6 @@
 "use server";
 // Server Actions：UI 只调这里；业务规则全部来自 @newbee/core
+import { setFlash } from "@/lib/flash";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { computeMilestones, instantiate, reconcile, BUILTIN_PLAYBOOKS, type FieldMap, type DealType } from "@newbee/core";
@@ -19,6 +20,7 @@ export async function createDeal(formData: FormData) {
   if (!title) throw new Error("title required");
   const { data, error } = await supabase.from("deals").insert({ agent_id: userId, type, title, stage: "lead" }).select("id").single();
   if (error) throw new Error(error.message);
+  await setFlash("created");
   redirect(`/deals/${data.id}`);
 }
 
@@ -33,6 +35,7 @@ export async function uploadDocument(dealId: string, formData: FormData) {
   if (upErr) throw new Error(upErr.message);
   const { error } = await supabase.from("documents").insert({ id: docId, deal_id: dealId, agent_id: userId, storage_path: path, file_name: file.name, status: "uploaded" });
   if (error) throw new Error(error.message);
+  await setFlash("uploaded");
   revalidatePath(`/deals/${dealId}`);
 }
 
@@ -57,6 +60,7 @@ export async function setField(dealId: string, formData: FormData) {
   await supabase.from("deal_fields").update({ superseded_at: new Date().toISOString() }).eq("deal_id", dealId).eq("key", key).is("superseded_at", null);
   const { error } = await supabase.from("deal_fields").insert(row);
   if (error) throw new Error(error.message);
+  await setFlash("saved");
   revalidatePath(`/deals/${dealId}`);
 }
 
@@ -88,6 +92,8 @@ export async function deriveDeal(dealId: string) {
   }
   for (const u of r.update) await supabase.from("tasks").update({ due_date: u.dueDate }).eq("id", u.id);
 
+  await setFlash("derived");
+
   revalidatePath(`/deals/${dealId}`);
   revalidatePath("/today");
   console.info(`[derive] deal=${dealId} milestones=${milestones.length} created=${r.create.length} updated=${r.update.length}`);
@@ -99,6 +105,7 @@ export async function extractDocument(dealId: string, docId: string) {
   const { runExtraction } = await import("@/lib/extract");
   try {
     await runExtraction(supabase, docId, userId);
+    await setFlash("extracted");
   } finally {
     revalidatePath(`/deals/${dealId}`);
   }
@@ -123,6 +130,7 @@ export async function confirmField(dealId: string, fieldId: string, formData: Fo
   await supabase.from("deal_fields").update({ superseded_at: new Date().toISOString() }).eq("deal_id", dealId).eq("key", f.key).neq("id", fieldId).is("superseded_at", null);
   const { error } = await supabase.from("deal_fields").update(patch).eq("id", fieldId);
   if (error) throw new Error(error.message);
+  await setFlash("saved");
   revalidatePath(`/deals/${dealId}`);
 }
 
@@ -131,6 +139,7 @@ export async function rejectField(dealId: string, fieldId: string) {
   const { supabase } = await me();
   const { error } = await supabase.from("deal_fields").update({ superseded_at: new Date().toISOString() }).eq("id", fieldId);
   if (error) throw new Error(error.message);
+  await setFlash("saved");
   revalidatePath(`/deals/${dealId}`);
 }
 
@@ -143,6 +152,7 @@ export async function setStage(dealId: string, formData: FormData) {
   // 佣金状态跟阶段走
   const { recomputeAll } = await import("@/lib/actions/commissions");
   await recomputeAll(dealId);
+  await setFlash("saved");
   revalidatePath(`/deals/${dealId}`);
   revalidatePath("/deals");
 }
@@ -163,6 +173,7 @@ export async function addTask(formData: FormData) {
   if (!title) return;
   const { error } = await supabase.from("tasks").insert({ agent_id: userId, deal_id: dealId, title, due_date: due });
   if (error) throw new Error(error.message);
+  await setFlash("created");
   revalidatePath("/tasks");
   revalidatePath("/today");
 }

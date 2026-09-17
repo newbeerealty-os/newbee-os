@@ -33,6 +33,8 @@ export const REPLICAS: Record<string, (T: TFn, hidden: string) => React.ReactNod
   nav: (T, h) => (
     <div className="flex flex-col gap-3">
       <div className="flex gap-3">{side(T, "deals")}<div className="flex-1 rounded-ui border border-dashed border-line p-3 text-xs text-muted">{T("nav.all")} · {T("nav.personal")} · {T("settings.langTheme")}</div></div>
+      <div className="flex flex-wrap gap-2">{["saved", "created", "deleted", "uploaded", "derived", "extracted", "reset", "sent"].map((k) => <span key={k} className="rounded-full bg-fg px-3 py-1 text-xs font-medium text-surface">✓ {T(`flash.${k}`)}</span>)}</div>
+      <W className="flex flex-col gap-2 border-danger/40 p-3 text-xs"><b className="text-danger">{T("error.title")}</b><span className="font-mono text-muted">…</span><div className="flex gap-1"><Btn>{T("error.retry")}</Btn><Btn ghost>{T("error.back")}</Btn></div></W>
       <Hidden title={h} items={[T("nav.collapse"), T("nav.expand"), T("nav.toggleGroup"), T("meta.description")]} />
     </div>
   ),

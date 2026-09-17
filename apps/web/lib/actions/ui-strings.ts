@@ -1,5 +1,6 @@
 "use server";
 // 翻译覆盖值：保存 = upsert(agent_id, key)；两栏都空 = 等于恢复默认（删行）
+import { setFlash } from "@/lib/flash";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { MESSAGES } from "@newbee/core";
@@ -25,6 +26,7 @@ export async function saveUiString(formData: FormData) {
     ? await supabase.from("ui_strings").delete().eq("key", key)
     : await supabase.from("ui_strings").upsert({ agent_id: userId, key, zh, en, deleted_at: null }, { onConflict: "agent_id,key" });
   if (error) throw new Error(error.message);
+  await setFlash("saved");
   revalidatePath("/", "layout");
 }
 
@@ -32,5 +34,6 @@ export async function resetUiString(key: string) {
   const { supabase } = await me();
   const { error } = await supabase.from("ui_strings").delete().eq("key", key);
   if (error) throw new Error(error.message);
+  await setFlash("reset");
   revalidatePath("/", "layout");
 }

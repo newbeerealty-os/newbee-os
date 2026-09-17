@@ -21,18 +21,8 @@ export function Empty({ children }: { children: React.ReactNode }) {
   return <p className="py-6 text-center text-sm text-muted">{children}</p>;
 }
 
-export function Button({ children, variant = "primary", ...rest }: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "primary" | "ghost" | "danger" }) {
-  const cls = {
-    primary: "bg-accent text-accent-ink hover:bg-accent-strong",
-    ghost: "border border-line-strong text-fg hover:bg-chip",
-    danger: "border border-danger/40 text-danger hover:bg-danger-bg",
-  }[variant];
-  return (
-    <button {...rest} className={`h-10 rounded-md px-3 text-sm font-medium disabled:opacity-50 ${cls} ${rest.className ?? ""}`}>
-      {children}
-    </button>
-  );
-}
+// 按钮在 button.tsx（client，提交时自带转圈）；这里转出口，页面照旧从 ui 拿
+export { Button } from "@/components/button";
 
 export const inputCls = "h-10 w-full rounded-md border border-line-strong bg-surface px-3 text-sm";
 

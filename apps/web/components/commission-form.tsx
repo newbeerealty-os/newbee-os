@@ -1,6 +1,7 @@
 "use client";
 // 佣金表单：左边输入（$ / % 切换、推荐费付出、自定义扣费），右边实时明细（core computeCommission）。
 import { useMemo, useState } from "react";
+import { Button } from "@/components/button";
 import { computeCommission, type CommissionPlan, type CommissionSide, type CustomFee, type YearToDate } from "@newbee/core";
 
 export type Opt = { value: string; label: string };
@@ -110,7 +111,7 @@ export function CommissionForm(p: CommissionFormProps) {
           <F label={p.l.paidAt}><input type="date" name="paid_at" value={paidAt} onChange={(e) => setPaidAt(e.target.value)} className={inputCls} /></F>
         </div>
         <F label={p.l.notes}><textarea name="notes" rows={2} defaultValue={v("notes")} className={`${inputCls} h-auto py-2`} /></F>
-        <div><button type="submit" className="h-10 rounded-md bg-accent px-3 text-sm font-medium text-accent-ink hover:bg-accent-strong">{p.submitLabel}</button></div>
+        <div><Button>{p.submitLabel}</Button></div>
       </div>
 
       <div className="flex flex-col rounded-ui border border-line bg-surface p-4">

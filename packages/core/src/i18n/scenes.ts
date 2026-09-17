@@ -8,6 +8,7 @@ export const SCENES: Scene[] = [
   { id: 'nav', zh: '左侧菜单', en: 'Sidebar', where: { zh: '左侧主菜单和收起后的图标栏', en: 'Left sidebar and its collapsed icon rail' }, sections: [
     s('items', '菜单项', 'Menu items', ['nav.'], '一级菜单名、展开 / 收起按钮', 'Top-level menu names, collapse / expand buttons'),
     s('locale', '语言切换', 'Language switch', ['locale.'], '菜单底部两面国旗旁的语言名', 'Language names next to the flags at the bottom of the menu'),
+    s('feedback', '操作反馈', 'Feedback', ['flash.', 'error.'], '按钮按完右下角弹的"已保存 / 已删除"，以及出错页', 'The "Saved / Deleted" toast after a button press, and the error page'),
   ] },
   { id: 'today', zh: '今天', en: 'Today', where: { zh: '"今天"页面', en: 'The Today page' }, sections: [
     s('page', '页面文字', 'Page text', ['today.'], '标题、选项卡、空状态', 'Title, tabs, empty states'),

@@ -1,6 +1,7 @@
 "use client";
 // 设置 › 佣金方案：一键预设 + 六个模块开关（关掉的折叠、计算按 0）+ 固定周期费列表。保存走 server action。
 import { useState } from "react";
+import { Button } from "@/components/button";
 import { applyPreset, recurringPerPeriod, PLAN_PRESET_IDS, PLAN_MODULES, RECURRING_PERIODS, type CommissionPlan, type PlanModule, type PlanPresetId, type RecurringFee } from "@newbee/core";
 
 export type PlanLabels = Record<string, string>;
@@ -113,7 +114,7 @@ export function PlanForm({ initial, l, action }: { initial: CommissionPlan; l: P
           </div>
         </Mod>
       </div>
-      <div><button type="submit" className="h-10 rounded-md bg-accent px-4 text-sm font-medium text-accent-ink hover:bg-accent-strong">{l.save}</button></div>
+      <div><Button className="px-4">{l.save}</Button></div>
     </form>
   );
 }

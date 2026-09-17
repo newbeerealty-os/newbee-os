@@ -1,6 +1,7 @@
 "use client";
 // 联系人 / 公司表单（客户端）：类型→公司列表联动、下拉底部固定"+ 添加公司"、邮箱域名灰字补全（Tab）、
 // 姓名首字母大写、美国号码 3-3-4、职位候选层、常用标签可点选、未保存提示。文案由服务端算好传进来。
+import { Button } from "@/components/button";
 import { useMemo, useRef, useState } from "react";
 import { ORG_KINDS_FOR, formatUsPhone, capitalizeName, type ContactKind } from "@newbee/core";
 import { EmailInput } from "@/components/email-input";
@@ -18,9 +19,7 @@ const F = ({ label, children, className = "" }: { label: string; children: React
 const FI = ({ icon, label, children, className = "" }: { icon: string; label: string; children: React.ReactNode; className?: string }) => (
   <label className={`flex flex-col gap-1 text-xs text-muted ${className}`}><span className="flex items-center gap-1"><ChannelIcon kind={icon} className="h-3.5 w-3.5" />{label}</span>{children}</label>
 );
-const Btn = ({ children, variant = "primary", ...rest }: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "primary" | "ghost" | "danger" }) => (
-  <button {...rest} className={`h-10 rounded-md px-3 text-sm font-medium disabled:opacity-50 ${variant === "primary" ? "bg-accent text-accent-ink hover:bg-accent-strong" : variant === "danger" ? "border border-danger/40 text-danger hover:bg-danger-bg" : "border border-line-strong text-fg hover:bg-chip"} ${rest.className ?? ""}`}>{children}</button>
-);
+const Btn = Button;
 
 /** 电话：10 位美国号码自动 3-3-4 */
 export function PhoneInput({ name, value, onChange }: { name: string; value: string; onChange: (v: string) => void }) {
