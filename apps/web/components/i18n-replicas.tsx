@@ -29,6 +29,50 @@ const side = (T: TFn, active: string) => (
   </div>
 );
 
+/** 佣金总览复刻：过滤行 + 四个环 + （完整版）月度柱 + 待收清单 */
+const dash = (T: TFn, compact: boolean) => {
+  const ring = (label: React.ReactNode, big: string, center: string, rows: [string, string, string][]) => (
+    <W className="flex flex-col gap-2 p-3">
+      <div className="flex items-center gap-3"><div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-[7px] border-accent text-xs font-mono">{center}</div><div><div className="text-[10px] font-semibold uppercase tracking-wide text-muted">{label}</div><div className="font-mono text-lg">{big}</div><div className="text-[11px] text-muted"><b className="text-ok">+12%</b> {T("dash.vsPrev")}</div></div></div>
+      <div className="grid grid-cols-[1fr_auto] gap-x-2 text-[11px]">{rows.map(([c, l, v], i) => <div key={i} className="contents"><span className="flex items-center gap-1 text-muted"><i className="inline-block h-2 w-2 rounded-sm" style={{ background: c }} />{l}</span><span className="text-right font-mono">{v}</span></div>)}</div>
+    </W>
+  );
+  const st = (i: number) => `var(--viz-status-${i})`;
+  const statusRows = (fmt: (n: number) => string, v: number[]): [string, string, string][] => [[st(1), T("commStatus.paid") as string, fmt(v[0])], [st(2), T("commStatus.closed") as string, fmt(v[1])], [st(3), T("commStatus.pending") as string, fmt(v[2])], [st(4), T("commStatus.projected") as string, fmt(v[3])]];
+  const n = (x: number) => T("dash.count", { n: x }) as string;
+  const $ = (x: number) => "$" + x.toLocaleString("en-US");
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex flex-wrap items-center gap-1.5 text-xs">
+        <span className="flex overflow-hidden rounded-full border border-line-strong">{["month", "quarter", "year", "m12", "period"].map((k, i) => <span key={k} className={`px-2 py-1 font-semibold ${i === 2 ? "bg-accent text-accent-ink" : "text-muted"}`}>{T(`dash.period.${k}`)}</span>)}</span>
+        <span className="text-muted">{T("comm.from")}</span><Input>2026-01-01</Input><span className="text-muted">{T("comm.to")}</span><Input>2026-12-31</Input>
+        {["listing", "buyer", "landlord", "tenant", "referral"].map((sd, i) => <span key={sd} className="flex items-center gap-1 rounded-full border border-line-strong px-2 py-0.5 font-semibold"><i className="h-2 w-2 rounded-full" style={{ background: `var(--viz-side-${i + 1})` }} />{T(`commSide.${sd}`)}</span>)}
+      </div>
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+        {ring(T("dash.ring.count"), n(24), "17", statusRows(n, [14, 3, 4, 3]))}
+        {ring(T("dash.ring.gci"), $(153863), "$154K", statusRows($, [94200, 24800, 29800, 5000]))}
+        {ring(<>{T("dash.ring.nci")} · {T("dash.paidRate")}</>, $(112400), "73%", [[st(1), T("dash.bd.take") as string, $(112400)], ["var(--viz-ded-1)", T("comm.r.brokerSplit") as string, $(22800)], ["var(--viz-ded-2)", T("comm.r.referralOut") as string, $(11600)], ["var(--viz-ded-3)", T("dash.bd.fees") as string, $(7060)]])}
+        {ring(<>{T("dash.ring.cap")} · {T("dash.ring.fixed")}</>, "$9,420 / $16,000", "59%", [["var(--accent)", T("dash.capPaid") as string, $(9420)], ["var(--chip)", T("dash.capLeft") as string, $(6580)]])}
+      </div>
+      <div className="text-[11px] text-muted">{T("dash.capRemain", { amount: "$6,580" })} · {T("dash.fixedHint")} · {T("dash.share")} 34% · {T("dash.closedCount")}</div>
+      <div className={`grid gap-2 ${compact ? "" : "lg:grid-cols-[2fr_1fr]"}`}>
+        {!compact && (
+          <Card title={T("dash.monthly")} right={<span className="flex gap-1"><Chip tone="info">{T("dash.m.nci")}</Chip><Chip>{T("dash.m.gci")}</Chip><Chip>{T("dash.m.n")}</Chip></span>}>
+            <div className="flex h-24 items-end gap-1.5">{[3, 5, 6, 2, 7, 4, 6, 9, 5, 8, 4, 6].map((h, i) => <div key={i} className="flex-1 rounded-t" style={{ height: `${h * 10}%`, background: `var(--viz-side-${(i % 5) + 1})` }} title={T("dash.month", { m: i + 1 }) as string} />)}</div>
+            <div className="mt-1 flex justify-between text-[10px] text-muted"><span>{T("dash.month", { m: 1 })}</span><span>{T("dash.total")} $112K</span><span>{T("dash.month", { m: 12 })}</span></div>
+          </Card>
+        )}
+        <Card title={T("dash.pending")} right="$37,900 · 5">
+          <div className="grid grid-cols-[1fr_auto] gap-x-3 border-b border-line py-1 text-xs"><b>3825 Brookfield Dr</b><span className="font-mono">$11,170</span><span className="text-muted">{T("commSide.listing")} · {T("commStatus.pending")}</span><span className="text-warn">{T("rel.inDays", { n: 8 })} · 2026-09-29</span></div>
+          <div className="grid grid-cols-[1fr_auto] gap-x-3 py-1 text-xs"><b>9562 Hickory Hill Rd</b><span className="font-mono">$8,720</span><span className="text-muted">{T("commSide.buyer")} · {T("commStatus.closed")}</span><span className="text-danger">{T("rel.overdue", { n: 3 })} · 2026-09-15</span></div>
+          <div className="mt-1 text-center text-[11px] text-accent">{T("dash.viewAll")}</div>
+          <div className="mt-1 text-[11px] text-muted">{T("dash.noPending")} · {T("dash.none")}</div>
+        </Card>
+      </div>
+    </div>
+  );
+};
+
 export const REPLICAS: Record<string, (T: TFn, hidden: string) => React.ReactNode> = {
   nav: (T, h) => (
     <div className="flex flex-col gap-3">
@@ -41,6 +85,7 @@ export const REPLICAS: Record<string, (T: TFn, hidden: string) => React.ReactNod
   today: (T, h) => (
     <div className="flex gap-3">{side(T, "today")}<div className="flex min-w-0 flex-1 flex-col gap-3">
       <div className="flex items-baseline justify-between"><b className="text-base">{T("today.title")} · 2026-09-17</b><span className="text-xs text-muted">{T("today.summary", { ms: 2, tasks: 5 })}</span></div>
+      <Card title={T("dash.title")} right={T("dash.viewAll")}>{dash(T, true)}</Card>
       <Tabs items={[T("today.all"), T("today.overdue"), T("today.today"), T("today.next7")]} />
       <Card title={T("today.overdue")} right="0"><div className="py-3 text-center text-muted">{T("today.noOverdue")}</div></Card>
       <Card title={T("today.next7")} right="3">
@@ -203,12 +248,8 @@ export const REPLICAS: Record<string, (T: TFn, hidden: string) => React.ReactNod
   ),
   commissions: (T, h) => (
     <div className="flex gap-3">{side(T, "commissions")}<div className="flex min-w-0 flex-1 flex-col gap-3">
-      <div className="flex flex-wrap items-center gap-2"><b className="text-base">{T("comm.title")} · {T("comm.all")}</b><span className="text-xs text-accent">{T("nav.commissions")}</span><span className="flex-1" /><span className="flex items-center gap-1 text-xs text-muted">{T("comm.from")}<Input>2026-01-01</Input>{T("comm.to")}<Input>2026-12-31</Input></span><Input>{T("comm.search")}</Input><Btn ghost>{T("comm.newReferral")}</Btn><Btn>{T("comm.new")}</Btn></div>
-      <div className="grid grid-cols-4 gap-2">{[["comm.stat.gci", "$27,000"], ["comm.stat.nci", "$17,820"], ["comm.stat.paid", "$8,910"], ["comm.stat.pending", "$8,910"]].map(([k, v]) => <W key={k} className="px-3 py-2"><div className="text-xs text-muted">{T(k)}</div><div className="font-mono text-lg font-semibold">{v}</div></W>)}</div>
-      <Card title={T("comm.period")} right={T("comm.capPeriod", { start: "2026-01-01", end: "2026-12-31" })}>
-        <div className="flex justify-between text-xs"><span>{T("comm.cap")} · <span className="font-mono">$8,100 / $16,000</span></span><span className="text-muted">51% · {T("comm.capHit")}</span></div><div className="mt-1 h-2 rounded-full bg-chip"><div className="h-full w-1/2 rounded-full bg-accent" /></div>
-        <div className="mt-2 flex justify-between text-xs"><span>{T("comm.stat.fixed")}</span><span className="font-mono">$3,000</span></div>
-      </Card>
+      <div className="flex flex-wrap items-center gap-2"><b className="text-base">{T("comm.title")} · {T("comm.all")}</b><span className="text-xs text-accent">{T("nav.commissions")}</span><span className="flex-1" /><Input>{T("comm.search")}</Input><Btn ghost>{T("comm.newReferral")}</Btn><Btn>{T("comm.new")}</Btn></div>
+      {dash(T, false)}
       <Tabs items={[T("comm.all"), T("commSide.listing"), T("commSide.buyer"), T("comm.filter.both"), T("commSide.landlord"), T("commSide.tenant"), T("commKind.referral"), T("comm.filter.pending"), T("comm.filter.paid")]} />
       <Card title={<>{T("comm.title")} · {T("comm.all")}</>} right="3">
         <div className="grid grid-cols-[.9fr_1.8fr_1fr_.9fr_.9fr_.9fr_.9fr_.8fr] gap-2 border-b border-line pb-1 text-[11px] font-semibold text-muted"><span>{T("comm.col.date")}</span><span>{T("comm.col.what")}</span><span>{T("comm.col.kind")}</span><span className="text-right">{T("comm.col.price")}</span><span className="text-right">{T("comm.col.gci")}</span><span className="text-right">{T("comm.col.deductions")}</span><span className="text-right">{T("comm.col.nci")}</span><span>{T("comm.col.status")}</span></div>
@@ -274,7 +315,7 @@ export const REPLICAS: Record<string, (T: TFn, hidden: string) => React.ReactNod
         <Card title={T("plan.royalty")} right={<Chip>{T("plan.module.off")}</Chip>}><div className="grid grid-cols-2 gap-2 text-xs">{[["plan.royaltyPct", "6 %"], ["plan.royaltyCap", "$3,000"]].map(([k, v]) => <label key={k} className="flex flex-col gap-1"><span className="text-muted">{T(k)}</span><Input>{v}</Input></label>)}</div></Card>
         <Card title={T("plan.team")} right={<Chip>{T("plan.module.off")}</Chip>}><div className="grid grid-cols-2 gap-2 text-xs">{[["plan.teamPct", "0 %"], ["plan.teamCap", "$0"]].map(([k, v]) => <label key={k} className="flex flex-col gap-1"><span className="text-muted">{T(k)}</span><Input>{v}</Input></label>)}<label className="flex flex-col gap-1"><span className="text-muted">{T("plan.teamBasis")}</span><span className="flex gap-1"><Chip tone="info">{T("plan.teamBasis.gci")}</Chip><Chip>{T("plan.teamBasis.after_broker")}</Chip></span></label></div></Card>
       </div>
-      <Card title={T("comm.period")} right={T("comm.capPeriod", { start: "2026-01-01", end: "2026-12-31" })}><div className="flex justify-between text-xs"><span>{T("comm.stat.fixed")}</span><span className="font-mono">$3,000</span></div></Card>
+      <Card title={T("comm.period")} right={T("comm.capPeriod", { start: "2026-01-01", end: "2026-12-31" })}><div className="flex justify-between text-xs"><span>{T("comm.cap")} · <span className="font-mono">$8,100 / $16,000</span></span><span className="text-muted">51% · {T("comm.capHit")}</span></div><div className="mt-1 flex justify-between text-xs"><span>{T("comm.stat.fixed")}</span><span className="font-mono">$3,000</span></div></Card>
       <Hidden title={h} items={[T("plan.period"), T("plan.saved")]} />
     </div>
   ),

@@ -1,6 +1,6 @@
 // 佣金：读方案、读记录、算本周期已付（cap 进度）。计算本身在 core（computeCommission）。
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { CommissionPlanSchema, computeCommission, capYearOf, statusFromStage, contactName, sideForDealType, type CommissionPlan, type CommissionSide, type CommissionResult, type CustomFee, type YearToDate } from "@newbee/core";
+import { CommissionPlanSchema, computeCommission, capYearOf, statusFromStage, contactName, sideForDealType, type CommissionPlan, type CommissionSide, type ReportRow, type Translator, type CommissionResult, type CustomFee, type YearToDate } from "@newbee/core";
 import { getAgentSettings } from "@/lib/settings";
 import { todayISO } from "@/lib/format";
 
@@ -100,4 +100,27 @@ export async function prefillFromDeal(supabase: SupabaseClient, dealId: string, 
     values: { deal_id: dealId, side: side || sideForDealType(dealType), price: fv.sales_price ?? fv.rent ?? null, pct: fv.commission_pct ?? 3 },
     prefilled: Boolean(fv.sales_price || fv.rent || fv.commission_pct),
   };
+}
+
+// ---------- 总览图用的精简行 ----------
+export function toReportRows(rows: CommissionRow[], t: Translator): ReportRow[] {
+  return rows.map((r) => ({
+    id: r.id, kind: r.kind, side: r.side as CommissionSide, status: r.status as ReportRow["status"], date: effectiveDate(r),
+    title: r.deal?.title ?? (r.contact ? contactName(r.contact) : t("commKind.referral")),
+    price: r.price, gci: r.computed?.gci ?? 0, nci: r.computed?.nci ?? 0,
+    lines: (r.computed?.lines ?? []).map((ln) => ({ id: ln.id, amount: ln.amount })),
+  }));
+}
+
+/** 总览组件的全部文案（客户端组件拿不到 t） */
+export function dashboardLabels(t: Translator): Record<string, string> {
+  const l: Record<string, string> = {};
+  for (const k of ["title", "ring_count", "ring_gci", "ring_nci", "ring_cap", "ring_fixed", "closedCount", "paidRate", "share", "vsPrev", "bd_take", "bd_fees", "capPaid", "capLeft", "capRemain", "fixedHint", "monthly", "m_nci", "m_gci", "m_n", "total", "month", "count", "pending", "noPending", "none", "viewAll"]) l[k] = t(`dash.${k.replace("_", ".")}`);
+  for (const x of ["month", "quarter", "year", "m12", "period"]) l[`period_${x}`] = t(`dash.period.${x}`);
+  for (const s of ["listing", "buyer", "landlord", "tenant", "management", "referral"]) l[`side_${s}`] = t(`commSide.${s}`);
+  for (const s of ["paid", "closed", "pending", "projected"]) l[`status_${s}`] = t(`commStatus.${s}`);
+  l.r_brokerSplit = t("comm.r.brokerSplit"); l.r_referralOut = t("comm.r.referralOut"); l.capHit = t("comm.capHit");
+  l.from = t("comm.from"); l.to = t("comm.to");
+  l.rel_overdue = t("rel.overdue", { n: "{n}" }); l.rel_today = t("rel.today"); l.rel_inDays = t("rel.inDays", { n: "{n}" });
+  return l;
 }

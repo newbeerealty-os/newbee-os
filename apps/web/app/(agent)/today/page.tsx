@@ -1,6 +1,8 @@
 // /today —— 每天打开的第一页：逾期 / 今天 / 未来 7 天 的里程碑与任务（选项卡：全部 / 逾期 / 今天 / 7 天）
 import Link from "next/link";
-import { addCalendarDays } from "@newbee/core";
+import { addCalendarDays, recurringPerPeriod } from "@newbee/core";
+import { getPlan, loadCommissions, ytdFor, toReportRows, dashboardLabels } from "@/lib/commissions";
+import { CommissionDashboard } from "@/components/commission-dashboard";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n";
 import { todayISO, relDays } from "@/lib/format";
@@ -13,6 +15,8 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
   const { tab = "all" } = await searchParams;
   const supabase = await createClient();
   const t = await getT();
+  const [plan, commissions] = await Promise.all([getPlan(), loadCommissions(supabase)]);
+  const ytd = ytdFor(plan, commissions);
   const today = todayISO();
   const horizon = addCalendarDays(today, 7);
 
@@ -36,6 +40,10 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
     <div className="mx-auto flex max-w-4xl flex-col gap-4">
       <PageHeader crumbs={[{ label: t("nav.today") }]} title={`${t("today.title")} · ${today}`}
         actions={<span className="text-xs text-muted">{t("today.summary", { ms: milestones.length, tasks: tasks.length })}</span>} />
+      <Section title={t("dash.title")} right={<Link href="/commissions" className="text-sm text-accent hover:underline">{t("dash.viewAll")}</Link>}>
+        <CommissionDashboard compact rows={toReportRows(commissions, t)} today={today} plan={{ capAmount: plan.capAmount, capOn: plan.modules.cap, capYearStart: plan.capYearStart, fixed: recurringPerPeriod(plan) }} capPaid={ytd.brokerPaid} l={dashboardLabels(t)} />
+      </Section>
+
       <Tabs base="/today" active={tab} tabs={[
         { id: "all", label: t("today.all"), count: milestones.length + tasks.length },
         ...buckets.map((b) => ({ id: b.id, label: t(b.key), count: b.ms.length + b.ts.length })),

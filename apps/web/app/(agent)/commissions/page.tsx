@@ -5,16 +5,17 @@ import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n";
 import { money } from "@/lib/format";
 import { getAgentSettings } from "@/lib/settings";
-import { getPlan, loadCommissions, ytdFor, effectiveDate, type CommissionRow } from "@/lib/commissions";
+import { getPlan, loadCommissions, ytdFor, effectiveDate, toReportRows, dashboardLabels, type CommissionRow } from "@/lib/commissions";
 import { whatOf, isBothSides } from "@/lib/commission-props";
 import { COMMISSION_FILTERS as FILTERS, commissionFilterLabel } from "@/lib/nav";
-import { Section, Empty, Badge, Button, inputCls } from "@/components/ui";
-import { PageHeader, Tabs, Stat, StatGrid, SortHeader, readSort } from "@/components/page";
+import { Section, Empty, Badge } from "@/components/ui";
+import { PageHeader, Tabs, SortHeader, readSort } from "@/components/page";
 import { SearchBox } from "@/components/search-box";
 import { DataTable } from "@/components/data-table";
 import { StageDot } from "@/components/stage";
 import { COMMISSION_STATUS_TONE as STATUS_TONE } from "@/components/commission-list";
-import { PeriodCard } from "@/components/period-card";
+import { CommissionDashboard } from "@/components/commission-dashboard";
+import { todayISO } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -47,10 +48,6 @@ export default async function CommissionsPage({ searchParams }: { searchParams: 
   const text = (r: CommissionRow) => ({ text: [whatOf(r, t), t(`commSide.${r.side}`), t(`commStatus.${r.status}`), r.notes].filter(Boolean).join(" "), nums: [r.price ?? 0, r.computed?.gci ?? 0, r.computed?.nci ?? 0] });
   const rows = all.filter((r) => inFilter(r) && inRange(r) && matchesQuery(q, text(r)));
 
-  // 统计：本周期
-  const inPeriod = all.filter((r) => { const d = effectiveDate(r); return d >= ytd.period.start && d <= ytd.period.end && r.status !== "cancelled"; });
-  const sum = (xs: CommissionRow[], k: "gci" | "nci") => xs.reduce((s, r) => s + (r.computed?.[k] ?? 0), 0);
-  const stats = { gci: sum(inPeriod, "gci"), nci: sum(inPeriod, "nci"), paid: sum(inPeriod.filter((r) => r.status === "paid"), "nci"), pending: sum(inPeriod.filter((r) => r.status === "pending" || r.status === "closed"), "nci") };
 
   const items = rows.map((r) => ({ r, what: whatOf(r, t), date: effectiveDate(r), both: isBothSides(r, all) }));
   const sorted = sort === "date" ? sortRows(items, (x) => x.date, compareDate, dir)
@@ -73,24 +70,14 @@ export default async function CommissionsPage({ searchParams }: { searchParams: 
         subnav={FILTERS.map((x) => ({ href: href(x), label: fLabel(x), count: all.filter((r) => inFilter(r, x)).length, active: f === x }))}
         actions={
           <>
-            <form method="get" className="flex items-center gap-1 text-xs text-muted">
-              {f !== "all" && <input type="hidden" name="f" value={f} />}
-              {t("comm.from")}<input type="date" name="from" defaultValue={sp.from ?? ""} className={`${inputCls} w-36`} />{t("comm.to")}<input type="date" name="to" defaultValue={sp.to ?? ""} className={`${inputCls} w-36`} />
-              <Button variant="ghost">OK</Button>
-            </form>
             <SearchBox placeholder={t("comm.search")} label={t("common.search")} allLabel={t("common.searchAll")} items={all.map((r) => ({ label: whatOf(r, t), ...text(r) }))} widthClass="w-56" />
             <Link href="/commissions/new?kind=referral" className="flex h-10 items-center rounded-md border border-line-strong bg-surface px-3 text-sm font-medium text-fg hover:bg-chip">{t("comm.newReferral")}</Link>
             <Link href="/commissions/new" className="flex h-10 items-center rounded-md bg-accent px-3 text-sm font-medium text-accent-ink hover:bg-accent-strong">{t("comm.new")}</Link>
           </>
         } />
 
-      <StatGrid>
-        <Stat label={t("comm.stat.gci")} value={money(stats.gci)} />
-        <Stat label={t("comm.stat.nci")} value={money(stats.nci)} />
-        <Stat label={t("comm.stat.paid")} value={money(stats.paid)} />
-        <Stat label={t("comm.stat.pending")} value={money(stats.pending)} tone={stats.pending ? "warn" : undefined} />
-      </StatGrid>
-      <PeriodCard t={t} plan={plan} ytd={ytd} fixed={recurringPerPeriod(plan)} money={money} />
+      <CommissionDashboard rows={toReportRows(all, t)} today={todayISO()} plan={{ capAmount: plan.capAmount, capOn: plan.modules.cap, capYearStart: plan.capYearStart, fixed: recurringPerPeriod(plan) }} capPaid={ytd.brokerPaid} l={dashboardLabels(t)} syncUrl
+        initial={sp.from && sp.to ? { from: sp.from, to: sp.to } : undefined} />
 
       <div className="hidden md:block">
         <Tabs base={href("all")} param="f" active={f} tabs={FILTERS.map((x) => ({ id: x, label: fLabel(x), count: all.filter((r) => inFilter(r, x)).length }))} />

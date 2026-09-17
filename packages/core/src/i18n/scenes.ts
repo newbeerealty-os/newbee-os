@@ -37,6 +37,7 @@ export const SCENES: Scene[] = [
     s('photo', '照片与头像', 'Photos & avatar', ['photo.'], '头像裁剪器和照片库', 'Avatar cropper and photo gallery'),
   ] },
   { id: 'commissions', zh: '佣金', en: 'Commissions', where: { zh: '"佣金"列表、佣金明细 / 编辑页、交易详情的"佣金"选项卡', en: 'The Commissions list, the commission detail / edit page, the Commission tab on a deal' }, sections: [
+    s('dash', '佣金总览', 'Overview', ['dash.'], '门户首页和佣金页顶部的四个环、月度柱、待收清单', 'The four rings, monthly bars and pending list on the home page and the top of Commissions'),
     s('cols', '表头与统计', 'Columns & stats', ['comm.col.', 'comm.stat.'], '列表表头、顶部统计卡', 'Table headers and stat cards'),
     s('form', '表单字段', 'Form fields', ['comm.f.'], '添加 / 编辑佣金的输入框', 'Inputs on the add / edit commission form'),
     s('breakdown', '明细', 'Breakdown', ['comm.r.'], '右侧实时算出来的逐项明细', 'The live breakdown on the right'),
