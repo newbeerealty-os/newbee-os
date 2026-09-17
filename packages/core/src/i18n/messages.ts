@@ -157,6 +157,13 @@ const UI: Record<string, Message> = {
   'settings.tr.changed': { zh: '已修改', en: 'Changed' },
   'settings.tr.defaultIs': { zh: '默认：{v}', en: 'Default: {v}' },
   'settings.tr.zh': { zh: '中文', en: 'Chinese' },
+  'settings.tr.hint': { zh: '点页面上的任何文字就能改；Enter 保存，Esc 取消。改动只影响显示、只在你的账号下。', en: 'Click any text on the page to edit it; Enter saves, Esc cancels. Changes affect display only, under your account.' },
+  'settings.tr.hidden': { zh: '看不见的提示文字（按钮说明、读屏、占位）', en: 'Hidden helper text (tooltips, screen readers, placeholders)' },
+  'settings.tr.other': { zh: '其他', en: 'Other' },
+  'settings.tr.sample': { zh: '示例', en: 'Sample' },
+  'settings.tr.save': { zh: '保存', en: 'Save' },
+  'settings.tr.cancel': { zh: '取消', en: 'Cancel' },
+  'settings.tr.reset': { zh: '恢复默认', en: 'Reset to default' },
   'settings.tr.en': { zh: '英文', en: 'English' },
 
   // /settings/theme
