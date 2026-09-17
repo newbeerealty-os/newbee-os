@@ -1,26 +1,37 @@
 // /contacts —— 联系人总表：人 + 公司一张表，按类型页签 / 搜索过滤，表格或卡片
 import Link from "next/link";
-import { CONTACT_TABS } from "@newbee/core";
+import { CONTACT_TABS, sortRows, compareText, compareNumber } from "@newbee/core";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n";
 import { loadContactRows, filterRows, loadSuggestions } from "@/lib/contacts";
 import { createContact, createOrganization, createOrganizationInline } from "@/lib/actions/contacts";
 import { contactFormLabels, contactFormOptions, defaultKindsForTab } from "@/lib/contact-form-props";
 import { Section, Empty, Badge, inputCls, Button } from "@/components/ui";
-import { PageHeader, Tabs } from "@/components/page";
+import { PageHeader, Tabs, SortHeader, readSort } from "@/components/page";
 import { ContactAvatar } from "@/components/avatar";
 import { ContactCreator } from "@/components/contact-form-client";
 import { SearchBox } from "@/components/search-box";
 
 export const dynamic = "force-dynamic";
 
-export default async function ContactsPage({ searchParams }: { searchParams: Promise<{ tab?: string; q?: string; view?: string }> }) {
-  const { tab: rawTab, q = "", view = "table" } = await searchParams;
+export default async function ContactsPage({ searchParams }: { searchParams: Promise<{ tab?: string; q?: string; view?: string; sort?: string; dir?: string }> }) {
+  const sp = await searchParams;
+  const { tab: rawTab, q = "", view = "table" } = sp;
+  const { sort, dir } = readSort(sp);
   const tab = CONTACT_TABS.some((x) => x.id === rawTab) ? rawTab! : null;
   const supabase = await createClient();
   const t = await getT();
   const [all, suggestions] = await Promise.all([loadContactRows(supabase, t), loadSuggestions(supabase)]);
-  const rows = filterRows(all, tab, q);
+  const unsorted = filterRows(all, tab, q);
+  const rows = sort === "name" ? sortRows(unsorted, (r) => r.name, compareText, dir)
+    : sort === "org" ? sortRows(unsorted, (r) => r.orgName, compareText, dir)
+    : sort === "email" ? sortRows(unsorted, (r) => r.email, compareText, dir)
+    : sort === "phone" ? sortRows(unsorted, (r) => r.phone, compareText, dir)
+    : sort === "kind" ? sortRows(unsorted, (r) => r.kindLabel, compareText, dir)
+    : sort === "license" ? sortRows(unsorted, (r) => r.licenseType, compareText, dir)
+    : sort === "deals" ? sortRows(unsorted, (r) => r.deals, compareNumber, dir)
+    : unsorted;
+  const hp = { tab: tab ?? undefined, q: q || undefined, view: view === "cards" ? "cards" : undefined, sort: sp.sort, dir: sp.dir };
   const orgs = all.filter((r) => r.isOrg).map((r) => ({ id: r.id, name: r.name, kind: r.kind }));
   const l = contactFormLabels(t);
   const opts = contactFormOptions(t);
@@ -50,7 +61,7 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
               <Link href={qs({ view: null })} className={`px-3 py-2 ${view !== "cards" ? "bg-accent text-accent-ink" : "bg-surface text-muted hover:bg-chip"}`}>{t("contacts.viewTable")}</Link>
               <Link href={qs({ view: "cards" })} className={`px-3 py-2 ${view === "cards" ? "bg-accent text-accent-ink" : "bg-surface text-muted hover:bg-chip"}`}>{t("contacts.viewCards")}</Link>
             </div>
-            <SearchBox placeholder={t("contacts.search")} label={t("common.search")} suggestions={[...new Set(filterRows(all, tab, "").flatMap((r) => [r.name, r.orgName ?? ""]).filter(Boolean))]} />
+            <SearchBox placeholder={t("contacts.search")} label={t("common.search")} items={filterRows(all, tab, "").map((r) => ({ label: r.name, text: r.search }))} />
             <ContactCreator l={l}
               contact={{ l, ...opts, orgs, jobTitles: suggestions.jobTitles, tags: suggestions.tags, sources: suggestions.sources, defaultKind: defaults.contact, action: createContact, submitLabel: t("contacts.add"), compact: true, createOrg: createOrganizationInline }}
               org={{ l, orgKindOptions: opts.orgKindOptions, defaultKind: defaults.org, action: createOrganization, submitLabel: t("contacts.addOrg"), compact: true }} />
@@ -90,7 +101,7 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
         <Section title={tabLabel} right={<span className="font-mono text-sm text-muted">{rows.length}</span>}>
           <div className="-mx-4 -my-4">
             <div className={`hidden gap-3 border-b border-line bg-chip/40 px-4 py-2 text-[11.5px] font-semibold text-muted md:grid ${cols}`}>
-              <span>{t("contacts.col.name")}</span><span>{t("contacts.col.org")}</span><span>{t("contacts.col.email")}</span><span>{t("contacts.col.phone")}</span><span>{t("contacts.col.kind")}</span>{showLicense && <span>{t("contacts.col.licenseType")}</span>}<span className="text-right">{t("contacts.col.deals")}</span>
+              <SortHeader col="name" label={t("contacts.col.name")} sort={sort} dir={dir} params={hp} /><SortHeader col="org" label={t("contacts.col.org")} sort={sort} dir={dir} params={hp} /><SortHeader col="email" label={t("contacts.col.email")} sort={sort} dir={dir} params={hp} /><SortHeader col="phone" label={t("contacts.col.phone")} sort={sort} dir={dir} params={hp} /><SortHeader col="kind" label={t("contacts.col.kind")} sort={sort} dir={dir} params={hp} />{showLicense && <SortHeader col="license" label={t("contacts.col.licenseType")} sort={sort} dir={dir} params={hp} />}<SortHeader col="deals" label={t("contacts.col.deals")} sort={sort} dir={dir} params={hp} align="right" />
             </div>
             <ul className="divide-y divide-line">
               {rows.map((r) => (

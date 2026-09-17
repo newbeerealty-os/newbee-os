@@ -1,5 +1,6 @@
 // 页面骨架：页头（面包屑 + 标题 + 动作）、选项卡（链接式 ?tab=，服务端只渲染当前块）、手机上的二级胶囊、统计卡
 import Link from "next/link";
+import type { SortDir } from "@newbee/core";
 
 export interface Crumb { label: string; href?: string }
 export interface SubNav { href: string; label: string; count?: number; active: boolean }
@@ -71,4 +72,25 @@ export function Stat({ label, value, sub, tone }: { label: string; value: React.
 
 export function StatGrid({ children }: { children: React.ReactNode }) {
   return <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">{children}</div>;
+}
+
+/** 从 ?sort=&dir= 读排序状态 */
+export function readSort(sp: { sort?: string; dir?: string }): { sort: string | null; dir: SortDir } {
+  const dir: SortDir = sp.dir === "asc" || sp.dir === "desc" ? sp.dir : null;
+  return { sort: sp.sort && dir ? sp.sort : null, dir: sp.sort ? dir : null };
+}
+
+/** 可点的表头：升序 → 降序 → 恢复默认顺序 → 循环 */
+export function SortHeader({ col, label, sort, dir, params, align }: { col: string; label: string; sort: string | null; dir: SortDir; params: Record<string, string | undefined>; align?: "right" }) {
+  const active = sort === col ? dir : null;
+  const next: SortDir = active === null ? "asc" : active === "asc" ? "desc" : null;
+  const p = new URLSearchParams();
+  for (const [k, v] of Object.entries(params)) if (v && k !== "sort" && k !== "dir") p.set(k, v);
+  if (next) { p.set("sort", col); p.set("dir", next); }
+  const qs = p.toString();
+  return (
+    <Link href={qs ? `?${qs}` : "?"} scroll={false} className={`inline-flex items-center gap-1 hover:text-fg ${active ? "text-accent" : ""} ${align === "right" ? "justify-end" : ""}`}>
+      {label}<span className="font-mono text-[10px] leading-none">{active === "asc" ? "▲" : active === "desc" ? "▼" : "△"}</span>
+    </Link>
+  );
 }

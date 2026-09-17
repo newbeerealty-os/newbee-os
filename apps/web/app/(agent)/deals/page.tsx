@@ -1,13 +1,13 @@
 // /deals —— 交易列表（?stage= 按阶段过滤）+ 顶部统计 + 新建交易
 import Link from "next/link";
-import { addCalendarDays, contactName } from "@newbee/core";
+import { addCalendarDays, contactName, matchesQuery, sortRows, compareAddress, compareText, compareDate, compareNumber } from "@newbee/core";
 import { createClient } from "@/lib/supabase/server";
 import { createDeal } from "@/lib/actions/deals";
 import { getT } from "@/lib/i18n";
 import { DEAL_STAGES } from "@/lib/nav";
 import { todayISO, relDays } from "@/lib/format";
 import { Section, Empty, Button, Badge, inputCls, dueTone } from "@/components/ui";
-import { PageHeader, Stat, StatGrid } from "@/components/page";
+import { PageHeader, Stat, StatGrid, SortHeader, readSort } from "@/components/page";
 import { StageBar, StageBadge } from "@/components/stage";
 import { SearchBox } from "@/components/search-box";
 
@@ -15,8 +15,10 @@ export const dynamic = "force-dynamic";
 
 const TYPES = ["seller", "buyer", "lease_listing", "lease_tenant", "property_mgmt"];
 
-export default async function DealsPage({ searchParams }: { searchParams: Promise<{ stage?: string; q?: string }> }) {
-  const { stage, q = "" } = await searchParams;
+export default async function DealsPage({ searchParams }: { searchParams: Promise<{ stage?: string; q?: string; sort?: string; dir?: string }> }) {
+  const sp = await searchParams;
+  const { stage, q = "" } = sp;
+  const { sort, dir } = readSort(sp);
   const stageFilter = DEAL_STAGES.includes(stage as (typeof DEAL_STAGES)[number]) ? stage! : null;
   const supabase = await createClient();
   const t = await getT();
@@ -32,21 +34,36 @@ export default async function DealsPage({ searchParams }: { searchParams: Promis
   const all = (data ?? []) as unknown as Row[];
   // 搜索索引：标题 + 已确认字段值（地址、金额…）+ 各方名字 + addenda
   const index = new Map<string, string[]>();
+  const nums = new Map<string, number[]>();
   const push = (id: string, ...xs: (string | number | null | undefined)[]) => index.set(id, [...(index.get(id) ?? []), ...xs.filter((x) => x !== null && x !== undefined && x !== "").map(String)]);
   for (const d of all) push(d.id, d.title, ...d.addenda);
   const fieldRows = (fv ?? []) as { deal_id: string; key: string; value_text: string | null; value_num: number | null }[];
-  for (const r of fieldRows) push(r.deal_id, r.value_text, r.value_num);
-  // 搜索候选：标题 + 房产地址
-  const suggestions = [...new Set([...all.map((d) => d.title), ...fieldRows.filter((r) => r.key === "property_address" && r.value_text).map((r) => r.value_text!)])];
+  for (const r of fieldRows) { push(r.deal_id, r.value_text, r.value_num); if (r.value_num !== null) nums.set(r.deal_id, [...(nums.get(r.deal_id) ?? []), r.value_num]); }
   type One<T> = T | T[] | null;
   const one = <T,>(x: One<T>): T | null => (Array.isArray(x) ? x[0] ?? null : x);
   for (const p of (pv ?? []) as unknown as { deal_id: string; contacts: One<{ first_name: string; last_name: string; name_zh: string | null }>; organizations: One<{ name: string }> }[]) {
     const c = one(p.contacts); const o = one(p.organizations);
     push(p.deal_id, c ? contactName(c) : null, c?.name_zh, o?.name);
   }
-  const needle = q.trim().toLowerCase();
-  const hit = (id: string) => !needle || (index.get(id) ?? []).join(" ").toLowerCase().includes(needle);
-  const deals = all.filter((d) => (!stageFilter || d.stage === stageFilter) && hit(d.id));
+  const needle = q.trim();
+  const searchable = (id: string) => ({ text: (index.get(id) ?? []).join(" "), nums: nums.get(id) ?? [] });
+  const hit = (id: string) => matchesQuery(needle, searchable(id));
+  // 搜索候选：命中的交易（地址 / 相关人 / 金额都算 key），显示交易标题
+  const searchItems = all.map((d) => ({ label: d.title, ...searchable(d.id) }));
+  const filtered = all.filter((d) => (!stageFilter || d.stage === stageFilter) && hit(d.id));
+  // 每行先算出下一节点和未完成数，再按表头排序（默认 = 数据库的显示优先级）
+  const rows = filtered.map((d) => {
+    const next = d.milestones.filter((m) => m.status === "pending" && m.due_date && m.due_date >= today).sort((a, b) => a.due_date!.localeCompare(b.due_date!))[0];
+    return { d, next, nextLabel: next ? t.or(`ms.${next.key}`, next.label) : null, open: d.tasks.filter((x) => !x.done_at && !x.deleted_at).length, stageLabel: stageFilter ? t(`type.${d.type}`) : t(`stage.${d.stage}`) };
+  });
+  const sorted = sort === "title" ? sortRows(rows, (r) => r.d.title, compareAddress, dir)
+    : sort === "stage" ? sortRows(rows, (r) => r.stageLabel, compareText, dir)
+    : sort === "next" ? sortRows(rows, (r) => r.nextLabel, compareText, dir)
+    : sort === "date" ? sortRows(rows, (r) => r.next?.due_date ?? null, compareDate, dir)
+    : sort === "open" ? sortRows(rows, (r) => r.open, compareNumber, dir)
+    : rows;
+  const deals = sorted.map((r) => r.d);
+  const hp = { stage: stageFilter ?? undefined, q: q || undefined, sort: sp.sort, dir: sp.dir };
 
   // 统计只看当前过滤范围
   const pendingMs = deals.flatMap((d) => d.milestones.filter((m) => m.status === "pending" && m.due_date));
@@ -68,7 +85,7 @@ export default async function DealsPage({ searchParams }: { searchParams: Promis
       <PageHeader crumbs={[{ label: t("nav.deals"), href: "/deals" }, { label: stageFilter ? t(`stage.${stageFilter}`) : t("deals.stageAll") }]} title={title} subnav={subnav}
         actions={
           <>
-          <SearchBox placeholder={t("deals.search")} label={t("common.search")} suggestions={suggestions} />
+          <SearchBox placeholder={t("deals.search")} label={t("common.search")} items={searchItems} />
           <details className="relative">
             <summary className="flex h-10 cursor-pointer list-none items-center rounded-md bg-accent px-3 text-sm font-medium text-accent-ink hover:bg-accent-strong">{t("deals.new")}</summary>
             <form action={createDeal} className="absolute right-0 z-10 mt-2 flex w-[min(90vw,380px)] flex-col gap-2 rounded-ui border border-line bg-surface p-3 shadow-xl">
@@ -95,12 +112,10 @@ export default async function DealsPage({ searchParams }: { searchParams: Promis
         ) : (
           <div className="-mx-4 -my-4">
             <div className="hidden grid-cols-[1.6fr_1fr_1.2fr_1.4fr_.6fr] gap-3 border-b border-line bg-chip/40 px-4 py-2 text-[11.5px] font-semibold text-muted md:grid">
-              <span>{t("deals.col.deal")}</span><span>{stageFilter ? t("deals.col.type") : t("deals.col.stage")}</span><span>{t("deals.col.next")}</span><span>{t("deals.col.date")}</span><span className="text-right">{t("deals.col.open")}</span>
+              <SortHeader col="title" label={t("deals.col.deal")} sort={sort} dir={dir} params={hp} /><SortHeader col="stage" label={stageFilter ? t("deals.col.type") : t("deals.col.stage")} sort={sort} dir={dir} params={hp} /><SortHeader col="next" label={t("deals.col.next")} sort={sort} dir={dir} params={hp} /><SortHeader col="date" label={t("deals.col.date")} sort={sort} dir={dir} params={hp} /><SortHeader col="open" label={t("deals.col.open")} sort={sort} dir={dir} params={hp} align="right" />
             </div>
             <ul className="divide-y divide-line">
-              {deals.map((d) => {
-                const next = d.milestones.filter((m) => m.status === "pending" && m.due_date && m.due_date >= today).sort((a, b) => a.due_date!.localeCompare(b.due_date!))[0];
-                const open = d.tasks.filter((x) => !x.done_at && !x.deleted_at).length;
+              {sorted.map(({ d, next, nextLabel, open }) => {
                 return (
                   <li key={d.id}>
                     <Link href={`/deals/${d.id}`} className="grid gap-1.5 px-4 py-3 hover:bg-chip/40 md:grid-cols-[1.6fr_1fr_1.2fr_1.4fr_.6fr] md:items-center md:gap-3">
@@ -115,7 +130,7 @@ export default async function DealsPage({ searchParams }: { searchParams: Promis
                         <Badge>{t(`type.${d.type}`)}</Badge>
                         {!stageFilter && <StageBadge stage={d.stage} label={t(`stage.${d.stage}`)} />}
                       </div>
-                      <div className="truncate text-sm">{next ? t.or(`ms.${next.key}`, next.label) : <span className="text-muted">{t("deals.noNext")}</span>}</div>
+                      <div className="truncate text-sm">{nextLabel ?? <span className="text-muted">{t("deals.noNext")}</span>}</div>
                       <div>{next && <Badge tone={dueTone(next.due_date, today)}>{next.due_date} · {relDays(next.due_date, today, t)}</Badge>}</div>
                       <div className="hidden text-right font-mono text-sm md:block">{open}</div>
                     </Link>

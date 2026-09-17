@@ -2,8 +2,11 @@
 // 列表页搜索框：软跳转（只换 ?q=，侧栏不刷新）；边输入边出本页数据的候选；↑↓ 选、Enter 搜、点候选 = 填入并搜。
 import { useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { matchesQuery } from "@newbee/core";
 
-export function SearchBox({ placeholder, label, suggestions, param = "q", widthClass = "w-64" }: { placeholder: string; label: string; suggestions: string[]; param?: string; widthClass?: string }) {
+export interface SearchItem { label: string; text?: string; nums?: number[] }
+
+export function SearchBox({ placeholder, label, items, param = "q", widthClass = "w-64" }: { placeholder: string; label: string; items: SearchItem[]; param?: string; widthClass?: string }) {
   const router = useRouter();
   const pathname = usePathname();
   const sp = useSearchParams();
@@ -13,8 +16,8 @@ export function SearchBox({ placeholder, label, suggestions, param = "q", widthC
   const [hi, setHi] = useState(0);
   useEffect(() => { setQ(current); }, [current]);
 
-  const needle = q.trim().toLowerCase();
-  const list = needle ? suggestions.filter((s) => s.toLowerCase().includes(needle)).slice(0, 8) : [];
+  const needle = q.trim();
+  const list = needle ? [...new Set(items.filter((it) => matchesQuery(needle, { text: it.text ?? it.label, nums: it.nums })).map((it) => it.label))].slice(0, 8) : [];
 
   function go(value: string) {
     const next = new URLSearchParams(sp.toString());

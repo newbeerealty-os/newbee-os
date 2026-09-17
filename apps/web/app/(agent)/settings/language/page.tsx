@@ -39,7 +39,7 @@ export default async function LanguageSettingsPage({ searchParams }: { searchPar
         <span className="text-xs text-muted">{t("settings.count", { n: keys.length })}</span>
       </div>
 
-      <SearchBox placeholder={t("settings.filter")} label={t("common.search")} suggestions={Object.keys(MESSAGES)} widthClass="w-80" />
+      <SearchBox placeholder={t("settings.filter")} label={t("common.search")} items={Object.keys(MESSAGES).map((k) => ({ label: k, text: `${k} ${MESSAGES[k].zh} ${MESSAGES[k].en}` }))} widthClass="w-80" />
 
       {Array.from(byNs.entries()).map(([ns, list]) => (
         <Section key={ns} title={`${ns} · ${list.length}`}>
