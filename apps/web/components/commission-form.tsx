@@ -114,8 +114,10 @@ export function CommissionForm(p: CommissionFormProps) {
           </>
         )}
         {p.prefillHint && <p className="text-xs text-muted">{p.prefillHint}</p>}
-        <F label={p.l.price}><MoneyInput value={price} onChange={setPrice} /></F>
-        <F label={p.l.amount}><AmountInput basis={basis} onBasis={(b) => { setBasis(b); }} value={amount} onValue={setAmount} name="x" l={p.l} /></F>
+        <div className="grid grid-cols-[1.3fr_1fr] gap-3">
+          <F label={p.l.price}><MoneyInput value={price} onChange={setPrice} /></F>
+          <F label={p.l.amount}><AmountInput basis={basis} onBasis={(b) => { setBasis(b); }} value={amount} onValue={setAmount} name="x" l={p.l} /></F>
+        </div>
         <input type="hidden" name="basis" value={basis} /><input type="hidden" name="pct" value={basis === "pct" ? amount : ""} /><input type="hidden" name="flat" value={basis === "flat" ? amount : ""} />
         {p.kind === "deal" ? (
           <div className="grid grid-cols-[1fr_1fr] gap-3">

@@ -224,8 +224,7 @@ export const REPLICAS: Record<string, (T: TFn, hidden: string) => React.ReactNod
           <div className="grid grid-cols-[6rem_1fr] items-center gap-x-2 gap-y-1.5 text-xs">
             <span className="text-muted">{T("comm.f.deal")}</span><Input>1234 Sample Pl</Input>
             <span className="text-muted">{T("comm.f.side")}</span><Input>{T("commSide.listing")}</Input>
-            <span className="text-muted">{T("comm.f.price")}</span><Input>$450,000 <span className="ml-auto text-accent">{T("comm.fromDeal")}</span></Input>
-            <span className="text-muted">{T("comm.f.amount")}</span><span className="flex gap-1"><Input>3 %</Input><Chip tone="info">%</Chip><Chip>$</Chip></span>
+            <span className="text-muted">{T("comm.f.price")} · {T("comm.f.amount")}</span><span className="flex gap-1"><Input>$450,000 <span className="ml-auto text-accent">{T("comm.fromDeal")}</span></Input><Input>3 %</Input><Chip tone="info">%</Chip><Chip>$</Chip></span>
             <span className="text-muted">{T("comm.f.referralOut")}</span><span className="flex gap-1"><Input>25 %</Input><Input>{T("comm.f.referralOutTo")}</Input></span>
             <span className="text-muted">{T("comm.f.client")}</span><Input>Li Wei</Input>
             <span className="text-muted">{T("comm.f.partner")}</span><span className="flex gap-1"><Input>Jane Broker</Input><Input>{T("comm.f.partnerOrg")}</Input></span>
