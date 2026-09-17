@@ -8,7 +8,7 @@ import { createContact, createOrganization, createOrganizationInline } from "@/l
 import { contactFormLabels, contactFormOptions, defaultKindsForTab } from "@/lib/contact-form-props";
 import { Section, Empty, Badge, inputCls, Button } from "@/components/ui";
 import { PageHeader, Tabs } from "@/components/page";
-import { InitialsAvatar } from "@/components/contact-forms";
+import { ContactAvatar } from "@/components/avatar";
 import { ContactCreator } from "@/components/contact-form-client";
 
 export const dynamic = "force-dynamic";
@@ -70,7 +70,7 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
           {rows.map((r) => (
             <Link key={r.id} href={r.href} className="flex flex-col gap-2 rounded-ui border border-line bg-surface p-4 hover:border-accent">
               <div className="flex items-center gap-3">
-                <InitialsAvatar text={r.initials} size="lg" />
+                <ContactAvatar initials={r.initials} avatarUrl={r.avatarUrl} photoUrl={r.photoUrl} size="lg" />
                 <div className="min-w-0">
                   <div className="truncate text-sm font-semibold text-fg">{r.name}</div>
                   <div className="truncate text-xs text-muted">{r.sub || r.kindLabel}{r.orgName ? ` · ${r.orgName}` : ""}</div>
@@ -98,7 +98,7 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
                 <li key={r.id}>
                   <Link href={r.href} className="grid gap-1 px-4 py-2.5 hover:bg-chip/40 md:grid-cols-[1.8fr_1.1fr_1.5fr_1.1fr_.9fr_.5fr] md:items-center md:gap-3">
                     <div className="flex min-w-0 items-center gap-2.5">
-                      <InitialsAvatar text={r.initials} size="sm" />
+                      <ContactAvatar initials={r.initials} avatarUrl={r.avatarUrl} photoUrl={r.photoUrl} size="sm" />
                       <div className="min-w-0">
                         <div className="truncate text-sm font-semibold text-fg">{r.name}</div>
                         {r.sub && <div className="truncate text-[11.5px] text-muted">{r.sub}</div>}

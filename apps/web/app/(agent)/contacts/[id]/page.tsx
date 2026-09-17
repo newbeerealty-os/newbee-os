@@ -7,11 +7,12 @@ import { getT } from "@/lib/i18n";
 import { todayISO, relDays } from "@/lib/format";
 import { updateContact, deleteContact, createOrganizationInline, saveContactNotes, addContactLink, removeContactLink } from "@/lib/actions/contacts";
 import { loadSuggestions } from "@/lib/contacts";
-import { contactFormLabels, contactFormOptions } from "@/lib/contact-form-props";
+import { contactFormLabels, contactFormOptions, photoLabels } from "@/lib/contact-form-props";
+import { avatarUrlsFor, signPaths } from "@/lib/avatars";
 import { ContactFormClient } from "@/components/contact-form-client";
 import { Section, Empty, Badge, Button, inputCls } from "@/components/ui";
 import { PageHeader } from "@/components/page";
-import { InitialsAvatar } from "@/components/contact-forms";
+import { ContactAvatar, PhotoGallery, type PhotoItem } from "@/components/avatar";
 import { StageBar, StageBadge } from "@/components/stage";
 import { CopyButton } from "@/components/copy-button";
 
@@ -19,7 +20,8 @@ export const dynamic = "force-dynamic";
 
 type One<T> = T | T[] | null;
 const one = <T,>(x: One<T>): T | null => (Array.isArray(x) ? x[0] ?? null : x);
-type Person = { id: string; first_name: string; last_name: string; name_zh: string | null; kind: string; job_title: string | null };
+type Person = { id: string; first_name: string; last_name: string; name_zh: string | null; kind: string; job_title: string | null; avatar_path?: string | null; avatar_photo_id?: string | null };
+const P = "id,first_name,last_name,name_zh,kind,job_title,avatar_path,avatar_photo_id";
 type Deal = { id: string; title: string; stage: string; type: string; updated_at: string };
 
 export default async function ContactPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ edit?: string }> }) {
@@ -34,7 +36,7 @@ export default async function ContactPage({ params, searchParams }: { params: Pr
   if (!c) notFound();
   const [{ data: orgRow }, { data: refRow }] = await Promise.all([
     c.organization_id ? supabase.from("organizations").select("id,name").eq("id", c.organization_id).maybeSingle() : Promise.resolve({ data: null }),
-    c.referred_by_contact_id ? supabase.from("contacts").select("id,first_name,last_name,name_zh,kind,job_title").eq("id", c.referred_by_contact_id).maybeSingle() : Promise.resolve({ data: null }),
+    c.referred_by_contact_id ? supabase.from("contacts").select(P).eq("id", c.referred_by_contact_id).maybeSingle() : Promise.resolve({ data: null }),
   ]);
   const org = orgRow as { id: string; name: string } | null;
   const referrer = refRow as Person | null;
@@ -53,13 +55,19 @@ export default async function ContactPage({ params, searchParams }: { params: Pr
   // 这些交易的下一节点 / 同交易的其他人 / 紧密关系 / 编辑用的下拉
   const [{ data: ms }, { data: others }, { data: linksA }, { data: linksB }, { data: orgs }, { data: people }, suggestions] = await Promise.all([
     dealIds.length ? supabase.from("milestones").select("deal_id,key,label,due_date").in("deal_id", dealIds).eq("status", "pending").not("due_date", "is", null).gte("due_date", today).order("due_date") : Promise.resolve({ data: [] }),
-    dealIds.length ? supabase.from("deal_parties").select("deal_id,role,contact_id,contacts(id,first_name,last_name,name_zh,kind,job_title)").in("deal_id", dealIds).is("deleted_at", null).not("contact_id", "is", null).neq("contact_id", id) : Promise.resolve({ data: [] }),
-    supabase.from("contact_links").select("id,relation,related:contacts!contact_links_related_contact_id_fkey(id,first_name,last_name,name_zh,kind,job_title)").eq("contact_id", id).is("deleted_at", null),
-    supabase.from("contact_links").select("id,relation,related:contacts!contact_links_contact_id_fkey(id,first_name,last_name,name_zh,kind,job_title)").eq("related_contact_id", id).is("deleted_at", null),
+    dealIds.length ? supabase.from("deal_parties").select(`deal_id,role,contact_id,contacts(${P})`).in("deal_id", dealIds).is("deleted_at", null).not("contact_id", "is", null).neq("contact_id", id) : Promise.resolve({ data: [] }),
+    supabase.from("contact_links").select(`id,relation,related:contacts!contact_links_related_contact_id_fkey(${P})`).eq("contact_id", id).is("deleted_at", null),
+    supabase.from("contact_links").select(`id,relation,related:contacts!contact_links_contact_id_fkey(${P})`).eq("related_contact_id", id).is("deleted_at", null),
     supabase.from("organizations").select("id,name,kind").is("deleted_at", null).order("name"),
-    supabase.from("contacts").select("id,first_name,last_name,name_zh,kind,job_title").is("deleted_at", null).neq("id", id).order("first_name"),
+    supabase.from("contacts").select(P).is("deleted_at", null).neq("id", id).order("first_name"),
     loadSuggestions(supabase),
   ]);
+  // 照片 + 头像 URL（本人、相关人、紧密关系里的人一起签）
+  const { data: photoRows } = await supabase.from("contact_photos").select("id,storage_path,file_name").eq("contact_id", id).is("deleted_at", null).order("created_at", { ascending: false });
+  const photoRecs = (photoRows ?? []) as { id: string; storage_path: string; file_name: string | null }[];
+  const signed = await signPaths(supabase, photoRecs.map((p) => p.storage_path));
+  const photos: PhotoItem[] = photoRecs.map((p) => ({ id: p.id, url: signed.get(p.storage_path) ?? "", name: p.file_name })).filter((p) => p.url);
+  const pl2 = photoLabels(t);
   const nextMs = new Map<string, { key: string; label: string; due_date: string }>();
   for (const m of (ms ?? []) as { deal_id: string; key: string; label: string; due_date: string }[]) if (!nextMs.has(m.deal_id)) nextMs.set(m.deal_id, m);
 
@@ -92,6 +100,13 @@ export default async function ContactPage({ params, searchParams }: { params: Pr
     return [];
   });
 
+  const avatarPeople: Person[] = [c as Person, ...(referrer ? [referrer] : []), ...links.map((l) => l.person), ...[...personById.values()]];
+  const avatars = await avatarUrlsFor(supabase, avatarPeople.map((p) => ({ id: p.id, avatar_path: p.avatar_path ?? null, avatar_photo_id: p.avatar_photo_id ?? null })));
+  const Av = ({ p, size, editable }: { p: Person; size: "sm" | "md" | "lg" | "xl"; editable?: boolean }) => (
+    <ContactAvatar initials={initials(p.first_name, p.last_name)} avatarUrl={avatars.get(p.id)?.avatarUrl} photoUrl={avatars.get(p.id)?.photoUrl} size={size}
+      editable={editable} contactId={editable ? p.id : undefined} photos={editable ? photos : []} l={editable ? pl2 : undefined} />
+  );
+
   const name = contactName(c);
   const base = `/contacts/${id}`;
   const tabOf = CONTACT_TABS.find((x) => (x.kinds as string[]).includes(c.kind))?.id;
@@ -119,18 +134,23 @@ export default async function ContactPage({ params, searchParams }: { params: Pr
       />
 
       {edit ? (
+        <>
+        <Section title={pl2.photos}>
+          <PhotoGallery contactId={id} photos={photos} avatarPhotoId={c.avatar_photo_id ?? null} hasAvatar={!!c.avatar_path} l={pl2} />
+        </Section>
         <Section title={t("contact.edit")}>
           <ContactFormClient l={contactFormLabels(t)} {...contactFormOptions(t)} orgs={(orgs ?? []) as { id: string; name: string; kind: string }[]}
             contacts={((people ?? []) as Person[]).map((p) => ({ value: p.id, label: contactName(p) }))}
             jobTitles={suggestions.jobTitles} tags={suggestions.tags} sources={suggestions.sources} values={{ ...c, tags: c.tags as string[] }}
             action={updateContact.bind(null, id)} submitLabel={t("contact.save")} createOrg={createOrganizationInline} />
         </Section>
+        </>
       ) : (
         <div className="grid gap-4 lg:grid-cols-[1fr_1.15fr]">
           {/* 左栏 */}
           <div className="flex flex-col gap-4">
             <div className="flex items-center gap-4 rounded-ui border border-line bg-surface p-4">
-              <InitialsAvatar text={initials(c.first_name, c.last_name)} size="lg" />
+              <Av p={c as Person} size="xl" editable />
               <div className="min-w-0">
                 <div className="truncate text-lg font-semibold text-fg">{name}{c.name_zh && <span className="ml-2 text-sm font-normal text-muted">{c.name_zh}</span>}</div>
                 {(org || c.job_title) && <div className="truncate text-sm text-muted">{c.job_title}{c.job_title && org ? " · " : ""}{org && <Link href={`/contacts/org/${org.id}`} className="text-accent hover:underline">{org.name}</Link>}</div>}
@@ -160,7 +180,7 @@ export default async function ContactPage({ params, searchParams }: { params: Pr
                 <ul className="divide-y divide-line">
                   {links.map((l) => (
                     <li key={l.id} className="flex items-center gap-3 py-2">
-                      <InitialsAvatar text={initials(l.person.first_name, l.person.last_name)} size="sm" />
+                      <Av p={l.person} size="sm" />
                       <Link href={`/contacts/${l.person.id}`} className="min-w-0 flex-1 truncate text-sm font-medium text-fg hover:text-accent">{pl(l.person)}</Link>
                       <Badge tone="blue">{t(`relation.${l.relation}`)}</Badge>
                       <form action={removeContactLink.bind(null, id, l.id)}><button className="text-xs text-muted hover:text-danger">{t("contact.removeLink")}</button></form>
@@ -228,7 +248,7 @@ export default async function ContactPage({ params, searchParams }: { params: Pr
                           <StageBar stage={top.stage} />
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2">
-                              <InitialsAvatar text={initials(p.first_name, p.last_name)} size="sm" />
+                              <Av p={p} size="sm" />
                               <span className="truncate text-sm font-semibold text-fg">{pl(p)}</span>
                             </div>
                             <div className="mt-1.5 flex flex-wrap gap-1">{roles.map((x) => <Badge key={x} tone="blue">{t(`partyRole.${x}`)}</Badge>)}<Badge>{t(`contactKind.${p.kind}`)}</Badge></div>

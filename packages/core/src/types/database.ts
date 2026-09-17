@@ -102,11 +102,68 @@ export type Database = {
           },
         ]
       }
+      contact_photos: {
+        Row: {
+          agent_id: string
+          contact_id: string
+          created_at: string
+          deleted_at: string | null
+          file_name: string | null
+          height: number | null
+          id: string
+          storage_path: string
+          updated_at: string
+          width: number | null
+        }
+        Insert: {
+          agent_id: string
+          contact_id: string
+          created_at?: string
+          deleted_at?: string | null
+          file_name?: string | null
+          height?: number | null
+          id?: string
+          storage_path: string
+          updated_at?: string
+          width?: number | null
+        }
+        Update: {
+          agent_id?: string
+          contact_id?: string
+          created_at?: string
+          deleted_at?: string | null
+          file_name?: string | null
+          height?: number | null
+          id?: string
+          storage_path?: string
+          updated_at?: string
+          width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contact_photos_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contact_photos_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contacts: {
         Row: {
           address_line1: string | null
           address_line2: string | null
           agent_id: string
+          avatar_crop: Json | null
+          avatar_path: string | null
+          avatar_photo_id: string | null
           birthday: string | null
           city: string | null
           created_at: string
@@ -139,6 +196,9 @@ export type Database = {
           address_line1?: string | null
           address_line2?: string | null
           agent_id: string
+          avatar_crop?: Json | null
+          avatar_path?: string | null
+          avatar_photo_id?: string | null
           birthday?: string | null
           city?: string | null
           created_at?: string
@@ -171,6 +231,9 @@ export type Database = {
           address_line1?: string | null
           address_line2?: string | null
           agent_id?: string
+          avatar_crop?: Json | null
+          avatar_path?: string | null
+          avatar_photo_id?: string | null
           birthday?: string | null
           city?: string | null
           created_at?: string
@@ -205,6 +268,13 @@ export type Database = {
             columns: ["agent_id"]
             isOneToOne: false
             referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contacts_avatar_photo_id_fkey"
+            columns: ["avatar_photo_id"]
+            isOneToOne: false
+            referencedRelation: "contact_photos"
             referencedColumns: ["id"]
           },
           {

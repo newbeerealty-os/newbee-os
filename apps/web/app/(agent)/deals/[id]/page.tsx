@@ -6,7 +6,8 @@ import { DEAL_FIELDS, FIELD_BY_KEY, ADDENDA, PARTY_ROLES, PARTY_SIDES, contactNa
 import { createClient } from "@/lib/supabase/server";
 import { uploadDocument, extractDocument, confirmField, rejectField, setField, deriveDeal, setStage } from "@/lib/actions/deals";
 import { addParty, removeParty } from "@/lib/actions/contacts";
-import { InitialsAvatar } from "@/components/contact-forms";
+import { ContactAvatar } from "@/components/avatar";
+import { avatarUrlsFor } from "@/lib/avatars";
 import { getT } from "@/lib/i18n";
 import { DEAL_STAGES } from "@/lib/nav";
 import { todayISO, relDays, money } from "@/lib/format";
@@ -46,7 +47,7 @@ export default async function DealPage({ params, searchParams }: { params: Promi
     supabase.from("deal_fields_current").select("id,key,value_text,value_num,value_date,source_page,source_quote,confidence,confirmed_at,source_doc_id").eq("deal_id", id),
     supabase.from("milestones").select("id,key,label,due_date,due_time,status,client_visible").eq("deal_id", id).order("due_date", { ascending: true, nullsFirst: false }),
     supabase.from("tasks").select("id,title,due_date,done_at,deal_id,stage,playbook_rule_id").eq("deal_id", id).is("deleted_at", null).order("due_date", { ascending: true, nullsFirst: false }),
-    supabase.from("deal_parties").select("id,role,side,is_primary,notes,contact_id,organization_id,contacts(id,first_name,last_name,name_zh,email,phone,job_title,organizations!contacts_organization_id_fkey(name)),organizations(id,name,email,phone)").eq("deal_id", id).is("deleted_at", null).order("created_at"),
+    supabase.from("deal_parties").select("id,role,side,is_primary,notes,contact_id,organization_id,contacts(id,first_name,last_name,name_zh,email,phone,job_title,avatar_path,avatar_photo_id,organizations!contacts_organization_id_fkey(name)),organizations(id,name,email,phone)").eq("deal_id", id).is("deleted_at", null).order("created_at"),
     supabase.from("contacts").select("id,first_name,last_name,name_zh,kind").is("deleted_at", null).order("first_name"),
     supabase.from("organizations").select("id,name,kind").is("deleted_at", null).order("name"),
   ]);
@@ -59,13 +60,14 @@ export default async function DealPage({ params, searchParams }: { params: Promi
   type One<T> = T | T[] | null;
   const one = <T,>(x: One<T>): T | null => (Array.isArray(x) ? x[0] ?? null : x);
   type PartyRow = { id: string; role: string; side: string; is_primary: boolean; notes: string | null; contact_id: string | null; organization_id: string | null;
-    contacts: One<{ id: string; first_name: string; last_name: string; name_zh: string | null; email: string | null; phone: string | null; job_title: string | null; organizations: One<{ name: string }> }>;
+    contacts: One<{ id: string; first_name: string; last_name: string; name_zh: string | null; email: string | null; phone: string | null; job_title: string | null; avatar_path: string | null; avatar_photo_id: string | null; organizations: One<{ name: string }> }>;
     organizations: One<{ id: string; name: string; email: string | null; phone: string | null }> };
   const parties = ((ps ?? []) as unknown as PartyRow[]).map((p) => {
     const c = one(p.contacts); const o = one(p.organizations);
     return { ...p, name: c ? contactName(c) : o?.name ?? "", sub: c ? [c.name_zh, c.job_title, one(c.organizations)?.name].filter(Boolean).join(" · ") : t("contacts.company"),
-      email: c?.email ?? o?.email ?? null, phone: c?.phone ?? o?.phone ?? null, href: c ? `/contacts/${c.id}` : o ? `/contacts/org/${o.id}` : "#", av: c ? initials(c.first_name, c.last_name) : initials(o?.name ?? "?") };
+      email: c?.email ?? o?.email ?? null, phone: c?.phone ?? o?.phone ?? null, href: c ? `/contacts/${c.id}` : o ? `/contacts/org/${o.id}` : "#", av: c ? initials(c.first_name, c.last_name) : initials(o?.name ?? "?"), person: c };
   });
+  const partyAvatars = await avatarUrlsFor(supabase, parties.flatMap((p) => (p.person ? [{ id: p.person.id, avatar_path: p.person.avatar_path, avatar_photo_id: p.person.avatar_photo_id }] : [])));
   const people = (cs ?? []) as { id: string; first_name: string; last_name: string; name_zh: string | null; kind: string }[];
   const orgs = (os ?? []) as { id: string; name: string; kind: string }[];
   const base = `/deals/${id}`;
@@ -155,7 +157,7 @@ export default async function DealPage({ params, searchParams }: { params: Promi
                       {list.map((p) => (
                         <li key={p.id} className="flex flex-wrap items-center gap-3 py-2">
                           <Link href={p.href} className="flex min-w-0 flex-1 items-center gap-2.5">
-                            <InitialsAvatar text={p.av} size="sm" />
+                            <ContactAvatar initials={p.av} avatarUrl={p.person ? partyAvatars.get(p.person.id)?.avatarUrl : null} photoUrl={p.person ? partyAvatars.get(p.person.id)?.photoUrl : null} size="sm" />
                             <span className="min-w-0"><span className="block truncate text-sm font-medium text-fg">{p.name}</span>{p.sub && <span className="block truncate text-[11.5px] text-muted">{p.sub}</span>}</span>
                           </Link>
                           <Badge tone="blue">{t(`partyRole.${p.role}`)}</Badge>

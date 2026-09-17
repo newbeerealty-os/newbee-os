@@ -26,3 +26,9 @@ export function defaultKindsForTab(tab: string | null): { contact: string; org: 
   if (!def) return { contact: "client", org: "brokerage" };
   return { contact: def.kinds[0] ?? (tab === "brokerage" ? "agent" : "other"), org: def.orgKinds[0] ?? (tab === "agent" || tab === "broker" || tab === "tc" ? "brokerage" : "other") };
 }
+
+export function photoLabels(t: Translator): L {
+  const l: L = {};
+  for (const k of ["photos", "upload", "none", "setAvatar", "isAvatar", "delete", "removeAvatar", "editAvatar", "chooseFile", "orPick", "dragHint", "zoom", "use", "saving", "cancel", "original"]) l[k] = t(`photo.${k}`);
+  return l;
+}

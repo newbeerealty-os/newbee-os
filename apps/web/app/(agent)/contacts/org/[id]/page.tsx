@@ -8,6 +8,8 @@ import { updateOrganization, deleteOrganization } from "@/lib/actions/contacts";
 import { Section, Empty, Badge, Button } from "@/components/ui";
 import { PageHeader } from "@/components/page";
 import { InitialsAvatar } from "@/components/contact-forms";
+import { ContactAvatar } from "@/components/avatar";
+import { avatarUrlsFor } from "@/lib/avatars";
 import { OrganizationFormClient } from "@/components/contact-form-client";
 import { contactFormLabels, contactFormOptions } from "@/lib/contact-form-props";
 
@@ -22,12 +24,13 @@ export default async function OrganizationPage({ params, searchParams }: { param
   if (oErr) throw new Error(`organization query failed: ${oErr.message}`);
   if (!o) notFound();
   const [{ data: people }, { data: parties }] = await Promise.all([
-    supabase.from("contacts").select("id,first_name,last_name,name_zh,job_title,email,phone,kind").eq("organization_id", id).is("deleted_at", null).order("first_name"),
+    supabase.from("contacts").select("id,first_name,last_name,name_zh,job_title,email,phone,kind,avatar_path,avatar_photo_id").eq("organization_id", id).is("deleted_at", null).order("first_name"),
     supabase.from("deal_parties").select("id,role,side,deals(id,title,stage)").eq("organization_id", id).is("deleted_at", null),
   ]);
-  type Person = { id: string; first_name: string; last_name: string; name_zh: string | null; job_title: string | null; email: string | null; phone: string | null; kind: string };
+  type Person = { id: string; first_name: string; last_name: string; name_zh: string | null; job_title: string | null; email: string | null; phone: string | null; kind: string; avatar_path: string | null; avatar_photo_id: string | null };
   type Party = { id: string; role: string; side: string; deals: { id: string; title: string; stage: string } | { id: string; title: string; stage: string }[] | null };
   const staff = (people ?? []) as Person[];
+  const avatars = await avatarUrlsFor(supabase, staff);
   const dealRows = ((parties ?? []) as unknown as Party[]).map((p) => ({ ...p, deal: Array.isArray(p.deals) ? p.deals[0] : p.deals })).filter((p) => p.deal);
   const base = `/contacts/org/${id}`;
   const tabOf = CONTACT_TABS.find((x) => (x.orgKinds as string[]).includes(o.kind))?.id;
@@ -81,7 +84,7 @@ export default async function OrganizationPage({ params, searchParams }: { param
                 {staff.map((p) => (
                   <li key={p.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
                     <Link href={`/contacts/${p.id}`} className="flex items-center gap-2.5">
-                      <InitialsAvatar text={initials(p.first_name, p.last_name)} size="sm" />
+                      <ContactAvatar initials={initials(p.first_name, p.last_name)} avatarUrl={avatars.get(p.id)?.avatarUrl} photoUrl={avatars.get(p.id)?.photoUrl} size="sm" />
                       <span className="text-sm font-medium text-fg">{contactName(p)}</span>
                       {p.job_title && <span className="text-xs text-muted">{p.job_title}</span>}
                     </Link>
