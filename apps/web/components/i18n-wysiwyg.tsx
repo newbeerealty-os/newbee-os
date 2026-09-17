@@ -17,6 +17,7 @@ const GROUPS: { label: string; ids: string[] }[] = [
   { label: "pages", ids: ["nav", "today", "tasks", "settings", "login"] },
   { label: "deals", ids: ["deals", "deal"] },
   { label: "contacts", ids: ["contacts", "contact", "form"] },
+  { label: "money", ids: ["commissions", "plan"] },
   { label: "names", ids: ["field", "ms", "task"] },
 ];
 

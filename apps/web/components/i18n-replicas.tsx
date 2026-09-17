@@ -23,7 +23,7 @@ const Hidden = ({ title, items }: { title: React.ReactNode; items: React.ReactNo
 const side = (T: TFn, active: string) => (
   <div className="flex w-40 shrink-0 flex-col gap-0.5 rounded-ui bg-side p-2 text-side-text">
     <div className="px-2 pb-2 text-sm font-semibold">New<span className="text-accent">Bee</span> OS</div>
-    {[["today", "◐"], ["deals", "▤"], ["contacts", "◉"], ["tasks", "☑"], ["settings", "⚙"]].map(([k, ic]) => <div key={k} className={`flex items-center gap-2 rounded-md px-2 py-1.5 text-xs font-medium ${k === active ? "bg-side-active text-side-active-text" : ""}`}><span className="w-3 text-side-muted">{ic}</span>{T(`nav.${k}`)}</div>)}
+    {[["today", "◐"], ["deals", "▤"], ["contacts", "◉"], ["tasks", "☑"], ["commissions", "$"], ["settings", "⚙"]].map(([k, ic]) => <div key={k} className={`flex items-center gap-2 rounded-md px-2 py-1.5 text-xs font-medium ${k === active ? "bg-side-active text-side-active-text" : ""}`}><span className="w-3 text-side-muted">{ic}</span>{T(`nav.${k}`)}</div>)}
     <div className="mt-2 flex items-center gap-1 px-1 text-[11px] text-side-muted"><span className="rounded bg-side-active px-1.5 py-0.5 text-side-active-text">{T("locale.zh")}</span><span className="px-1.5">{T("locale.en")}</span></div>
     <div className="mt-1 flex items-center justify-between border-t border-side-line px-1 pt-1.5 text-[11px] text-side-muted"><span>Jason W.</span><span>{T("nav.signout")}</span></div>
   </div>
@@ -183,7 +183,7 @@ export const REPLICAS: Record<string, (T: TFn, hidden: string) => React.ReactNod
   ),
   settings: (T, h) => (
     <div className="flex flex-col gap-3">
-      <Tabs items={[T("settings.language"), T("settings.theme")]} />
+      <Tabs items={[T("settings.language"), T("settings.theme"), T("settings.commission")]} />
       <div className="text-xs text-muted">{T("settings.themeHint")} · {T("settings.nowUsing", { name: "…" })} {T("theme.sandstone")}</div>
       <Card title={T("settings.mode")}><div className="flex gap-1">{["auto", "day", "night"].map((m) => <Chip key={m} tone={m === "auto" ? "info" : ""}>{T(`settings.mode.${m}`)}</Chip>)}</div></Card>
       <div className="grid gap-3 md:grid-cols-2">
@@ -193,10 +193,74 @@ export const REPLICAS: Record<string, (T: TFn, hidden: string) => React.ReactNod
       <Card title={T("settings.location")} right={T("settings.sunToday", { rise: "07:17", set: "19:31" })}><div className="text-xs text-muted">{T("settings.locationHint")}</div><div className="mt-1 flex gap-1"><Input>{T("settings.lat")}</Input><Input>{T("settings.lng")}</Input><Btn ghost>{T("settings.useMyLocation")}</Btn><span className="text-xs text-muted">{T("settings.locating")} · {T("settings.locationFailed")}</span></div></Card>
       <Card title={T("settings.language")} right={<Chip>{T("settings.tr.changedOnly")} 3</Chip>}>
         <div className="text-xs text-muted">{T("settings.tr.hint")}</div>
-        <div className="mt-2 rounded-ui border border-line-strong p-2 text-xs"><div className="text-muted">{T("deal.tab.parties")} › … · {T("settings.tr.hidden")}</div><div className="mt-1 flex gap-2"><Input>{T("settings.tr.zh")}</Input><Input>{T("settings.tr.en")}</Input></div><div className="mt-1 text-muted">{T("settings.tr.defaultIs", { v: "…" })} · {T("settings.tr.sample")}: {"{n}"}</div><div className="mt-1 flex justify-end gap-1"><Btn ghost>{T("settings.tr.reset")}</Btn><Btn ghost>{T("settings.tr.cancel")}</Btn><Btn>{T("settings.tr.save")}</Btn></div><div className="mt-1 text-muted">{T("settings.tr.other")} · {T("settings.tr.g.pages")} · {T("settings.tr.g.deals")} · {T("settings.tr.g.contacts")} · {T("settings.tr.g.names")}</div></div>
+        <div className="mt-2 rounded-ui border border-line-strong p-2 text-xs"><div className="text-muted">{T("deal.tab.parties")} › … · {T("settings.tr.hidden")}</div><div className="mt-1 flex gap-2"><Input>{T("settings.tr.zh")}</Input><Input>{T("settings.tr.en")}</Input></div><div className="mt-1 text-muted">{T("settings.tr.defaultIs", { v: "…" })} · {T("settings.tr.sample")}: {"{n}"}</div><div className="mt-1 flex justify-end gap-1"><Btn ghost>{T("settings.tr.reset")}</Btn><Btn ghost>{T("settings.tr.cancel")}</Btn><Btn>{T("settings.tr.save")}</Btn></div><div className="mt-1 text-muted">{T("settings.tr.other")} · {T("settings.tr.g.pages")} · {T("settings.tr.g.deals")} · {T("settings.tr.g.contacts")} · {T("settings.tr.g.names")} · {T("settings.tr.g.money")}</div></div>
       </Card>
       <Card title={T("settings.title")}><div className="flex flex-wrap gap-2 text-xs"><Btn>{T("common.save")}</Btn><Btn ghost>{T("common.reset")}</Btn><Btn ghost>{T("common.delete")}</Btn><span className="text-muted">{T("settings.langTheme")}</span></div></Card>
       <Hidden title={h} items={[T("settings.languageHint"), T("settings.filter"), T("settings.key"), T("settings.default"), T("settings.overridden"), T("settings.stale"), T("settings.count", { n: 500 })]} />
+    </div>
+  ),
+  commissions: (T, h) => (
+    <div className="flex gap-3">{side(T, "commissions")}<div className="flex min-w-0 flex-1 flex-col gap-3">
+      <div className="flex flex-wrap items-center gap-2"><b className="text-base">{T("comm.title")} · {T("comm.all")}</b><span className="text-xs text-accent">{T("nav.commissions")}</span><span className="flex-1" /><span className="flex items-center gap-1 text-xs text-muted">{T("comm.from")}<Input>2026-01-01</Input>{T("comm.to")}<Input>2026-12-31</Input></span><Input>{T("comm.search")}</Input><Btn ghost>{T("comm.newReferral")}</Btn><Btn>{T("comm.new")}</Btn></div>
+      <div className="grid grid-cols-4 gap-2">{[["comm.stat.gci", "$27,000"], ["comm.stat.nci", "$17,820"], ["comm.stat.paid", "$8,910"], ["comm.stat.pending", "$8,910"]].map(([k, v]) => <W key={k} className="px-3 py-2"><div className="text-xs text-muted">{T(k)}</div><div className="font-mono text-lg font-semibold">{v}</div></W>)}</div>
+      <Card title={T("comm.cap")} right={T("comm.capPeriod", { start: "2026-01-01", end: "2026-12-31" })}>
+        <div className="flex justify-between text-xs"><span className="font-mono">$8,100 / $16,000</span><span className="text-muted">51% · {T("comm.capHit")}</span></div><div className="mt-1 h-2 rounded-full bg-chip"><div className="h-full w-1/2 rounded-full bg-accent" /></div>
+        <div className="mt-2 text-xs text-muted">{T("comm.capNone")}</div>
+      </Card>
+      <Tabs items={[T("comm.all"), T("commSide.listing"), T("commSide.buyer"), T("comm.filter.both"), T("comm.filter.lease"), T("commKind.referral"), T("comm.filter.pending"), T("comm.filter.paid")]} />
+      <Card title={<>{T("comm.title")} · {T("comm.all")}</>} right="3">
+        <div className="grid grid-cols-[.9fr_1.8fr_1fr_.9fr_.9fr_.9fr_.9fr_.8fr] gap-2 border-b border-line pb-1 text-[11px] font-semibold text-muted"><span>{T("comm.col.date")}</span><span>{T("comm.col.what")}</span><span>{T("comm.col.kind")}</span><span className="text-right">{T("comm.col.price")}</span><span className="text-right">{T("comm.col.gci")}</span><span className="text-right">{T("comm.col.deductions")}</span><span className="text-right">{T("comm.col.nci")}</span><span>{T("comm.col.status")}</span></div>
+        <div className="grid grid-cols-[.9fr_1.8fr_1fr_.9fr_.9fr_.9fr_.9fr_.8fr] items-center gap-2 border-b border-line py-2 font-mono text-xs"><span>2026-10-15</span><b className="font-sans">1234 Sample Pl</b><span className="flex gap-1"><Chip tone="info">{T("commSide.listing")}</Chip><Chip>{T("comm.both")}</Chip></span><span className="text-right">$450,000</span><span className="text-right">$13,500</span><span className="text-right text-danger">($4,590)</span><span className="text-right font-semibold">$8,910</span><Chip tone="warn">{T("commStatus.pending")}</Chip></div>
+        <div className="grid grid-cols-[.9fr_1.8fr_1fr_.9fr_.9fr_.9fr_.9fr_.8fr] items-center gap-2 border-b border-line py-2 font-mono text-xs"><span>2026-08-02</span><b className="font-sans">88 Harbor Ln</b><span className="flex gap-1"><Chip tone="info">{T("commSide.buyer")}</Chip></span><span className="text-right">$390,000</span><span className="text-right">$11,700</span><span className="text-right text-danger">($4,050)</span><span className="text-right font-semibold">$7,650</span><Chip tone="ok">{T("commStatus.paid")}</Chip></div>
+        <div className="grid grid-cols-[.9fr_1.8fr_1fr_.9fr_.9fr_.9fr_.9fr_.8fr] items-center gap-2 py-2 font-mono text-xs"><span>2026-11-30</span><b className="font-sans">Li Wei</b><span className="flex gap-1"><Chip tone="warn">{T("commKind.referral")}</Chip></span><span className="text-right">$300,000</span><span className="text-right">$2,250</span><span className="text-right text-danger">($675)</span><span className="text-right font-semibold">$1,575</span><Chip>{T("commStatus.projected")}</Chip></div>
+        <div className="mt-2 flex flex-wrap gap-1 text-xs">{["deal", "referral"].map((k) => <Chip key={k}>{T(`commKind.${k}`)}</Chip>)}{["listing", "buyer", "landlord", "tenant", "management", "referral"].map((s) => <Chip key={s} tone="info">{T(`commSide.${s}`)}</Chip>)}</div>
+        <div className="mt-1 flex flex-wrap gap-1 text-xs">{["projected", "pending", "closed", "paid", "cancelled"].map((s) => <Chip key={s}>{T(`commStatus.${s}`)}</Chip>)}</div>
+      </Card>
+      <div className="flex flex-wrap items-center gap-2"><b className="text-base">1234 Sample Pl · {T("commSide.listing")}</b><span className="text-xs text-accent">{T("nav.commissions")}</span><span className="flex-1" /><Btn ghost>{T("comm.f.deal")}</Btn><Btn ghost>{T("comm.delete")}</Btn></div>
+      <div className="grid gap-3 md:grid-cols-[1fr_1fr]">
+        <Card title={T("comm.detail")}>
+          <div className="grid grid-cols-[6rem_1fr] items-center gap-x-2 gap-y-1.5 text-xs">
+            <span className="text-muted">{T("comm.f.deal")}</span><Input>1234 Sample Pl</Input>
+            <span className="text-muted">{T("comm.f.side")}</span><Input>{T("commSide.listing")}</Input>
+            <span className="text-muted">{T("comm.f.price")}</span><Input>$450,000 <span className="ml-auto text-accent">{T("comm.fromDeal")}</span></Input>
+            <span className="text-muted">{T("comm.f.amount")}</span><span className="flex gap-1"><Input>3 %</Input><Chip tone="info">%</Chip><Chip>$</Chip></span>
+            <span className="text-muted">{T("comm.f.referralOut")}</span><span className="flex gap-1"><Input>25 %</Input><Input>{T("comm.f.referralOutTo")}</Input></span>
+            <span className="text-muted">{T("comm.f.client")}</span><Input>Li Wei</Input>
+            <span className="text-muted">{T("comm.f.partner")}</span><span className="flex gap-1"><Input>Jane Broker</Input><Input>{T("comm.f.partnerOrg")}</Input></span>
+            <span className="text-muted">{T("comm.f.referralIn")}</span><Input>25 %</Input>
+            <span className="text-muted">{T("comm.f.fees")}</span><span className="flex flex-wrap gap-1"><Input>{T("comm.f.feeName")}</Input><Chip>{T("comm.f.feeBasis.flat")}</Chip><Chip>{T("comm.f.feeBasis.pct_of_gci")}</Chip><Chip>{T("comm.f.feeBasis.pct_of_price")}</Chip><Btn ghost>{T("comm.f.addFee")}</Btn></span>
+            <span className="text-muted">{T("comm.f.expectedAt")}</span><Input>2026-10-15</Input>
+            <span className="text-muted">{T("comm.f.closedAt")}</span><Input>—</Input>
+            <span className="text-muted">{T("comm.f.paidAt")}</span><Input>—</Input>
+            <span className="text-muted">{T("comm.f.notes")}</span><Input>…</Input>
+          </div>
+          <div className="mt-2 flex justify-end gap-1"><Btn ghost>{T("comm.edit")}</Btn><Btn>{T("comm.save")}</Btn></div>
+        </Card>
+        <Card title={T("comm.r.gci")} right="$13,500">
+          {[["comm.r.referralOut", "($3,375)"], ["comm.r.brokerSplit", "($3,037.50)"], ["comm.r.brokerPre", "70% · $2,500"], ["comm.r.brokerPost", "100% · $537.50"], ["comm.r.royalty", "($810)"], ["comm.r.team", "($0)"], ["comm.r.perDealFee", "($540)"], ["comm.r.eoFee", "($0)"], ["comm.r.total", "($7,762.50)"]].map(([k, v]) => <div key={k} className="flex justify-between border-b border-line py-1 text-xs"><span>{T(k)}</span><span className="font-mono">{v}</span></div>)}
+          <div className="flex justify-between py-1.5 text-sm font-semibold"><span>{T("comm.r.nci")}</span><span className="font-mono">$5,737.50</span></div>
+          <div className="flex justify-between text-xs text-muted"><span>{T("comm.r.capAfter")}</span><span className="font-mono">$10,600 / $16,000</span></div>
+        </Card>
+      </div>
+      <Card title={T("nav.commissions")} right={<>{T("comm.r.nci")} $8,910</>}><div className="flex flex-wrap gap-2"><Btn>{T("comm.new")} · {T("commSide.listing")}</Btn><Btn ghost>{T("comm.addOtherSide")} · {T("commSide.buyer")}</Btn></div></Card>
+      <Card title={T("comm.referralsOf")} right={T("comm.newReferral")}><div className="py-2 text-center text-muted">{T("comm.noReferrals")}</div></Card>
+      <Hidden title={h} items={[T("comm.none"), T("comm.deleteConfirm")]} />
+    </div></div>
+  ),
+  plan: (T, h) => (
+    <div className="flex flex-col gap-3">
+      <Tabs items={[T("settings.commission"), T("settings.language"), T("settings.theme")]} />
+      <div className="text-xs text-muted">{T("plan.hint")}</div>
+      <div className="grid gap-3 md:grid-cols-2">
+        <Card title={T("plan.split")}><div className="grid grid-cols-2 gap-2 text-xs">{[["plan.splitPreCap", "70 %"], ["plan.splitPostCap", "100 %"], ["plan.capAmount", "$16,000"], ["plan.capYearStart", "01-01"]].map(([k, v]) => <label key={k} className="flex flex-col gap-1"><span className="text-muted">{T(k)}</span><Input>{v}</Input></label>)}</div></Card>
+        <Card title={T("plan.perDeal")}><div className="grid grid-cols-2 gap-2 text-xs">{[["plan.perDealFee", "$540"], ["plan.perDealFeePostCap", "$540"], ["plan.eoFee", "$0"]].map(([k, v]) => <label key={k} className="flex flex-col gap-1"><span className="text-muted">{T(k)}</span><Input>{v}</Input></label>)}</div></Card>
+        <Card title={T("plan.royalty")}><div className="grid grid-cols-2 gap-2 text-xs">{[["plan.royaltyPct", "6 %"], ["plan.royaltyCap", "$3,000"]].map(([k, v]) => <label key={k} className="flex flex-col gap-1"><span className="text-muted">{T(k)}</span><Input>{v}</Input></label>)}</div></Card>
+        <Card title={T("plan.team")}><div className="grid grid-cols-2 gap-2 text-xs">{[["plan.teamPct", "0 %"], ["plan.teamCap", "$0"]].map(([k, v]) => <label key={k} className="flex flex-col gap-1"><span className="text-muted">{T(k)}</span><Input>{v}</Input></label>)}<label className="flex flex-col gap-1"><span className="text-muted">{T("plan.teamBasis")}</span><span className="flex gap-1"><Chip tone="info">{T("plan.teamBasis.gci")}</Chip><Chip>{T("plan.teamBasis.after_broker")}</Chip></span></label></div></Card>
+      </div>
+      <Card title={T("plan.monthly")}><div className="flex gap-1 text-xs"><Input>{T("plan.monthlyName")}</Input><Input>{T("plan.monthlyAmount")}</Input><Btn ghost>{T("plan.monthlyAdd")}</Btn></div></Card>
+      <Card title={T("comm.cap")} right={T("comm.capPeriod", { start: "2026-01-01", end: "2026-12-31" })}><div className="h-2 rounded-full bg-chip"><div className="h-full w-1/2 rounded-full bg-accent" /></div></Card>
+      <div className="flex items-center gap-2"><Btn>{T("common.save")}</Btn><span className="text-xs text-ok">{T("plan.saved")}</span></div>
+      <Hidden title={h} items={[]} />
     </div>
   ),
   login: (T, h) => (
@@ -206,7 +270,7 @@ export const REPLICAS: Record<string, (T: TFn, hidden: string) => React.ReactNod
   ms: (T, h) => (<div className="flex flex-col gap-2"><div className="text-xs text-muted">{T("deal.milestones")}</div><W className="p-3 text-sm">{Object.keys(MESSAGES).filter((k) => k.startsWith("ms.")).map((k) => <div key={k} className="flex justify-between border-b border-line py-1"><span>◆ {T(k)}</span><Chip>2026-11-30</Chip></div>)}</W><Hidden title={h} items={[]} /></div>),
   task: (T, h) => (<div className="flex flex-col gap-2"><div className="text-xs text-muted">{T("deal.tab.tasks")}</div><W className="p-3 text-sm">{Object.keys(MESSAGES).filter((k) => k.startsWith("task.")).map((k) => <div key={k} className="flex items-center gap-2 border-b border-line py-1"><span className="h-4 w-4 rounded border border-line-strong" />{T(k)}<span className="ml-auto font-mono text-xs text-muted">{k.slice(5)}</span></div>)}</W><Hidden title={h} items={[]} /></div>),
 };
-export const ORDER = ["nav", "today", "deals", "deal", "contacts", "contact", "form", "tasks", "settings", "login", "field", "ms", "task"];
+export const ORDER = ["nav", "today", "deals", "deal", "contacts", "contact", "form", "tasks", "commissions", "plan", "settings", "login", "field", "ms", "task"];
 
 /** 用收集器跑一遍复刻，得到每个页面放了哪些 key */
 export function placedKeys(): Record<string, Set<string>> {

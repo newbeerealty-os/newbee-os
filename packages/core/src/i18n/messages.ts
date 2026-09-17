@@ -162,6 +162,7 @@ const UI: Record<string, Message> = {
   'settings.tr.g.deals': { zh: '交易', en: 'Deals' },
   'settings.tr.g.contacts': { zh: '联系人', en: 'Contacts' },
   'settings.tr.g.names': { zh: '名称库', en: 'Name lists' },
+  'settings.tr.g.money': { zh: '佣金', en: 'Money' },
   'settings.tr.en': { zh: '英文', en: 'English' },
 
   // /settings/theme
@@ -456,7 +457,8 @@ const UI: Record<string, Message> = {
   'comm.f.feeBasis.pct_of_gci': { zh: '% of GCI', en: '% of GCI' },
   'comm.f.feeBasis.pct_of_price': { zh: '% of 售价', en: '% of price' },
   'comm.f.client': { zh: '被推荐的客户', en: 'Referred client' },
-  'comm.f.partner': { zh: '推荐给（经纪人 / 公司）', en: 'Referred to (agent / company)' },
+  'comm.f.partner': { zh: '推荐给（经纪人）', en: 'Referred to (agent)' },
+  'comm.f.partnerOrg': { zh: '推荐给（公司）', en: 'Referred to (company)' },
   'comm.f.referralIn': { zh: '我拿对方佣金的', en: 'My share of their commission' },
   'comm.f.expectedAt': { zh: '预计成交', en: 'Expected close' },
   'comm.f.closedAt': { zh: '成交日期', en: 'Closed on' },

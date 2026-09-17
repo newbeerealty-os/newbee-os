@@ -138,8 +138,11 @@ export async function setStage(dealId: string, formData: FormData) {
   const { supabase } = await me();
   const stage = String(formData.get("stage") ?? "");
   if (!stage) return;
-  const { error } = await supabase.from("deals").update({ stage }).eq("id", dealId);
+  const { error } = await supabase.from("deals").update({ stage, ...(stage === "closed" ? { closed_at: new Date().toISOString() } : stage === "terminated" ? { terminated_at: new Date().toISOString() } : {}) }).eq("id", dealId);
   if (error) throw new Error(error.message);
+  // 佣金状态跟阶段走
+  const { recomputeAll } = await import("@/lib/actions/commissions");
+  await recomputeAll(dealId);
   revalidatePath(`/deals/${dealId}`);
   revalidatePath("/deals");
 }

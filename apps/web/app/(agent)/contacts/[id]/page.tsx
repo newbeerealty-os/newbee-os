@@ -16,6 +16,8 @@ import { ContactAvatar, PhotoGallery, type PhotoItem } from "@/components/avatar
 import { StageBar, StageBadge } from "@/components/stage";
 import { CopyButton } from "@/components/copy-button";
 import { ChannelIcon } from "@/components/channel-icon";
+import { loadCommissions } from "@/lib/commissions";
+import { CommissionMiniList } from "@/components/commission-list";
 
 export const dynamic = "force-dynamic";
 
@@ -54,7 +56,7 @@ export default async function ContactPage({ params, searchParams }: { params: Pr
   const rankedDeals = rankDeals(Object.values(dealsById).map((d) => ({ ...d, updatedAt: d.updated_at })), now);
 
   // 这些交易的下一节点 / 同交易的其他人 / 紧密关系 / 编辑用的下拉
-  const [{ data: ms }, { data: others }, { data: linksA }, { data: linksB }, { data: orgs }, { data: people }, suggestions] = await Promise.all([
+  const [{ data: ms }, { data: others }, { data: linksA }, { data: linksB }, { data: orgs }, { data: people }, suggestions, commissions] = await Promise.all([
     dealIds.length ? supabase.from("milestones").select("deal_id,key,label,due_date").in("deal_id", dealIds).eq("status", "pending").not("due_date", "is", null).gte("due_date", today).order("due_date") : Promise.resolve({ data: [] }),
     dealIds.length ? supabase.from("deal_parties").select(`deal_id,role,contact_id,contacts(${P})`).in("deal_id", dealIds).is("deleted_at", null).not("contact_id", "is", null).neq("contact_id", id) : Promise.resolve({ data: [] }),
     supabase.from("contact_links").select(`id,relation,related:contacts!contact_links_related_contact_id_fkey(${P})`).eq("contact_id", id).is("deleted_at", null),
@@ -62,6 +64,7 @@ export default async function ContactPage({ params, searchParams }: { params: Pr
     supabase.from("organizations").select("id,name,kind").is("deleted_at", null).order("name"),
     supabase.from("contacts").select(P).is("deleted_at", null).neq("id", id).order("first_name"),
     loadSuggestions(supabase),
+    loadCommissions(supabase, { contactId: id }),
   ]);
   // 照片 + 头像 URL（本人、相关人、紧密关系里的人一起签）
   const { data: photoRows } = await supabase.from("contact_photos").select("id,storage_path,file_name").eq("contact_id", id).is("deleted_at", null).order("created_at", { ascending: false });
@@ -273,6 +276,10 @@ export default async function ContactPage({ params, searchParams }: { params: Pr
                   })}
                 </ul>
               )}
+            </Section>
+
+            <Section title={t("comm.referralsOf")} right={<Link href={`/commissions/new?kind=referral&contact=${id}&back=${encodeURIComponent(`/contacts/${id}`)}`} className="text-sm text-accent hover:underline">{t("comm.newReferral")}</Link>}>
+              {commissions.length === 0 ? <Empty>{t("comm.noReferrals")}</Empty> : <CommissionMiniList rows={commissions} t={t} backTo={`/contacts/${id}`} showWhat />}
             </Section>
           </div>
         </div>

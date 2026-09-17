@@ -159,3 +159,44 @@ export function capYearOf(dateISO: string, startMMDD: string): { start: string; 
   const end = `${endDate.getUTCFullYear()}-${pad(endDate.getUTCMonth() + 1)}-${pad(endDate.getUTCDate())}`;
   return { start, end };
 }
+
+// 表单输入（FormData → 记录）。空串一律当 null；金额去掉 $ , 空格
+const formNum = z.preprocess((v) => (v === '' || v === null || v === undefined ? null : Number(String(v).replace(/[$,\s]/g, ''))), z.number().finite().nullable());
+const formStr = z.preprocess((v) => (typeof v === 'string' && v.trim() === '' ? null : (v ?? null)), z.string().nullable());
+const formUuid = z.preprocess((v) => (typeof v === 'string' && v.trim() === '' ? null : (v ?? null)), z.string().uuid().nullable());
+export const CommissionInputSchema = z.object({
+  kind: z.enum(COMMISSION_KINDS),
+  side: z.enum(COMMISSION_SIDES),
+  deal_id: formUuid.default(null),
+  contact_id: formUuid.default(null),
+  partner_contact_id: formUuid.default(null),
+  partner_org_id: formUuid.default(null),
+  price: formNum.default(null),
+  basis: z.enum(['pct', 'flat']).default('pct'),
+  pct: formNum.default(null),
+  flat: formNum.default(null),
+  referral_out_basis: z.preprocess((v) => (v === '' ? null : (v ?? null)), z.enum(['pct', 'flat']).nullable()).default(null),
+  referral_out_pct: formNum.default(null),
+  referral_out_flat: formNum.default(null),
+  referral_out_to_contact_id: formUuid.default(null),
+  fees: z.preprocess((v) => { try { return typeof v === 'string' ? JSON.parse(v || '[]') : (v ?? []); } catch { return []; } }, z.array(CustomFeeSchema)).default([]),
+  expected_at: formStr.default(null),
+  closed_at: formStr.default(null),
+  paid_at: formStr.default(null),
+  notes: formStr.default(null),
+});
+export type CommissionInput = z.infer<typeof CommissionInputSchema>;
+
+/** 按交易类型预选我方 side，以及双方代理时的"另一边"（托管没有另一边） */
+export function sideForDealType(dealType: string): CommissionSide {
+  switch (dealType) {
+    case 'buyer': return 'buyer';
+    case 'lease_listing': return 'landlord';
+    case 'lease_tenant': return 'tenant';
+    case 'property_mgmt': return 'management';
+    default: return 'listing';
+  }
+}
+export function otherSide(side: CommissionSide): CommissionSide | null {
+  return side === 'listing' ? 'buyer' : side === 'buyer' ? 'listing' : side === 'landlord' ? 'tenant' : side === 'tenant' ? 'landlord' : null;
+}

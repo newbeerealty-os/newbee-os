@@ -5,6 +5,7 @@ import { getT } from "@/lib/i18n";
 const TABS = [
   { href: "/settings/language", key: "settings.language" },
   { href: "/settings/theme", key: "settings.theme" },
+  { href: "/settings/commission", key: "settings.commission" },
 ];
 
 export async function SettingsTabs({ active }: { active: string }) {

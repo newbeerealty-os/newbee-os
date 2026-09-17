@@ -2,7 +2,7 @@
 // 上传 → 抽取 → 确认 → 派生 的闭环都在这一页。
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { DEAL_FIELDS, FIELD_BY_KEY, ADDENDA, PARTY_ROLES, PARTY_SIDES, contactName, initials } from "@newbee/core";
+import { DEAL_FIELDS, FIELD_BY_KEY, ADDENDA, PARTY_ROLES, PARTY_SIDES, contactName, initials, sideForDealType, otherSide } from "@newbee/core";
 import { createClient } from "@/lib/supabase/server";
 import { uploadDocument, extractDocument, confirmField, rejectField, setField, deriveDeal, setStage } from "@/lib/actions/deals";
 import { addParty, removeParty } from "@/lib/actions/contacts";
@@ -14,12 +14,14 @@ import { todayISO, relDays, money } from "@/lib/format";
 import { Section, Empty, Button, Badge, inputCls, TaskItem, dueTone, type TaskRow } from "@/components/ui";
 import { PageHeader, Tabs, Stat, StatGrid } from "@/components/page";
 import { StageBadge } from "@/components/stage";
+import { loadCommissions } from "@/lib/commissions";
+import { CommissionMiniList } from "@/components/commission-list";
 
 export const dynamic = "force-dynamic";
 
 const DOC_TONE: Record<string, "zinc" | "blue" | "green" | "amber" | "red"> = { uploaded: "zinc", extracting: "blue", review: "amber", confirmed: "green", failed: "red" };
 const GROUPS = ["parties", "money", "dates", "property", "addenda", "commission", "lease"];
-const TABS = ["overview", "parties", "files", "pending", "fields", "milestones", "tasks"] as const;
+const TABS = ["overview", "parties", "files", "pending", "fields", "milestones", "tasks", "commission"] as const;
 
 type FieldRow = { id: string; key: string; value_text: string | null; value_num: number | null; value_date: string | null; source_page: number | null; source_quote: string | null; confidence: number | null; confirmed_at: string | null; source_doc_id: string | null };
 type DocRow = { id: string; file_name: string | null; doc_type: string | null; status: string; error: string | null; uploaded_at: string; page_count: number | null };
@@ -42,7 +44,7 @@ export default async function DealPage({ params, searchParams }: { params: Promi
   const { data: deal } = await supabase.from("deals").select("id,title,type,stage,addenda,created_at").eq("id", id).is("deleted_at", null).single();
   if (!deal) notFound();
 
-  const [{ data: docs }, { data: fields }, { data: ms }, { data: ts }, { data: ps }, { data: cs }, { data: os }] = await Promise.all([
+  const [{ data: docs }, { data: fields }, { data: ms }, { data: ts }, { data: ps }, { data: cs }, { data: os }, commissions] = await Promise.all([
     supabase.from("documents").select("id,file_name,doc_type,status,error,uploaded_at,page_count").eq("deal_id", id).is("deleted_at", null).order("uploaded_at", { ascending: false }),
     supabase.from("deal_fields_current").select("id,key,value_text,value_num,value_date,source_page,source_quote,confidence,confirmed_at,source_doc_id").eq("deal_id", id),
     supabase.from("milestones").select("id,key,label,due_date,due_time,status,client_visible").eq("deal_id", id).order("due_date", { ascending: true, nullsFirst: false }),
@@ -50,6 +52,7 @@ export default async function DealPage({ params, searchParams }: { params: Promi
     supabase.from("deal_parties").select("id,role,side,is_primary,notes,contact_id,organization_id,contacts(id,first_name,last_name,name_zh,email,phone,job_title,avatar_path,avatar_photo_id,organizations!contacts_organization_id_fkey(name)),organizations(id,name,email,phone)").eq("deal_id", id).is("deleted_at", null).order("created_at"),
     supabase.from("contacts").select("id,first_name,last_name,name_zh,kind").is("deleted_at", null).order("first_name"),
     supabase.from("organizations").select("id,name,kind").is("deleted_at", null).order("name"),
+    loadCommissions(supabase, { dealId: id }),
   ]);
   const documents = (docs ?? []) as DocRow[];
   const allFields = (fields ?? []) as FieldRow[];
@@ -118,6 +121,7 @@ export default async function DealPage({ params, searchParams }: { params: Promi
         { id: "fields", label: t("deal.fields"), count: confirmed.length },
         { id: "milestones", label: t("deal.milestones"), count: milestones.length },
         { id: "tasks", label: t("deal.tab.tasks"), count: openTasks.length },
+        { id: "commission", label: t("nav.commissions"), count: commissions.length },
       ]} />
 
       {tab === "overview" && (
@@ -323,6 +327,24 @@ export default async function DealPage({ params, searchParams }: { params: Promi
           )}
         </Section>
       )}
+      {tab === "commission" && (() => {
+        // 预选 side：按交易类型；已有一边就给"加另一边"
+        const mySide = sideForDealType(deal.type);
+        const other = otherSide(mySide);
+        const has = (side: string) => commissions.some((c) => c.side === side);
+        const newHref = (side: string) => `/commissions/new?deal=${id}&side=${side}&back=${encodeURIComponent(backTo)}`;
+        const nci = commissions.filter((c) => c.status !== "cancelled").reduce((sum, c) => sum + (c.computed?.nci ?? 0), 0);
+        return (
+          <Section title={t("nav.commissions")} right={<span className="font-mono text-sm text-muted">{t("comm.r.nci")} {money(nci)}</span>}>
+            {commissions.length === 0 ? <Empty>{t("comm.none")}</Empty> : <CommissionMiniList rows={commissions} t={t} backTo={backTo} />}
+            <div className="mt-3 flex flex-wrap gap-2">
+              {!has(mySide) && <Link href={newHref(mySide)} className="flex h-10 items-center rounded-md bg-accent px-3 text-sm font-medium text-accent-ink hover:bg-accent-strong">{t("comm.new")} · {t(`commSide.${mySide}`)}</Link>}
+              {other && has(mySide) && !has(other) && <Link href={newHref(other)} className="flex h-10 items-center rounded-md border border-line-strong bg-surface px-3 text-sm font-medium text-fg hover:bg-chip">{t("comm.addOtherSide")} · {t(`commSide.${other}`)}</Link>}
+              {(has(mySide) && (!other || has(other))) && <Link href={newHref(mySide)} className="flex h-10 items-center rounded-md border border-line-strong bg-surface px-3 text-sm font-medium text-fg hover:bg-chip">{t("comm.new")}</Link>}
+            </div>
+          </Section>
+        );
+      })()}
     </div>
   );
 }

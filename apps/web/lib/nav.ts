@@ -4,10 +4,11 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { CONTACT_TABS, type Translator } from "@newbee/core";
 import { todayISO } from "@/lib/format";
 
+export const COMMISSION_FILTERS = ["all", "listing", "buyer", "both", "lease", "referral", "pending", "paid"] as const;
 export const DEAL_STAGES = ["lead", "pre", "active", "offer", "under_contract", "closing", "closed", "terminated"] as const;
 
 export interface NavChild { href: string; label: string; count?: number }
-export interface NavItem { key: string; href: string; icon: "today" | "deals" | "contacts" | "tasks" | "settings"; label: string; badge?: number; children?: NavChild[] }
+export interface NavItem { key: string; href: string; icon: "today" | "deals" | "contacts" | "tasks" | "commissions" | "settings"; label: string; badge?: number; children?: NavChild[] }
 
 export interface NavCounts {
   today: number;
@@ -72,8 +73,26 @@ export function buildNav(t: Translator, c: NavCounts): NavItem[] {
       ],
     },
     {
+      key: "commissions", href: "/commissions", icon: "commissions", label: t("nav.commissions"),
+      children: COMMISSION_FILTERS.map((f) => ({ href: f === "all" ? "/commissions" : `/commissions?f=${f}`, label: commissionFilterLabel(t, f) })),
+    },
+    {
       key: "settings", href: "/settings/language", icon: "settings", label: t("nav.settings"),
       children: [{ href: "/settings/language", label: t("settings.langTheme") }],
     },
   ];
+}
+
+// 佣金二级菜单 / 列表页签共用的标签
+export function commissionFilterLabel(t: Translator, f: string): string {
+  switch (f) {
+    case "listing": return t("commSide.listing");
+    case "buyer": return t("commSide.buyer");
+    case "both": return t("comm.filter.both");
+    case "lease": return t("comm.filter.lease");
+    case "referral": return t("commKind.referral");
+    case "pending": return t("comm.filter.pending");
+    case "paid": return t("comm.filter.paid");
+    default: return t("comm.all");
+  }
 }
