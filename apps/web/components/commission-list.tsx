@@ -37,7 +37,7 @@ export function CommissionChips({ rows, selectedId, hrefOf, addHref, addLabel, t
         const on = r.id === selectedId;
         const pct = r.basis === "pct" && r.pct !== null ? `${r.pct}%` : r.flat !== null ? money(r.flat) : "";
         return (
-          <Link key={r.id} href={hrefOf(r)} aria-current={on ? "page" : undefined} className={`${chip} ${on ? "border-accent bg-accent text-accent-ink" : "border-line-strong bg-surface text-fg hover:bg-chip"}`}>
+          <Link key={r.id} href={hrefOf(r)} scroll={false} aria-current={on ? "page" : undefined} className={`${chip} ${on ? "border-accent bg-accent text-accent-ink" : "border-line-strong bg-surface text-fg hover:bg-chip"}`}>
             <span className={`h-2 w-2 rounded-full ${on ? "bg-accent-ink" : "bg-line-strong"}`} />
             {r.kind === "referral" ? t("commKind.referral") : t(`commSide.${r.side}`)}{pct && <span className={`font-mono ${on ? "opacity-85" : "text-muted"}`}>· {pct}</span>}
             <span className="font-mono">· {money(r.computed?.nci ?? 0)}</span>
@@ -45,7 +45,7 @@ export function CommissionChips({ rows, selectedId, hrefOf, addHref, addLabel, t
           </Link>
         );
       })}
-      <Link href={addHref} aria-current={selectedId === null ? "page" : undefined} className={`${chip} border-dashed ${selectedId === null ? "border-accent text-accent" : "border-line-strong text-muted hover:text-fg"}`}>+ {addLabel}</Link>
+      <Link href={addHref} scroll={false} aria-current={selectedId === null ? "page" : undefined} className={`${chip} border-dashed ${selectedId === null ? "border-accent text-accent" : "border-line-strong text-muted hover:text-fg"}`}>+ {addLabel}</Link>
     </div>
   );
 }

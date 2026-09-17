@@ -104,7 +104,8 @@ export function CommissionDashboard(p: CommissionDashboardProps) {
   const router = useRouter();
   const params = useSearchParams();
   const presets = (p.plan.capYearStart === "01-01" ? PERIOD_PRESETS.filter((x) => x !== "period") : PERIOD_PRESETS) as PeriodPreset[];
-  const [preset, setPreset] = useState<PeriodPreset | "custom">(p.initial ? "custom" : "year");
+  // URL 里带的时间段如果正好等于某个预设，就把那个预设点亮
+  const [preset, setPreset] = useState<PeriodPreset | "custom">(() => { if (!p.initial) return "year"; const hit = presets.find((x) => { const r = periodRange(x, p.today, p.plan.capYearStart); return r.from === p.initial!.from && r.to === p.initial!.to; }); return hit ?? "custom"; });
   const [range, setRange] = useState(p.initial ?? periodRange("year", p.today, p.plan.capYearStart));
   const [sides, setSides] = useState<CommissionSide[]>([...SIDE_ORDER]);
   const [metric, setMetric] = useState<"nci" | "gci" | "n">("nci");

@@ -28,7 +28,7 @@ export function PageHeader({ crumbs, title, actions, subnav }: { crumbs: Crumb[]
       {subnav && (
         <div className="-mx-4 flex gap-1.5 overflow-x-auto px-4 md:hidden">
           {subnav.map((s) => (
-            <Link key={s.href} href={s.href} className={`flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ${s.active ? "border-accent bg-accent text-accent-ink" : "border-line-strong bg-surface text-fg"}`}>
+            <Link key={s.href} href={s.href} scroll={false} className={`flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ${s.active ? "border-accent bg-accent text-accent-ink" : "border-line-strong bg-surface text-fg"}`}>
               {s.label}{s.count !== undefined && <span className={`font-mono text-[10.5px] ${s.active ? "opacity-85" : "text-muted"}`}>{s.count}</span>}
             </Link>
           ))}
@@ -40,7 +40,7 @@ export function PageHeader({ crumbs, title, actions, subnav }: { crumbs: Crumb[]
 
 export interface TabDef { id: string; label: string; count?: number | null }
 
-/** 选项卡 = 链接，?tab=id；第一个是默认，不带参数 */
+/** 选项卡 = 链接，?tab=id；第一个是默认，不带参数。scroll={false}：切页签页面不跳到顶部，页签位置不动 */
 export function Tabs({ base, tabs, active, param = "tab" }: { base: string; tabs: TabDef[]; active: string; param?: string }) {
   const sep = base.includes("?") ? "&" : "?";
   return (
@@ -48,7 +48,7 @@ export function Tabs({ base, tabs, active, param = "tab" }: { base: string; tabs
       {tabs.map((tb, i) => {
         const on = tb.id === active;
         return (
-          <Link key={tb.id} href={i === 0 ? base : `${base}${sep}${param}=${tb.id}`} aria-current={on ? "page" : undefined}
+          <Link key={tb.id} href={i === 0 ? base : `${base}${sep}${param}=${tb.id}`} scroll={false} aria-current={on ? "page" : undefined}
             className={`flex shrink-0 items-center gap-1.5 border-b-2 px-3 py-2.5 text-[13.5px] font-medium ${on ? "border-accent text-accent" : "border-transparent text-muted hover:text-fg"}`}>
             {tb.label}
             {tb.count !== undefined && tb.count !== null && <span className={`rounded-full px-1.5 py-0.5 font-mono text-[10.5px] leading-none ${on ? "bg-accent text-accent-ink" : "bg-chip text-muted"}`}>{tb.count}</span>}
