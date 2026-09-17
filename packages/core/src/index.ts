@@ -10,6 +10,7 @@ export * from './engines/dates';
 export * from './engines/milestones';
 export * from './engines/playbook';
 export * from './engines/commission';
+export * from './engines/commission-report';
 export * from './engines/sun';
 export * from './themes';
 export * from './ai/extract';
