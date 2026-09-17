@@ -44,6 +44,140 @@ export type Database = {
         }
         Relationships: []
       }
+      commissions: {
+        Row: {
+          agent_id: string
+          basis: Database["public"]["Enums"]["amount_basis"]
+          closed_at: string | null
+          computed: Json | null
+          contact_id: string | null
+          created_at: string
+          deal_id: string | null
+          deleted_at: string | null
+          expected_at: string | null
+          fees: Json
+          flat: number | null
+          id: string
+          kind: Database["public"]["Enums"]["commission_kind"]
+          notes: string | null
+          paid_at: string | null
+          partner_contact_id: string | null
+          partner_org_id: string | null
+          pct: number | null
+          price: number | null
+          referral_out_basis: Database["public"]["Enums"]["amount_basis"] | null
+          referral_out_flat: number | null
+          referral_out_pct: number | null
+          referral_out_to_contact_id: string | null
+          side: Database["public"]["Enums"]["commission_side"]
+          status: Database["public"]["Enums"]["commission_status"]
+          updated_at: string
+        }
+        Insert: {
+          agent_id: string
+          basis?: Database["public"]["Enums"]["amount_basis"]
+          closed_at?: string | null
+          computed?: Json | null
+          contact_id?: string | null
+          created_at?: string
+          deal_id?: string | null
+          deleted_at?: string | null
+          expected_at?: string | null
+          fees?: Json
+          flat?: number | null
+          id?: string
+          kind?: Database["public"]["Enums"]["commission_kind"]
+          notes?: string | null
+          paid_at?: string | null
+          partner_contact_id?: string | null
+          partner_org_id?: string | null
+          pct?: number | null
+          price?: number | null
+          referral_out_basis?:
+            | Database["public"]["Enums"]["amount_basis"]
+            | null
+          referral_out_flat?: number | null
+          referral_out_pct?: number | null
+          referral_out_to_contact_id?: string | null
+          side: Database["public"]["Enums"]["commission_side"]
+          status?: Database["public"]["Enums"]["commission_status"]
+          updated_at?: string
+        }
+        Update: {
+          agent_id?: string
+          basis?: Database["public"]["Enums"]["amount_basis"]
+          closed_at?: string | null
+          computed?: Json | null
+          contact_id?: string | null
+          created_at?: string
+          deal_id?: string | null
+          deleted_at?: string | null
+          expected_at?: string | null
+          fees?: Json
+          flat?: number | null
+          id?: string
+          kind?: Database["public"]["Enums"]["commission_kind"]
+          notes?: string | null
+          paid_at?: string | null
+          partner_contact_id?: string | null
+          partner_org_id?: string | null
+          pct?: number | null
+          price?: number | null
+          referral_out_basis?:
+            | Database["public"]["Enums"]["amount_basis"]
+            | null
+          referral_out_flat?: number | null
+          referral_out_pct?: number | null
+          referral_out_to_contact_id?: string | null
+          side?: Database["public"]["Enums"]["commission_side"]
+          status?: Database["public"]["Enums"]["commission_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commissions_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commissions_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commissions_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commissions_partner_contact_id_fkey"
+            columns: ["partner_contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commissions_partner_org_id_fkey"
+            columns: ["partner_org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commissions_referral_out_to_contact_id_fkey"
+            columns: ["referral_out_to_contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contact_links: {
         Row: {
           agent_id: string
@@ -948,6 +1082,21 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      amount_basis: "pct" | "flat"
+      commission_kind: "deal" | "referral"
+      commission_side:
+        | "listing"
+        | "buyer"
+        | "landlord"
+        | "tenant"
+        | "management"
+        | "referral"
+      commission_status:
+        | "projected"
+        | "pending"
+        | "closed"
+        | "paid"
+        | "cancelled"
       contact_channel: "phone" | "sms" | "email" | "wechat" | "whatsapp"
       contact_kind:
         | "client"
@@ -1150,6 +1299,23 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      amount_basis: ["pct", "flat"],
+      commission_kind: ["deal", "referral"],
+      commission_side: [
+        "listing",
+        "buyer",
+        "landlord",
+        "tenant",
+        "management",
+        "referral",
+      ],
+      commission_status: [
+        "projected",
+        "pending",
+        "closed",
+        "paid",
+        "cancelled",
+      ],
       contact_channel: ["phone", "sms", "email", "wechat", "whatsapp"],
       contact_kind: [
         "client",
