@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { computeCommission, CommissionPlanSchema, DEFAULT_PLAN, statusFromStage, capYearOf, applyPreset, recurringPerPeriod, PLAN_PRESET_IDS, COMMISSION_SIDES, COMMISSION_STATUSES, COMMISSION_KINDS } from '../src/engines/commission';
+import { computeCommission, CommissionPlanSchema, DEFAULT_PLAN, statusFromStage, capYearOf, applyPreset, recurringPerPeriod, PLAN_PRESET_IDS, COMMISSION_SIDES, COMMISSION_STATUSES, COMMISSION_KINDS, type YearToDate } from '../src/engines/commission';
+const r2 = (n: number) => Math.round(n * 100) / 100;
 import { MESSAGES } from '../src/i18n';
 
 // 典型方案：70/30，cap 16,000，每笔 540，cap 后每笔 250，E&O 45
@@ -106,7 +107,7 @@ describe('方案模块开关 / 预设 / 固定周期费', () => {
     expect(computeCommission(deal({ side: 'tenant', price: 2400, pct: 50 }), p, ytd0).nci).toBe(1200 - 125);
     expect(computeCommission(deal({ side: 'management', price: 2400, pct: 10 }), p, ytd0).nci).toBe(240 - 125);
   });
-  it('预设：每笔固定费型 = 只开每笔费 540 / 125；年费型 = 只开固定周期费 3,000 / 年；分成 + Cap 型开分成、cap、每笔费、加盟费', () => {
+  it('预设：每笔固定费型 = 只开每笔费 540 / 125；年费型 = 只开固定周期费 3,000 / 年；KW 型开分成、cap、加盟费', () => {
     const a = applyPreset(DEFAULT_PLAN, 'perDeal');
     expect(a.modules).toEqual({ split: false, cap: false, perDeal: true, royalty: false, team: false, recurring: false });
     expect([a.perDealFee, a.perDealFeeLease]).toEqual([540, 125]);
@@ -114,8 +115,8 @@ describe('方案模块开关 / 预设 / 固定周期费', () => {
     expect(b.modules.recurring).toBe(true);
     expect(b.modules.perDeal).toBe(false);
     expect(b.recurringFees).toEqual([{ name: 'Annual fee', amount: 3000, period: 'yearly' }]);
-    const c = applyPreset(DEFAULT_PLAN, 'capSplit');
-    expect(c.modules).toMatchObject({ split: true, cap: true, perDeal: true, royalty: true });
+    const c = applyPreset(DEFAULT_PLAN, 'kw');
+    expect(c.modules).toMatchObject({ split: true, cap: true, royalty: true });
     expect(computeCommission(deal(), c, ytd0).brokerSplit).toBe(4050);
     for (const id of PLAN_PRESET_IDS) expect(MESSAGES[`plan.preset.${id}`], id).toBeDefined();
   });
@@ -128,5 +129,64 @@ describe('方案模块开关 / 预设 / 固定周期费', () => {
     const p = CommissionPlanSchema.parse({ monthlyFees: [{ name: 'Tech', amount: 85 }] });
     expect(p.recurringFees).toEqual([{ name: 'Tech', amount: 85, period: 'monthly' }]);
     expect(p.modules).toEqual({ split: true, cap: true, perDeal: true, royalty: true, team: true, recurring: true });
+  });
+});
+
+describe('按业绩阶梯分成 / 每笔费封顶 / E&O 封顶（前 25 家经纪公司的方式）', () => {
+  const ytd = (over: Partial<YearToDate> = {}): YearToDate => ({ brokerPaid: 0, royaltyPaid: 0, teamPaid: 0, gciPaid: 0, perDealPaid: 0, eoPaid: 0, ...over });
+  const tiered = CommissionPlanSchema.parse({
+    modules: { split: true, cap: false, perDeal: false, royalty: false, team: false, recurring: false },
+    splitMode: 'tiers', splitTiers: [{ upTo: 50000, pct: 60 }, { upTo: 100000, pct: 70 }, { upTo: null, pct: 80 }],
+  });
+  it('阶梯：按这笔之前的本周期 GCI 定档：0 → 60%，60,000 → 70%，120,000 → 80%', () => {
+    expect(computeCommission(deal(), tiered, ytd()).brokerSplit).toBe(13500 * 0.4);
+    expect(computeCommission(deal(), tiered, ytd({ gciPaid: 60000 })).brokerSplit).toBe(13500 * 0.3);
+    expect(computeCommission(deal(), tiered, ytd({ gciPaid: 120000 })).brokerSplit).toBe(r2(13500 * 0.2));
+    expect(computeCommission(deal(), tiered, ytd()).agentPct).toBe(60);
+  });
+  it('阶梯 + cap 同时开：档位比例当 cap 前比例，到 cap 后仍按 cap 后比例', () => {
+    const p = CommissionPlanSchema.parse({ ...tiered, modules: { ...tiered.modules, cap: true }, capAmount: 5000, splitPostCap: 100 });
+    const r = computeCommission(deal(), p, ytd({ brokerPaid: 4000 }));
+    expect(r.brokerSplit).toBe(1000);
+    expect(r.capHit).toBe(true);
+  });
+  it('阶梯表为空或模式是 flat → 用 splitPreCap', () => {
+    const p = CommissionPlanSchema.parse({ ...tiered, splitMode: 'flat', splitPreCap: 75 });
+    expect(computeCommission(deal(), p, ytd({ gciPaid: 999999 })).brokerSplit).toBe(13500 * 0.25);
+    const q = CommissionPlanSchema.parse({ ...tiered, splitTiers: [] });
+    expect(computeCommission(deal(), q, ytd()).agentPct).toBe(q.splitPreCap);
+  });
+  it('每笔费年度封顶（Fathom Max：$465 / 笔到 $9,000 后 $0）：差 100 就封顶时只收 100', () => {
+    const p = CommissionPlanSchema.parse({ modules: { split: false, cap: false, perDeal: true, royalty: false, team: false, recurring: false }, perDealFee: 465, perDealFeeLease: 465, perDealFeeCap: 9000, perDealFeeAfterCap: 0 });
+    expect(computeCommission(deal(), p, ytd()).lines.find((l) => l.id === 'perDealFee')?.amount).toBe(465);
+    expect(computeCommission(deal(), p, ytd({ perDealPaid: 8900 })).lines.find((l) => l.id === 'perDealFee')?.amount).toBe(100);
+    expect(computeCommission(deal(), p, ytd({ perDealPaid: 9000 })).lines.find((l) => l.id === 'perDealFee')).toBeUndefined();
+  });
+  it('封顶后改收另一个数（eXp cap 后 $250 / 笔，交满 $5,000 后 $75）', () => {
+    const p = CommissionPlanSchema.parse({ modules: { split: true, cap: true, perDeal: true, royalty: false, team: false, recurring: false }, splitPreCap: 80, splitPostCap: 100, capAmount: 16000, perDealFee: 0, perDealFeePostCap: 250, perDealFeeCap: 5000, perDealFeeAfterCap: 75, eoFee: 60, eoCap: 750 });
+    const capped = ytd({ brokerPaid: 16000 });
+    expect(computeCommission(deal(), p, capped).lines.find((l) => l.id === 'perDealFee')?.amount).toBe(250);
+    expect(computeCommission(deal(), p, ytd({ brokerPaid: 16000, perDealPaid: 5000 })).lines.find((l) => l.id === 'perDealFee')?.amount).toBe(75);
+    // E&O $60 封顶 $750：已交 720 → 这笔 30；交满 → 没有
+    expect(computeCommission(deal(), p, ytd({ eoPaid: 720 })).lines.find((l) => l.id === 'eoFee')?.amount).toBe(30);
+    expect(computeCommission(deal(), p, ytd({ eoPaid: 750 })).lines.find((l) => l.id === 'eoFee')).toBeUndefined();
+  });
+  it('8 个预设都有文案，套上去能算出 eXp / KW / Real 的典型数', () => {
+    for (const id of PLAN_PRESET_IDS) { expect(MESSAGES[`plan.preset.${id}`], id).toBeDefined(); expect(MESSAGES[`plan.preset.${id}.desc`], id).toBeDefined(); }
+    const exp = applyPreset(DEFAULT_PLAN, 'exp');
+    const r = computeCommission(deal(), exp, ytd());
+    expect(r.brokerSplit).toBe(2700); // 20% of 13,500
+    expect(r.lines.find((l) => l.id === 'eoFee')?.amount).toBe(60);
+    const kw = applyPreset(DEFAULT_PLAN, 'kw');
+    expect(computeCommission(deal(), kw, ytd()).royalty).toBe(810); // 6%
+    const real = applyPreset(DEFAULT_PLAN, 'real');
+    expect(computeCommission(deal(), real, ytd({ brokerPaid: 12000 })).lines.find((l) => l.id === 'perDealFee')?.amount).toBe(285);
+    const t = applyPreset(DEFAULT_PLAN, 'tiered');
+    expect(t.splitMode).toBe('tiers');
+    expect(t.splitTiers.length).toBeGreaterThan(1);
+  });
+  it('旧的 YearToDate（没有 gciPaid 等）照常能算', () => {
+    const r = computeCommission(deal(), plan, { brokerPaid: 0, royaltyPaid: 0, teamPaid: 0 });
+    expect(r.nci).toBe(8865);
   });
 });

@@ -40,7 +40,11 @@ export const CommissionPlanSchema = z.preprocess((raw) => {
   return raw;
 }, z.object({
   modules: ModulesSchema,
-  /** cap 前我拿的比例 */
+  /** 分成怎么定：固定比例 / 按本周期 GCI 阶梯 */
+  splitMode: z.enum(['flat', 'tiers']).catch('flat'),
+  /** 阶梯：本周期 GCI（这笔之前）< upTo 就用这一档；upTo null = 最后一档 */
+  splitTiers: z.array(z.object({ upTo: z.coerce.number().min(0).nullable().catch(null), pct: pct(70) })).catch([]),
+  /** cap 前我拿的比例（固定模式）*/
   splitPreCap: pct(70),
   /** cap 后我拿的比例 */
   splitPostCap: pct(100),
@@ -52,8 +56,12 @@ export const CommissionPlanSchema = z.preprocess((raw) => {
   perDealFee: money(0),
   perDealFeeLease: money(0),
   perDealFeePostCap: money(0),
-  /** 每笔 E&O */
+  /** 每笔固定费的年度封顶（0 = 无）+ 封顶后改收多少（Fathom 0、eXp 75） */
+  perDealFeeCap: money(0),
+  perDealFeeAfterCap: money(0),
+  /** 每笔 E&O / 审核费 + 年度封顶（0 = 无） */
   eoFee: money(0),
+  eoCap: money(0),
   /** 加盟费：% of GCI，年度封顶（0 = 无） */
   royaltyPct: pct(0),
   royaltyCap: money(0),
@@ -68,15 +76,25 @@ export type CommissionPlan = z.infer<typeof CommissionPlanSchema>;
 export const DEFAULT_PLAN: CommissionPlan = CommissionPlanSchema.parse({});
 
 /** 一键预设：把开关和典型数值填好，之后随便改 */
-export const PLAN_PRESET_IDS = ['perDeal', 'annual', 'capSplit', 'splitOnly'] as const;
+export const PLAN_PRESET_IDS = ['perDeal', 'annual', 'exp', 'kw', 'real', 'fathom', 'tiered', 'remax'] as const;
 export type PlanPresetId = (typeof PLAN_PRESET_IDS)[number];
 const OFF = { split: false, cap: false, perDeal: false, royalty: false, team: false, recurring: false };
 export function applyPreset(plan: CommissionPlan, id: PlanPresetId): CommissionPlan {
   switch (id) {
     case 'perDeal': return { ...plan, modules: { ...OFF, perDeal: true }, perDealFee: 540, perDealFeeLease: 125, perDealFeePostCap: 0, eoFee: 0 };
     case 'annual': return { ...plan, modules: { ...OFF, recurring: true }, recurringFees: [{ name: 'Annual fee', amount: 3000, period: 'yearly' }] };
-    case 'capSplit': return { ...plan, modules: { ...OFF, split: true, cap: true, perDeal: true, royalty: true }, splitPreCap: 70, splitPostCap: 100, capAmount: 16000, perDealFee: 540, perDealFeeLease: 540, perDealFeePostCap: 250, royaltyPct: 6, royaltyCap: 3000 };
-    case 'splitOnly': return { ...plan, modules: { ...OFF, split: true }, splitPreCap: 70, splitPostCap: 70 };
+    // eXp：80/20 cap 16,000；cap 后每笔 250，交满 5,000 后 75；每笔风险费 60（封顶 750）；85/月（另有 25 审核费，可自己加进每笔费）
+    case 'exp': return { ...plan, modules: { ...OFF, split: true, cap: true, perDeal: true, recurring: true }, splitMode: 'flat', splitPreCap: 80, splitPostCap: 100, capAmount: 16000, perDealFee: 0, perDealFeeLease: 0, perDealFeePostCap: 250, perDealFeeCap: 5000, perDealFeeAfterCap: 75, eoFee: 60, eoCap: 750, recurringFees: [{ name: 'Cloud brokerage', amount: 85, period: 'monthly' }] };
+    // KW：70/30 到 Market Center cap（各地不同，先放 22,000）后 100%；加盟费 6% 封顶 3,000
+    case 'kw': return { ...plan, modules: { ...OFF, split: true, cap: true, royalty: true }, splitMode: 'flat', splitPreCap: 70, splitPostCap: 100, capAmount: 22000, royaltyPct: 6, royaltyCap: 3000 };
+    // Real：85/15 cap 12,000；cap 后每笔 285；每笔审核 40；900/年
+    case 'real': return { ...plan, modules: { ...OFF, split: true, cap: true, perDeal: true, recurring: true }, splitMode: 'flat', splitPreCap: 85, splitPostCap: 100, capAmount: 12000, perDealFee: 0, perDealFeeLease: 0, perDealFeePostCap: 285, perDealFeeCap: 0, perDealFeeAfterCap: 0, eoFee: 40, eoCap: 0, recurringFees: [{ name: 'Annual brokerage fee', amount: 900, period: 'yearly' }] };
+    // Fathom Max：100%，每笔 465 封顶 9,000；700/年
+    case 'fathom': return { ...plan, modules: { ...OFF, perDeal: true, recurring: true }, perDealFee: 465, perDealFeeLease: 465, perDealFeePostCap: 0, perDealFeeCap: 9000, perDealFeeAfterCap: 0, eoFee: 0, eoCap: 0, recurringFees: [{ name: 'Annual fee', amount: 700, period: 'yearly' }] };
+    // 传统加盟品牌（Coldwell Banker / BHHS / C21 …）：按本周期 GCI 阶梯 60 → 70 → 80，无 cap，加盟费 6%
+    case 'tiered': return { ...plan, modules: { ...OFF, split: true, royalty: true }, splitMode: 'tiers', splitTiers: [{ upTo: 50000, pct: 60 }, { upTo: 100000, pct: 70 }, { upTo: null, pct: 80 }], royaltyPct: 6, royaltyCap: 0 };
+    // RE/MAX 桌费型：95/5 无 cap + 月桌费
+    case 'remax': return { ...plan, modules: { ...OFF, split: true, recurring: true }, splitMode: 'flat', splitPreCap: 95, splitPostCap: 95, recurringFees: [{ name: 'Desk fee', amount: 1000, period: 'monthly' }] };
   }
 }
 
@@ -87,17 +105,20 @@ export function recurringPerPeriod(plan: CommissionPlan): number {
 }
 
 /** 把关掉的模块折成 0，计算只看这个 */
-export function effectivePlan(plan: CommissionPlan): CommissionPlan {
+export function effectivePlan(plan: CommissionPlan, ytd?: YearToDate): CommissionPlan {
   const m = plan.modules;
   return {
     ...plan,
-    splitPreCap: m.split ? plan.splitPreCap : 100,
+    splitPreCap: m.split ? tierPct(plan, ytd?.gciPaid ?? 0) : 100,
     splitPostCap: m.split ? plan.splitPostCap : 100,
     capAmount: m.cap ? plan.capAmount : 0,
     perDealFee: m.perDeal ? plan.perDealFee : 0,
     perDealFeeLease: m.perDeal ? plan.perDealFeeLease : 0,
     perDealFeePostCap: m.perDeal ? plan.perDealFeePostCap : 0,
+    perDealFeeCap: m.perDeal ? plan.perDealFeeCap : 0,
+    perDealFeeAfterCap: m.perDeal ? plan.perDealFeeAfterCap : 0,
     eoFee: m.perDeal ? plan.eoFee : 0,
+    eoCap: m.perDeal ? plan.eoCap : 0,
     royaltyPct: m.royalty ? plan.royaltyPct : 0,
     royaltyCap: m.royalty ? plan.royaltyCap : 0,
     teamPct: m.team ? plan.teamPct : 0,
@@ -106,6 +127,13 @@ export function effectivePlan(plan: CommissionPlan): CommissionPlan {
   };
 }
 const LEASE_SIDES: readonly string[] = ['landlord', 'tenant', 'management'];
+
+/** 固定模式 → splitPreCap；阶梯模式 → 本周期 GCI 落在哪一档就用哪一档；阶梯表空了退回固定 */
+export function tierPct(plan: CommissionPlan, gciPaid: number): number {
+  if (plan.splitMode !== 'tiers' || plan.splitTiers.length === 0) return plan.splitPreCap;
+  for (const t of plan.splitTiers) if (t.upTo === null || gciPaid < t.upTo) return t.pct;
+  return plan.splitTiers[plan.splitTiers.length - 1].pct;
+}
 
 export const CustomFeeSchema = z.object({ name: z.string().min(1), basis: z.enum(['flat', 'pct_of_gci', 'pct_of_price']), value: z.coerce.number().min(0) });
 export type CustomFee = z.infer<typeof CustomFeeSchema>;
@@ -128,11 +156,17 @@ export interface CommissionRecordInput {
 }
 
 /** 本周期已经付掉的（从已 closed / paid 记录的 computed 汇总） */
-export interface YearToDate { brokerPaid: number; royaltyPaid: number; teamPaid: number }
+export interface YearToDate {
+  brokerPaid: number; royaltyPaid: number; teamPaid: number;
+  /** 本周期已成交的 GCI（阶梯定档用）、已交的每笔费、已交的 E&O；老数据没有就当 0 */
+  gciPaid?: number; perDealPaid?: number; eoPaid?: number;
+}
 
 export interface CommissionLine { id: string; name: string; amount: number; custom?: boolean }
 export interface CommissionResult {
   gci: number;
+  /** 这笔用的我方比例（cap 前 / 阶梯档位） */
+  agentPct: number;
   referralOut: number;
   brokerSplit: number;
   /** broker 抽成里落在 cap 内 / cap 外的部分 */
@@ -148,7 +182,7 @@ export interface CommissionResult {
 }
 
 export function computeCommission(rec: CommissionRecordInput, rawPlan: CommissionPlan, ytd: YearToDate): CommissionResult {
-  const plan = effectivePlan(rawPlan);
+  const plan = effectivePlan(rawPlan, ytd);
   const price = rec.price ?? 0;
   let gci = rec.basis === 'flat' ? (rec.flat ?? 0) : (price * (rec.pct ?? 0)) / 100;
   if (rec.kind === 'referral' && rec.referralInPct) gci = (gci * rec.referralInPct) / 100;
@@ -194,16 +228,23 @@ export function computeCommission(rec: CommissionRecordInput, rawPlan: Commissio
   if (team) lines.push({ id: 'team', name: 'team', amount: team });
   if (rec.kind === 'deal') {
     const base = LEASE_SIDES.includes(rec.side ?? '') ? plan.perDealFeeLease : plan.perDealFee;
-    const perDeal = capHit || capRemaining === 0 ? plan.perDealFeePostCap : base;
+    let perDeal = capHit || capRemaining === 0 ? plan.perDealFeePostCap : base;
+    // 每笔费年度封顶：只收到封顶为止，封顶以后改收 perDealFeeAfterCap
+    if (plan.perDealFeeCap > 0) {
+      const left = Math.max(0, plan.perDealFeeCap - (ytd.perDealPaid ?? 0));
+      perDeal = left > 0 ? Math.min(perDeal, left) : plan.perDealFeeAfterCap;
+    }
     if (perDeal) lines.push({ id: 'perDealFee', name: 'perDealFee', amount: r2(perDeal) });
-    if (plan.eoFee) lines.push({ id: 'eoFee', name: 'eoFee', amount: r2(plan.eoFee) });
+    let eo = plan.eoFee;
+    if (plan.eoCap > 0) eo = Math.min(eo, Math.max(0, plan.eoCap - (ytd.eoPaid ?? 0)));
+    if (eo) lines.push({ id: 'eoFee', name: 'eoFee', amount: r2(eo) });
   }
   for (const f of rec.fees ?? []) {
     const amt = f.basis === 'flat' ? f.value : f.basis === 'pct_of_gci' ? (gci * f.value) / 100 : (price * f.value) / 100;
     lines.push({ id: `custom:${f.name}`, name: f.name, amount: r2(amt), custom: true });
   }
   const totalDeductions = r2(lines.reduce((s, l) => s + l.amount, 0));
-  return { gci, referralOut, brokerSplit, brokerPreCap, brokerPostCap, capHit, capProgressAfter, royalty, team, lines, totalDeductions, nci: r2(gci - totalDeductions) };
+  return { gci, agentPct: plan.splitPreCap, referralOut, brokerSplit, brokerPreCap, brokerPostCap, capHit, capProgressAfter, royalty, team, lines, totalDeductions, nci: r2(gci - totalDeductions) };
 }
 
 /** 状态跟着交易阶段走；填了收到日期就是 paid */

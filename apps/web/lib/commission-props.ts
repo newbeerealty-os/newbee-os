@@ -6,7 +6,7 @@ import type { CommissionRow } from "@/lib/commissions";
 export function commissionLabels(t: Translator): L {
   const l: L = {};
   for (const k of ["deal", "side", "price", "amount", "referralOut", "referralOutTo", "fees", "addFee", "feeName", "client", "partner", "partnerOrg", "referralIn", "expectedAt", "closedAt", "paidAt", "notes"]) l[k] = t(`comm.f.${k}`);
-  for (const k of ["gci", "referralOut", "brokerSplit", "brokerPre", "brokerPost", "royalty", "team", "perDealFee", "eoFee", "total", "nci", "capAfter"]) l[`r_${k}`] = t(`comm.r.${k}`);
+  for (const k of ["gci", "referralOut", "brokerSplit", "brokerPre", "brokerPost", "royalty", "team", "perDealFee", "eoFee", "total", "nci", "capAfter", "agentPct"]) l[`r_${k}`] = t(`comm.r.${k}`);
   for (const k of ["flat", "pct_of_gci", "pct_of_price"]) l[`feeBasis_${k}`] = t(`comm.f.feeBasis.${k}`);
   l.capHit = t("comm.capHit");
   return l;

@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { contactName } from "@newbee/core";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n";
-import { getPlan, loadCommission, loadCommissions, ytdFor } from "@/lib/commissions";
+import { getPlan, loadCommission, loadCommissions, ytdBefore } from "@/lib/commissions";
 import { commissionLabels, sideOptions, whatOf } from "@/lib/commission-props";
 import { saveCommission, deleteCommission } from "@/lib/actions/commissions";
 import { PageHeader } from "@/components/page";
@@ -26,7 +26,7 @@ export default async function CommissionPage({ params, searchParams }: { params:
     supabase.from("contacts").select("id,first_name,last_name,name_zh").is("deleted_at", null).order("first_name"),
     supabase.from("organizations").select("id,name").is("deleted_at", null).order("name"),
   ]);
-  const ytd = ytdFor(plan, all, id);
+  const ytd = ytdBefore(plan, all, r);
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-4">

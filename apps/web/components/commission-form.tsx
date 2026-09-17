@@ -115,7 +115,7 @@ export function CommissionForm(p: CommissionFormProps) {
 
       <div className="flex flex-col rounded-ui border border-line bg-surface p-4">
         <Row label={p.l.r_gci} amount={result.gci} strong />
-        {result.lines.map((ln) => <Row key={ln.id} label={lineLabel(ln.id, ln.name)} amount={ln.amount} neg sub={ln.id === "brokerSplit" && result.brokerPostCap > 0 ? `${p.l.r_brokerPre} ${fmt(result.brokerPreCap)} · ${p.l.r_brokerPost} ${fmt(result.brokerPostCap)}` : undefined} />)}
+        {result.lines.map((ln) => <Row key={ln.id} label={lineLabel(ln.id, ln.name)} amount={ln.amount} neg sub={ln.id === "brokerSplit" ? [p.l.r_agentPct.replace("{pct}", String(result.agentPct)), result.brokerPostCap > 0 ? `${p.l.r_brokerPre} ${fmt(result.brokerPreCap)} · ${p.l.r_brokerPost} ${fmt(result.brokerPostCap)}` : ""].filter(Boolean).join(" · ") : undefined} />)}
         <Row label={p.l.r_total} amount={result.totalDeductions} neg />
         <Row label={p.l.r_nci} amount={result.nci} strong />
         {p.plan.capAmount > 0 && (

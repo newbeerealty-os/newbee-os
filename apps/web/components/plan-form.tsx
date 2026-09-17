@@ -41,7 +41,8 @@ export function PlanForm({ initial, l, action }: { initial: CommissionPlan; l: P
       {/* 序列化：数值直接 hidden，模块和周期费走 JSON */}
       <input type="hidden" name="modules" value={JSON.stringify(plan.modules)} />
       <input type="hidden" name="recurringFees" value={JSON.stringify(plan.recurringFees.filter((f) => f.name.trim()))} />
-      {(["splitPreCap", "splitPostCap", "capAmount", "capYearStart", "perDealFee", "perDealFeeLease", "perDealFeePostCap", "eoFee", "royaltyPct", "royaltyCap", "teamPct", "teamCap", "teamBasis"] as const).map((k) => <input key={k} type="hidden" name={k} value={String(plan[k])} />)}
+      <input type="hidden" name="splitTiers" value={JSON.stringify(plan.splitTiers)} />
+      {(["splitMode", "splitPreCap", "splitPostCap", "capAmount", "capYearStart", "perDealFee", "perDealFeeLease", "perDealFeePostCap", "perDealFeeCap", "perDealFeeAfterCap", "eoFee", "eoCap", "royaltyPct", "royaltyCap", "teamPct", "teamCap", "teamBasis"] as const).map((k) => <input key={k} type="hidden" name={k} value={String(plan[k])} />)}
 
       <section className="rounded-ui border border-line bg-surface">
         <div className="flex items-center justify-between gap-3 px-4 py-2.5"><span className="text-sm font-semibold">{l.presets}</span>{applied && <span className="text-sm text-ok">{l.presetApplied}</span>}</div>
@@ -61,7 +62,10 @@ export function PlanForm({ initial, l, action }: { initial: CommissionPlan; l: P
           <F label={l.perDealFee}>{num("perDealFee")}</F>
           <F label={l.perDealFeeLease}>{num("perDealFeeLease")}</F>
           {plan.modules.cap && <F label={l.perDealFeePostCap}>{num("perDealFeePostCap")}</F>}
+          <F label={l.perDealFeeCap}>{num("perDealFeeCap")}</F>
+          {plan.modules.perDeal && plan.perDealFeeCap > 0 && <F label={l.perDealFeeAfterCap}>{num("perDealFeeAfterCap")}</F>}
           <F label={l.eoFee}>{num("eoFee")}</F>
+          <F label={l.eoCap}>{num("eoCap")}</F>
         </div>
       </Mod>
       <Mod id="recurring" title={l.recurring}>
@@ -72,8 +76,17 @@ export function PlanForm({ initial, l, action }: { initial: CommissionPlan; l: P
         </div>
       </Mod>
       <Mod id="split" title={l.split}>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <F label={l.splitPreCap}>{num("splitPreCap", "0.5")}</F>
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-wrap items-center gap-2 text-xs text-muted">{l.splitMode}
+            <div className="flex overflow-hidden rounded-md border border-line-strong">
+              {(["flat", "tiers"] as const).map((m) => <button key={m} type="button" onClick={() => set("splitMode", m)} className={`h-8 px-3 text-sm ${plan.splitMode === m ? "bg-accent text-accent-ink" : "bg-surface text-fg hover:bg-chip"}`}>{l[`splitMode_${m}`]}</button>)}
+            </div>
+          </div>
+          {plan.splitMode === "tiers" ? (
+            <TiersEditor rows={plan.splitTiers} onChange={(rows) => set("splitTiers", rows)} l={l} />
+          ) : (
+            <F label={l.splitPreCap}>{num("splitPreCap", "0.5")}</F>
+          )}
           {plan.modules.cap && <F label={l.splitPostCap}>{num("splitPostCap", "0.5")}</F>}
         </div>
       </Mod>
@@ -102,6 +115,30 @@ export function PlanForm({ initial, l, action }: { initial: CommissionPlan; l: P
       </div>
       <div><button type="submit" className="h-10 rounded-md bg-accent px-4 text-sm font-medium text-accent-ink hover:bg-accent-strong">{l.save}</button></div>
     </form>
+  );
+}
+
+type Tier = CommissionPlan["splitTiers"][number];
+function TiersEditor({ rows, onChange, l }: { rows: Tier[]; onChange: (rows: Tier[]) => void; l: PlanLabels }) {
+  const upd = (i: number, patch: Partial<Tier>) => onChange(rows.map((x, j) => (j === i ? { ...x, ...patch } : x)));
+  const list = rows.length ? rows : [{ upTo: null, pct: 70 }];
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="grid grid-cols-[1.4fr_1fr_auto] gap-2 text-xs text-muted"><span>{l["tiers.upTo"]}</span><span>{l["tiers.pct"]}</span><span className="w-5" /></div>
+      {list.map((r, i) => (
+        <div key={i} className="grid grid-cols-[1.4fr_1fr_auto] items-center gap-2">
+          {i === list.length - 1
+            ? <span className="px-1 text-sm text-muted">{l["tiers.last"]}</span>
+            : <input value={r.upTo ?? ""} inputMode="decimal" onChange={(e) => upd(i, { upTo: toNum(e.target.value) })} className={`${inputCls} font-mono`} />}
+          <input value={r.pct} inputMode="decimal" onChange={(e) => upd(i, { pct: toNum(e.target.value) })} className={`${inputCls} font-mono`} />
+          <button type="button" disabled={list.length <= 1} onClick={() => onChange(list.filter((_, j) => j !== i).map((x, j, a) => (j === a.length - 1 ? { ...x, upTo: null } : x)))} className="w-5 text-muted hover:text-danger disabled:opacity-30">✕</button>
+        </div>
+      ))}
+      <div className="flex flex-wrap items-center gap-3">
+        <button type="button" onClick={() => { const last = list[list.length - 1]; onChange([...list.slice(0, -1), { upTo: (list.length > 1 ? (list[list.length - 2].upTo ?? 0) : 0) + 50000, pct: last.pct }, { upTo: null, pct: Math.min(100, last.pct + 10) }]); }} className="text-sm text-accent hover:underline">{l["tiers.add"]}</button>
+        <span className="text-xs text-muted">{l["tiers.hint"]}</span>
+      </div>
+    </div>
   );
 }
 

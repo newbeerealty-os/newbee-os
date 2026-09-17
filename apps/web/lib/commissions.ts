@@ -43,21 +43,28 @@ export async function loadCommission(supabase: SupabaseClient, id: string): Prom
 /** 记录的"生效日期"：成交日 → 交易的 closed_at → 预计成交 → 创建日 */
 export const effectiveDate = (r: CommissionRow) => r.closed_at ?? r.deal?.closed_at?.slice(0, 10) ?? r.expected_at ?? r.created_at.slice(0, 10);
 
-/** 本周期已付：只算已成交 / 已收的记录（排除 excludeId，编辑时不把自己算进去） */
-export function ytdFor(plan: CommissionPlan, rows: CommissionRow[], excludeId?: string, today = todayISO()): YearToDate & { period: { start: string; end: string } } {
-  const period = capYearOf(today, plan.capYearStart);
-  const acc = { brokerPaid: 0, royaltyPaid: 0, teamPaid: 0 };
+/** 截至某一天的本周期累计：只算已成交 / 已收、且排在这一天之前的记录（同一天按 created_at 先后），编辑时不把自己算进去。
+ *  cap 进度和阶梯档位都靠这个"之前"——一笔 3 月成交的不能被 9 月成交的顶到 cap 后。 */
+export function ytdFor(plan: CommissionPlan, rows: CommissionRow[], excludeId?: string, asOf = todayISO(), beforeCreated?: string): YearToDate & { period: { start: string; end: string } } {
+  const period = capYearOf(asOf, plan.capYearStart);
+  const acc = { brokerPaid: 0, royaltyPaid: 0, teamPaid: 0, gciPaid: 0, perDealPaid: 0, eoPaid: 0 };
   for (const r of rows) {
     if (r.id === excludeId || !r.computed) continue;
     if (r.status !== "closed" && r.status !== "paid") continue;
     const d = effectiveDate(r);
     if (d < period.start || d > period.end) continue;
+    if (d > asOf || (d === asOf && beforeCreated !== undefined && r.created_at >= beforeCreated)) continue;
     acc.brokerPaid += r.computed.brokerPreCap ?? 0;
     acc.royaltyPaid += r.computed.royalty ?? 0;
     acc.teamPaid += r.computed.team ?? 0;
+    acc.gciPaid += r.computed.gci ?? 0;
+    for (const ln of r.computed.lines ?? []) { if (ln.id === "perDealFee") acc.perDealPaid += ln.amount; if (ln.id === "eoFee") acc.eoPaid += ln.amount; }
   }
   return { ...acc, period };
 }
+
+/** 重算某条记录时用的累计：截至它自己的日期 */
+export const ytdBefore = (plan: CommissionPlan, rows: CommissionRow[], r: CommissionRow) => ytdFor(plan, rows, r.id, effectiveDate(r), r.created_at);
 
 /** 重算一条记录的快照与状态 */
 export function recompute(r: CommissionRow, plan: CommissionPlan, ytd: YearToDate) {

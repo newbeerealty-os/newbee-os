@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { CommissionInputSchema, CommissionPlanSchema } from "@newbee/core";
 import { createClient } from "@/lib/supabase/server";
 import { patchAgentSettings } from "@/lib/settings";
-import { getPlan, loadCommissions, recompute, ytdFor, type CommissionRow } from "@/lib/commissions";
+import { getPlan, loadCommissions, recompute, ytdBefore, effectiveDate, type CommissionRow } from "@/lib/commissions";
 
 async function me() {
   const supabase = await createClient();
@@ -39,8 +39,7 @@ async function recomputeOne(supabase: Awaited<ReturnType<typeof me>>["supabase"]
   const [plan, rows] = await Promise.all([getPlan(), loadCommissions(supabase)]);
   const r = rows.find((x) => x.id === id);
   if (!r) return;
-  const ytd = ytdFor(plan, rows, id);
-  const { computed, status } = recompute(r, plan, ytd);
+  const { computed, status } = recompute(r, plan, ytdBefore(plan, rows, r));
   const { error } = await supabase.from("commissions").update({ computed, status }).eq("id", id);
   if (error) throw new Error(error.message);
 }
@@ -49,10 +48,11 @@ async function recomputeOne(supabase: Awaited<ReturnType<typeof me>>["supabase"]
 export async function recomputeAll(dealId?: string) {
   const { supabase } = await me();
   const [plan, rows] = await Promise.all([getPlan(), loadCommissions(supabase)]);
-  const targets = (dealId ? rows.filter((r) => r.deal_id === dealId) : rows).map((r) => r.id);
+  // 按日期先后重算：前面的算完更新到 rows 里，后面的累计才对
+  const targets = (dealId ? rows.filter((r) => r.deal_id === dealId) : rows).sort((a, b) => effectiveDate(a).localeCompare(effectiveDate(b)) || a.created_at.localeCompare(b.created_at)).map((r) => r.id);
   for (const id of targets) {
     const r = rows.find((x) => x.id === id) as CommissionRow;
-    const { computed, status } = recompute(r, plan, ytdFor(plan, rows, id));
+    const { computed, status } = recompute(r, plan, ytdBefore(plan, rows, r));
     r.computed = computed; r.status = status;
     await supabase.from("commissions").update({ computed, status }).eq("id", id);
   }
@@ -70,7 +70,7 @@ export async function deleteCommission(id: string, backTo?: string) {
 export async function savePlan(formData: FormData) {
   const raw = Object.fromEntries(formData.entries()) as Record<string, unknown>;
   const json = (k: string, fallback: unknown) => { try { return JSON.parse(String(raw[k] ?? "")); } catch { return fallback; } };
-  const plan = CommissionPlanSchema.parse({ ...raw, modules: json("modules", undefined), recurringFees: json("recurringFees", []) });
+  const plan = CommissionPlanSchema.parse({ ...raw, modules: json("modules", undefined), recurringFees: json("recurringFees", []), splitTiers: json("splitTiers", []) });
   await patchAgentSettings({ commissionPlan: plan });
   await recomputeAll();
   revalidatePath("/settings/commission");
