@@ -21,11 +21,12 @@ pnpm monorepo · TypeScript · Next.js App Router + Tailwind（shadcn/ui 按需 
 - AI 只在服务端调用（`apps/web/app/api/**/route.ts`）；用 tool_use 强制 JSON；system prompt 加 `cache_control`。
 - 抽取结果里数值 / 日期字段、或 `confidence < 0.9` 的，必须进待确认队列，**不得自动派生**。
 - 失败必须落 `documents.status = 'failed'` + `error`，禁止静默吞错。
+- 界面文案一律走 `packages/core/src/i18n/messages.ts`（中英都要有），**并且必须放进"设置 › 语言 / 翻译"对应页面的复刻**（`apps/web/components/i18n-replicas.tsx`）——新增菜单、表格、按钮、提示都要在复刻里出现，`apps/web/test` 会检查每条文案都被放置，漏了 `pnpm test` 直接挂。
 - **永远不读、不打印、不复制 `.env*` 文件里的值**；需要新的环境变量就在 `.env.example` 加一行占位并告诉我去填。
 
 ## 工作方式
 - 开工第一件事：`git status` 确认干净；结束前 `pnpm test && pnpm typecheck`，然后写 `docs/log.md`（做了什么 · 卡在哪 · 明天第一件事）并 commit。
-- 引擎先写测试再实现（`pnpm test`）；UI 手测。
+- 引擎先写测试再实现（`pnpm test` 跑 core + web 两套）；UI 手测。
 - 一次一个交付物；大任务先列步骤给我看。
 - 每天结束 `main` 必须可运行、可部署（`pnpm build` 通过）。
 - 不确定的业务规则就问，不要猜；Texas 合同规则以 `docs/spec.html` 第 2 节为准。
