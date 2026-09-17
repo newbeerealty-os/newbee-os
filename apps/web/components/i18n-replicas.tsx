@@ -245,7 +245,11 @@ export const REPLICAS: Record<string, (T: TFn, hidden: string) => React.ReactNod
           <div className="flex justify-between text-xs text-muted"><span>{T("comm.r.capAfter")}</span><span className="font-mono">$10,600 / $16,000</span></div>
         </Card>
       </div>
-      <Card title={T("nav.commissions")} right={<>{T("comm.r.nci")} $8,910</>}><div className="flex flex-wrap gap-2"><Btn>{T("comm.new")} · {T("commSide.listing")}</Btn><Btn ghost>{T("comm.addOtherSide")} · {T("commSide.buyer")}</Btn></div></Card>
+      <Card title={T("nav.commissions")} right={<>{T("comm.r.nci")} $8,910</>}>
+        <div className="flex flex-wrap gap-2 border-b border-line pb-2 text-xs"><span className="rounded-full bg-accent px-3 py-1 font-medium text-accent-ink">● {T("commSide.listing")} · 3% · $8,910 · {T("commStatus.pending")}</span><span className="rounded-full border border-dashed border-line-strong px-3 py-1 text-muted">+ {T("comm.addOtherSide")} · {T("commSide.buyer")}</span><span className="rounded-full border border-dashed border-line-strong px-3 py-1 text-muted">+ {T("comm.new")}</span></div>
+        <div className="mt-2 grid grid-cols-[6rem_1fr] items-center gap-x-2 gap-y-1.5 text-xs"><span className="text-muted">{T("comm.f.deal")}</span><Input>1234 Sample Pl · {T("type.seller")}</Input><span className="text-muted">{T("comm.f.side")}</span><Input>{T("commSide.listing")}</Input></div>
+        <div className="mt-2 flex items-center justify-between"><Btn>{T("comm.save")}</Btn><span className="text-xs text-muted">{T("comm.delete")}</span></div>
+      </Card>
       <Card title={T("comm.referralsOf")} right={T("comm.newReferral")}><div className="py-2 text-center text-muted">{T("comm.noReferrals")}</div></Card>
       <Hidden title={h} items={[T("comm.none"), T("comm.deleteConfirm")]} />
     </div></div>

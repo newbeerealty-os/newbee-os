@@ -1,6 +1,6 @@
 // 佣金：读方案、读记录、算本周期已付（cap 进度）。计算本身在 core（computeCommission）。
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { CommissionPlanSchema, computeCommission, capYearOf, statusFromStage, type CommissionPlan, type CommissionSide, type CommissionResult, type CustomFee, type YearToDate } from "@newbee/core";
+import { CommissionPlanSchema, computeCommission, capYearOf, statusFromStage, contactName, sideForDealType, type CommissionPlan, type CommissionSide, type CommissionResult, type CustomFee, type YearToDate } from "@newbee/core";
 import { getAgentSettings } from "@/lib/settings";
 import { todayISO } from "@/lib/format";
 
@@ -75,4 +75,29 @@ export function recompute(r: CommissionRow, plan: CommissionPlan, ytd: YearToDat
   }, plan, ytd);
   const status = r.kind === "deal" && r.deal ? statusFromStage(r.deal.stage, r.paid_at) : r.paid_at ? "paid" : r.closed_at ? "closed" : r.status === "cancelled" ? "cancelled" : "pending";
   return { computed, status };
+}
+
+// ---------- 表单要用的下拉项 / 从交易带值（新建页、明细页、交易详情的佣金选项卡共用） ----------
+export interface CommissionOptions { dealOptions: { value: string; label: string }[]; contactOptions: { value: string; label: string }[]; orgOptions: { value: string; label: string }[] }
+export async function loadCommissionOptions(supabase: SupabaseClient): Promise<CommissionOptions> {
+  const [{ data: deals }, { data: contacts }, { data: orgs }] = await Promise.all([
+    supabase.from("deals").select("id,title").is("deleted_at", null).order("priority", { ascending: false }).order("sort_at", { ascending: false }),
+    supabase.from("contacts").select("id,first_name,last_name,name_zh").is("deleted_at", null).order("first_name"),
+    supabase.from("organizations").select("id,name").is("deleted_at", null).order("name"),
+  ]);
+  return {
+    dealOptions: ((deals ?? []) as { id: string; title: string }[]).map((d) => ({ value: d.id, label: d.title })),
+    contactOptions: ((contacts ?? []) as { id: string; first_name: string; last_name: string; name_zh: string | null }[]).map((c) => ({ value: c.id, label: `${contactName(c)}${c.name_zh ? ` · ${c.name_zh}` : ""}` })),
+    orgOptions: ((orgs ?? []) as { id: string; name: string }[]).map((o) => ({ value: o.id, label: o.name })),
+  };
+}
+
+/** 从交易的已确认字段带出售价（sales_price / rent）、比例（commission_pct，默认 3）、我方 side */
+export async function prefillFromDeal(supabase: SupabaseClient, dealId: string, dealType: string, side?: string): Promise<{ values: { deal_id: string; side: string; price: number | null; pct: number }; prefilled: boolean }> {
+  const { data: fields } = await supabase.from("deal_fields_current").select("key,value_num").eq("deal_id", dealId).not("confirmed_at", "is", null).in("key", ["sales_price", "commission_pct", "rent"]);
+  const fv = Object.fromEntries(((fields ?? []) as { key: string; value_num: number | null }[]).map((x) => [x.key, x.value_num]));
+  return {
+    values: { deal_id: dealId, side: side || sideForDealType(dealType), price: fv.sales_price ?? fv.rent ?? null, pct: fv.commission_pct ?? 3 },
+    prefilled: Boolean(fv.sales_price || fv.rent || fv.commission_pct),
+  };
 }

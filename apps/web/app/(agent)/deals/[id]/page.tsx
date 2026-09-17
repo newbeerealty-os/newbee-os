@@ -14,8 +14,11 @@ import { todayISO, relDays, money } from "@/lib/format";
 import { Section, Empty, Button, Badge, inputCls, TaskItem, dueTone, type TaskRow } from "@/components/ui";
 import { PageHeader, Tabs, Stat, StatGrid } from "@/components/page";
 import { StageBadge } from "@/components/stage";
-import { loadCommissions } from "@/lib/commissions";
-import { CommissionMiniList } from "@/components/commission-list";
+import { getPlan, loadCommissions, loadCommissionOptions, prefillFromDeal, ytdFor, ytdBefore } from "@/lib/commissions";
+import { commissionLabels, sideOptions } from "@/lib/commission-props";
+import { saveCommission, deleteCommission } from "@/lib/actions/commissions";
+import { CommissionChips } from "@/components/commission-list";
+import { CommissionForm } from "@/components/commission-form";
 
 export const dynamic = "force-dynamic";
 
@@ -34,8 +37,8 @@ function show(f: FieldRow): string {
   return f.value_text ?? "—";
 }
 
-export default async function DealPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ tab?: string }> }) {
-  const [{ id }, { tab: rawTab }] = await Promise.all([params, searchParams]);
+export default async function DealPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ tab?: string; c?: string; side?: string }> }) {
+  const [{ id }, { tab: rawTab, c: rawC, side: rawSide }] = await Promise.all([params, searchParams]);
   const tab = (TABS as readonly string[]).includes(rawTab ?? "") ? rawTab! : "overview";
   const supabase = await createClient();
   const t = await getT();
@@ -75,6 +78,40 @@ export default async function DealPage({ params, searchParams }: { params: Promi
   const orgs = (os ?? []) as { id: string; name: string; kind: string }[];
   const base = `/deals/${id}`;
   const backTo = tab === "overview" ? base : `${base}?tab=${tab}`;
+
+  // 佣金选项卡 = 编辑器：没记录 → 新建表单；有记录 → 胶囊选一条编辑；?c=new&side=… → 加另一边
+  let commissionTab: React.ReactNode = null;
+  if (tab === "commission") {
+    const mySide = sideForDealType(deal.type);
+    const other = otherSide(mySide);
+    const has = (side: string) => commissions.some((c) => c.side === side);
+    const selected = rawC === "new" ? null : commissions.find((c) => c.id === rawC) ?? commissions[0] ?? null;
+    const [plan, all, options] = await Promise.all([getPlan(), loadCommissions(supabase), loadCommissionOptions(supabase)]);
+    const l = commissionLabels(t);
+    const nci = commissions.filter((c) => c.status !== "cancelled").reduce((sum, c) => sum + (c.computed?.nci ?? 0), 0);
+    // "+" 胶囊：先加另一边，两边都有了就是普通添加
+    const addSide = other && has(mySide) && !has(other) ? other : mySide;
+    const addLabel = other && has(mySide) && !has(other) ? `${t("comm.addOtherSide")} · ${t(`commSide.${other}`)}` : t("comm.new");
+    const hrefOf = (c: { id: string }) => `${backTo}&c=${c.id}`;
+    const lockDeal = { id, label: `${deal.title} · ${t(`type.${deal.type}`)}` };
+    let form: React.ReactNode;
+    if (selected) {
+      form = <CommissionForm l={l} plan={plan} ytd={ytdBefore(plan, all, selected)} kind={selected.kind} sideOptions={sideOptions(t)} {...options} lockDeal={lockDeal}
+        values={{ ...selected, deal: undefined, contact: undefined, partner_contact: undefined, partner_org: undefined, computed: undefined, fees: undefined } as unknown as Record<string, string | number | null>}
+        fees={selected.fees} action={saveCommission.bind(null, selected.id)} back={hrefOf(selected)} submitLabel={t("comm.save")}
+        deleteAction={deleteCommission.bind(null, selected.id, backTo)} deleteLabels={{ delete: t("comm.delete"), confirm: t("comm.deleteConfirm") }} />;
+    } else {
+      const pre = await prefillFromDeal(supabase, id, deal.type, rawSide || addSide);
+      form = <CommissionForm l={l} plan={plan} ytd={ytdFor(plan, all)} kind="deal" sideOptions={sideOptions(t)} {...options} lockDeal={lockDeal}
+        values={pre.values} fees={[]} action={saveCommission.bind(null, null)} back={backTo} submitLabel={t("comm.save")} prefillHint={pre.prefilled ? t("comm.fromDeal") : undefined} />;
+    }
+    commissionTab = (
+      <Section title={t("nav.commissions")} right={<span className="font-mono text-sm text-muted">{t("comm.r.nci")} {money(nci)}</span>}>
+        {commissions.length > 0 && <CommissionChips rows={commissions} selectedId={selected?.id ?? null} hrefOf={hrefOf} addHref={`${backTo}&c=new&side=${addSide}`} addLabel={addLabel} t={t} />}
+        <div className={commissions.length > 0 ? "border-t border-line pt-4" : ""}>{form}</div>
+      </Section>
+    );
+  }
 
   const openTasks = tasks.filter((x) => !x.done_at);
   const fieldLabel = (key: string) => t.or(`field.${key}`, FIELD_BY_KEY[key]?.label ?? key);
@@ -327,24 +364,7 @@ export default async function DealPage({ params, searchParams }: { params: Promi
           )}
         </Section>
       )}
-      {tab === "commission" && (() => {
-        // 预选 side：按交易类型；已有一边就给"加另一边"
-        const mySide = sideForDealType(deal.type);
-        const other = otherSide(mySide);
-        const has = (side: string) => commissions.some((c) => c.side === side);
-        const newHref = (side: string) => `/commissions/new?deal=${id}&side=${side}&back=${encodeURIComponent(backTo)}`;
-        const nci = commissions.filter((c) => c.status !== "cancelled").reduce((sum, c) => sum + (c.computed?.nci ?? 0), 0);
-        return (
-          <Section title={t("nav.commissions")} right={<span className="font-mono text-sm text-muted">{t("comm.r.nci")} {money(nci)}</span>}>
-            {commissions.length === 0 ? <Empty>{t("comm.none")}</Empty> : <CommissionMiniList rows={commissions} t={t} backTo={backTo} />}
-            <div className="mt-3 flex flex-wrap gap-2">
-              {!has(mySide) && <Link href={newHref(mySide)} className="flex h-10 items-center rounded-md bg-accent px-3 text-sm font-medium text-accent-ink hover:bg-accent-strong">{t("comm.new")} · {t(`commSide.${mySide}`)}</Link>}
-              {other && has(mySide) && !has(other) && <Link href={newHref(other)} className="flex h-10 items-center rounded-md border border-line-strong bg-surface px-3 text-sm font-medium text-fg hover:bg-chip">{t("comm.addOtherSide")} · {t(`commSide.${other}`)}</Link>}
-              {(has(mySide) && (!other || has(other))) && <Link href={newHref(mySide)} className="flex h-10 items-center rounded-md border border-line-strong bg-surface px-3 text-sm font-medium text-fg hover:bg-chip">{t("comm.new")}</Link>}
-            </div>
-          </Section>
-        );
-      })()}
+      {tab === "commission" && commissionTab}
     </div>
   );
 }

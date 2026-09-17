@@ -1,10 +1,9 @@
 // /commissions/[id] —— 一条佣金：左输入 / 右明细（同新建），删除
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { contactName } from "@newbee/core";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n";
-import { getPlan, loadCommission, loadCommissions, ytdBefore } from "@/lib/commissions";
+import { getPlan, loadCommission, loadCommissions, loadCommissionOptions, ytdBefore } from "@/lib/commissions";
 import { commissionLabels, sideOptions, whatOf } from "@/lib/commission-props";
 import { saveCommission, deleteCommission } from "@/lib/actions/commissions";
 import { PageHeader } from "@/components/page";
@@ -20,12 +19,7 @@ export default async function CommissionPage({ params, searchParams }: { params:
   const [t, plan] = await Promise.all([getT(), getPlan()]);
   const r = await loadCommission(supabase, id);
   if (!r) notFound();
-  const [all, { data: deals }, { data: contacts }, { data: orgs }] = await Promise.all([
-    loadCommissions(supabase),
-    supabase.from("deals").select("id,title").is("deleted_at", null).order("priority", { ascending: false }),
-    supabase.from("contacts").select("id,first_name,last_name,name_zh").is("deleted_at", null).order("first_name"),
-    supabase.from("organizations").select("id,name").is("deleted_at", null).order("name"),
-  ]);
+  const [all, options] = await Promise.all([loadCommissions(supabase), loadCommissionOptions(supabase)]);
   const ytd = ytdBefore(plan, all, r);
 
   return (
@@ -45,9 +39,7 @@ export default async function CommissionPage({ params, searchParams }: { params:
           </>
         } />
       <CommissionForm l={commissionLabels(t)} plan={plan} ytd={ytd} kind={r.kind} sideOptions={sideOptions(t)}
-        dealOptions={((deals ?? []) as { id: string; title: string }[]).map((d) => ({ value: d.id, label: d.title }))}
-        contactOptions={((contacts ?? []) as { id: string; first_name: string; last_name: string; name_zh: string | null }[]).map((c) => ({ value: c.id, label: `${contactName(c)}${c.name_zh ? ` · ${c.name_zh}` : ""}` }))}
-        orgOptions={((orgs ?? []) as { id: string; name: string }[]).map((o) => ({ value: o.id, label: o.name }))}
+        {...options}
         values={{ ...r, deal: undefined, contact: undefined, partner_contact: undefined, partner_org: undefined, computed: undefined, fees: undefined } as unknown as Record<string, string | number | null>}
         fees={r.fees} action={saveCommission.bind(null, id)} back={back} submitLabel={t("comm.save")} />
     </div>

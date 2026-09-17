@@ -38,6 +38,10 @@ export interface CommissionFormProps {
   kind: "deal" | "referral";
   sideOptions: Opt[]; dealOptions: Opt[]; contactOptions: Opt[]; orgOptions: Opt[];
   values: Record<string, string | number | null | undefined>;
+  /** 放在交易详情里时交易已定：不显示下拉，只读一行 */
+  lockDeal?: { id: string; label: string };
+  /** 编辑模式：底部右侧"删除"（确认后执行） */
+  deleteAction?: () => Promise<void>; deleteLabels?: { delete: string; confirm: string };
   fees: CustomFee[];
   action: (formData: FormData) => void | Promise<void>;
   back?: string;
@@ -74,7 +78,9 @@ export function CommissionForm(p: CommissionFormProps) {
       <div className="flex flex-col gap-3 rounded-ui border border-line bg-surface p-4">
         {p.kind === "deal" ? (
           <>
-            <F label={p.l.deal}><select name="deal_id" value={dealId} onChange={(e) => setDealId(e.target.value)} required className={inputCls}><option value="" disabled>—</option>{p.dealOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></F>
+            {p.lockDeal
+              ? <F label={p.l.deal}><input type="hidden" name="deal_id" value={p.lockDeal.id} /><div className={`${inputCls} flex items-center bg-chip text-muted`}>{p.lockDeal.label}</div></F>
+              : <F label={p.l.deal}><select name="deal_id" value={dealId} onChange={(e) => setDealId(e.target.value)} required className={inputCls}><option value="" disabled>—</option>{p.dealOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></F>}
             <F label={p.l.side}><select name="side" value={side} onChange={(e) => setSide(e.target.value)} className={inputCls}>{p.sideOptions.filter((o) => o.value !== "referral").map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></F>
           </>
         ) : (
@@ -118,7 +124,18 @@ export function CommissionForm(p: CommissionFormProps) {
           <F label={p.l.paidAt}><input type="date" name="paid_at" value={paidAt} onChange={(e) => setPaidAt(e.target.value)} className={inputCls} /></F>
         </div>
         <F label={p.l.notes}><textarea name="notes" rows={2} defaultValue={v("notes")} className={`${inputCls} h-auto py-2`} /></F>
-        <div><Button>{p.submitLabel}</Button></div>
+        <div className="flex items-center justify-between gap-3">
+          <Button>{p.submitLabel}</Button>
+          {p.deleteAction && p.deleteLabels && (
+            <details className="relative">
+              <summary className="flex h-10 cursor-pointer list-none items-center px-2 text-sm text-muted hover:text-danger">{p.deleteLabels.delete}</summary>
+              <div className="absolute bottom-12 right-0 z-10 flex w-72 flex-col gap-2 rounded-ui border border-line bg-surface p-3 text-sm shadow-xl">
+                <p className="text-muted">{p.deleteLabels.confirm}</p>
+                <Button variant="danger" type="button" formNoValidate onClick={() => p.deleteAction!()}>{p.deleteLabels.delete}</Button>
+              </div>
+            </details>
+          )}
+        </div>
       </div>
 
       <div className="flex flex-col rounded-ui border border-line bg-surface p-4">
