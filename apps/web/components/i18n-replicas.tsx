@@ -63,7 +63,7 @@ export const REPLICAS: Record<string, (T: TFn, hidden: string) => React.ReactNod
         <div className="mt-2 flex flex-wrap gap-1 text-xs">{DEAL_STAGES.map((s) => <Chip key={s}><StageDot stage={s} /> {T(`stage.${s}`)}</Chip>)}</div>
         <div className="mt-1 flex flex-wrap gap-1 text-xs">{["seller", "buyer", "lease_listing", "lease_tenant", "property_mgmt"].map((s) => <Chip key={s}>{T(`type.${s}`)}</Chip>)}</div>
       </Card>
-      <Hidden title={h} items={[T("deals.none"), T("deals.noneInStage"), T("common.noMatch"), T("deals.next")]} />
+      <Hidden title={h} items={[T("deals.none"), T("deals.noneInStage"), T("common.noMatch"), T("deals.next"), T("common.dragColumn")]} />
     </div></div>
   ),
   deal: (T, h) => (

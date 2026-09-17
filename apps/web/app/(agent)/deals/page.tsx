@@ -10,6 +10,8 @@ import { Section, Empty, Button, Badge, inputCls, dueTone } from "@/components/u
 import { PageHeader, Stat, StatGrid, SortHeader, readSort } from "@/components/page";
 import { StageBar, StageBadge } from "@/components/stage";
 import { SearchBox } from "@/components/search-box";
+import { DataTable } from "@/components/data-table";
+import { getAgentSettings } from "@/lib/settings";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +23,8 @@ export default async function DealsPage({ searchParams }: { searchParams: Promis
   const { sort, dir } = readSort(sp);
   const stageFilter = DEAL_STAGES.includes(stage as (typeof DEAL_STAGES)[number]) ? stage! : null;
   const supabase = await createClient();
-  const t = await getT();
+  const [t, agentSettings] = await Promise.all([getT(), getAgentSettings()]);
+  const columnOrder = ((agentSettings.columns ?? {}) as Record<string, string[]>).deals;
   const today = todayISO();
   const horizon = addCalendarDays(today, 7);
 
@@ -111,35 +114,21 @@ export default async function DealsPage({ searchParams }: { searchParams: Promis
         {deals.length === 0 ? (
           <Empty>{needle ? t("common.noMatch") : stageFilter ? t("deals.noneInStage") : t("deals.none")}</Empty>
         ) : (
-          <div className="-mx-4 -my-4">
-            <div className="hidden grid-cols-[1.6fr_1fr_1.2fr_1.4fr_.6fr] gap-3 border-b border-line bg-chip/40 px-4 py-2 text-[11.5px] font-semibold text-muted md:grid">
-              <SortHeader col="title" label={t("deals.col.deal")} sort={sort} dir={dir} params={hp} /><SortHeader col="stage" label={stageFilter ? t("deals.col.type") : t("deals.col.stage")} sort={sort} dir={dir} params={hp} /><SortHeader col="next" label={t("deals.col.next")} sort={sort} dir={dir} params={hp} /><SortHeader col="date" label={t("deals.col.date")} sort={sort} dir={dir} params={hp} /><SortHeader col="open" label={t("deals.col.open")} sort={sort} dir={dir} params={hp} align="right" />
-            </div>
-            <ul className="divide-y divide-line">
-              {sorted.map(({ d, next, nextLabel, open }) => {
-                return (
-                  <li key={d.id}>
-                    <Link href={`/deals/${d.id}`} className="grid gap-1.5 px-4 py-3 hover:bg-chip/40 md:grid-cols-[1.6fr_1fr_1.2fr_1.4fr_.6fr] md:items-center md:gap-3">
-                      <div className="flex min-w-0 gap-3"><StageBar stage={d.stage} /><div className="min-w-0">
-                        <div className="truncate text-sm font-semibold text-fg">{d.title}</div>
-                        <div className="mt-0.5 flex flex-wrap gap-1 text-[11.5px] text-muted">
-                          {d.addenda.map((a) => <Badge key={a} tone="blue">{a.replace(/_addendum$/, "")}</Badge>)}
-                          <span className="md:hidden">{t("deals.openTasks", { n: open })}</span>
-                        </div>
-                      </div></div>
-                      <div className="flex gap-1">
-                        <Badge>{t(`type.${d.type}`)}</Badge>
-                        {!stageFilter && <StageBadge stage={d.stage} label={t(`stage.${d.stage}`)} />}
-                      </div>
-                      <div className="truncate text-sm">{nextLabel ?? <span className="text-muted">{t("deals.noNext")}</span>}</div>
-                      <div>{next && <Badge tone={dueTone(next.due_date, today)}>{next.due_date} · {relDays(next.due_date, today, t)}</Badge>}</div>
-                      <div className="hidden text-right font-mono text-sm md:block">{open}</div>
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
+          <DataTable table="deals" initialOrder={columnOrder} dragHint={t("common.dragColumn")}
+            columns={[
+              { id: "title", width: "1.6fr", header: <SortHeader col="title" label={t("deals.col.deal")} sort={sort} dir={dir} params={hp} /> },
+              { id: "stage", width: "1fr", header: <SortHeader col="stage" label={stageFilter ? t("deals.col.type") : t("deals.col.stage")} sort={sort} dir={dir} params={hp} /> },
+              { id: "next", width: "1.2fr", header: <SortHeader col="next" label={t("deals.col.next")} sort={sort} dir={dir} params={hp} /> },
+              { id: "date", width: "1.4fr", header: <SortHeader col="date" label={t("deals.col.date")} sort={sort} dir={dir} params={hp} /> },
+              { id: "open", width: ".6fr", align: "right", mobile: false, header: <SortHeader col="open" label={t("deals.col.open")} sort={sort} dir={dir} params={hp} align="right" /> },
+            ]}
+            rows={sorted.map(({ d, next, nextLabel, open }) => ({ key: d.id, href: `/deals/${d.id}`, cells: {
+              title: <div className="flex min-w-0 gap-3"><StageBar stage={d.stage} /><div className="min-w-0"><div className="truncate text-sm font-semibold text-fg">{d.title}</div><div className="mt-0.5 flex flex-wrap gap-1 text-[11.5px] text-muted">{d.addenda.map((a) => <Badge key={a} tone="blue">{a.replace(/_addendum$/, "")}</Badge>)}<span className="md:hidden">{t("deals.openTasks", { n: open })}</span></div></div></div>,
+              stage: <div className="flex gap-1"><Badge>{t(`type.${d.type}`)}</Badge>{!stageFilter && <StageBadge stage={d.stage} label={t(`stage.${d.stage}`)} />}</div>,
+              next: <div className="truncate text-sm">{nextLabel ?? <span className="text-muted">{t("deals.noNext")}</span>}</div>,
+              date: <div>{next && <Badge tone={dueTone(next.due_date, today)}>{next.due_date} · {relDays(next.due_date, today, t)}</Badge>}</div>,
+              open: <div className="font-mono text-sm">{open}</div>,
+            } }))} />
         )}
       </Section>
     </div>

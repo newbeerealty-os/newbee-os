@@ -11,6 +11,8 @@ import { PageHeader, Tabs, SortHeader, readSort } from "@/components/page";
 import { ContactAvatar } from "@/components/avatar";
 import { ContactCreator } from "@/components/contact-form-client";
 import { SearchBox } from "@/components/search-box";
+import { DataTable } from "@/components/data-table";
+import { getAgentSettings } from "@/lib/settings";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +23,8 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
   const tab = CONTACT_TABS.some((x) => x.id === rawTab) ? rawTab! : null;
   const supabase = await createClient();
   const t = await getT();
-  const [all, suggestions] = await Promise.all([loadContactRows(supabase, t), loadSuggestions(supabase)]);
+  const [all, suggestions, agentSettings] = await Promise.all([loadContactRows(supabase, t), loadSuggestions(supabase), getAgentSettings()]);
+  const columnOrder = ((agentSettings.columns ?? {}) as Record<string, string[]>).contacts;
   const unsorted = filterRows(all, tab, q);
   const rows = sort === "name" ? sortRows(unsorted, (r) => r.name, compareText, dir)
     : sort === "org" ? sortRows(unsorted, (r) => r.orgName, compareText, dir)
@@ -46,7 +49,6 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
   };
   const tabLabel = tab ? t(`contactTab.${tab}`) : t("contacts.all");
   const showLicense = tab === "agent";
-  const cols = showLicense ? "md:grid-cols-[1.8fr_1.1fr_1.5fr_1.1fr_.9fr_.9fr_.5fr]" : "md:grid-cols-[1.8fr_1.1fr_1.5fr_1.1fr_.9fr_.5fr]";
   const LicenseTag = ({ r }: { r: { licenseType: string | null } }) => r.licenseType === "broker" || r.licenseType === "broker_associate" ? <Badge tone="blue">{t(`licenseType.${r.licenseType}`)}</Badge> : null;
 
   return (
@@ -99,32 +101,25 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
         </div>
       ) : (
         <Section title={tabLabel} right={<span className="font-mono text-sm text-muted">{rows.length}</span>}>
-          <div className="-mx-4 -my-4">
-            <div className={`hidden gap-3 border-b border-line bg-chip/40 px-4 py-2 text-[11.5px] font-semibold text-muted md:grid ${cols}`}>
-              <SortHeader col="name" label={t("contacts.col.name")} sort={sort} dir={dir} params={hp} /><SortHeader col="org" label={t("contacts.col.org")} sort={sort} dir={dir} params={hp} /><SortHeader col="email" label={t("contacts.col.email")} sort={sort} dir={dir} params={hp} /><SortHeader col="phone" label={t("contacts.col.phone")} sort={sort} dir={dir} params={hp} /><SortHeader col="kind" label={t("contacts.col.kind")} sort={sort} dir={dir} params={hp} />{showLicense && <SortHeader col="license" label={t("contacts.col.licenseType")} sort={sort} dir={dir} params={hp} />}<SortHeader col="deals" label={t("contacts.col.deals")} sort={sort} dir={dir} params={hp} align="right" />
-            </div>
-            <ul className="divide-y divide-line">
-              {rows.map((r) => (
-                <li key={r.id}>
-                  <Link href={r.href} className={`grid gap-1 px-4 py-2.5 hover:bg-chip/40 md:items-center md:gap-3 ${cols}`}>
-                    <div className="flex min-w-0 items-center gap-2.5">
-                      <ContactAvatar initials={r.initials} avatarUrl={r.avatarUrl} photoUrl={r.photoUrl} size="sm" />
-                      <div className="min-w-0">
-                        <div className="truncate text-sm font-semibold text-fg">{r.name}</div>
-                        {r.sub && <div className="truncate text-[11.5px] text-muted">{r.sub}</div>}
-                      </div>
-                    </div>
-                    <div className="truncate text-sm text-fg">{r.orgName ?? <span className="text-muted">—</span>}</div>
-                    <div className="truncate font-mono text-xs">{r.email ?? <span className="text-muted">—</span>}</div>
-                    <div className="font-mono text-xs">{r.phone ?? <span className="text-muted">—</span>}</div>
-                    <div className="flex gap-1"><Badge tone={r.isOrg ? "zinc" : "blue"}>{r.kindLabel}</Badge>{!showLicense && <LicenseTag r={r} />}</div>
-                    {showLicense && <div className="text-xs">{r.licenseType ? (r.licenseType === "sales_agent" ? <span className="text-muted">{t("licenseType.sales_agent")}</span> : <LicenseTag r={r} />) : <span className="text-muted">—</span>}</div>}
-                    <div className="hidden text-right font-mono text-sm md:block">{r.deals}</div>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+          <DataTable table="contacts" initialOrder={columnOrder} dragHint={t("common.dragColumn")}
+            columns={[
+              { id: "name", width: "1.8fr", header: <SortHeader col="name" label={t("contacts.col.name")} sort={sort} dir={dir} params={hp} /> },
+              { id: "org", width: "1.1fr", header: <SortHeader col="org" label={t("contacts.col.org")} sort={sort} dir={dir} params={hp} /> },
+              { id: "email", width: "1.5fr", header: <SortHeader col="email" label={t("contacts.col.email")} sort={sort} dir={dir} params={hp} /> },
+              { id: "phone", width: "1.1fr", header: <SortHeader col="phone" label={t("contacts.col.phone")} sort={sort} dir={dir} params={hp} /> },
+              { id: "kind", width: ".9fr", header: <SortHeader col="kind" label={t("contacts.col.kind")} sort={sort} dir={dir} params={hp} /> },
+              ...(showLicense ? [{ id: "license", width: ".9fr", header: <SortHeader col="license" label={t("contacts.col.licenseType")} sort={sort} dir={dir} params={hp} /> }] : []),
+              { id: "deals", width: ".5fr", align: "right" as const, mobile: false, header: <SortHeader col="deals" label={t("contacts.col.deals")} sort={sort} dir={dir} params={hp} align="right" /> },
+            ]}
+            rows={rows.map((r) => ({ key: r.id, href: r.href, cells: {
+              name: <div className="flex min-w-0 items-center gap-2.5"><ContactAvatar initials={r.initials} avatarUrl={r.avatarUrl} photoUrl={r.photoUrl} size="sm" /><div className="min-w-0"><div className="truncate text-sm font-semibold text-fg">{r.name}</div>{r.sub && <div className="truncate text-[11.5px] text-muted">{r.sub}</div>}</div></div>,
+              org: <div className="truncate text-sm text-fg">{r.orgName ?? <span className="text-muted">—</span>}</div>,
+              email: <div className="truncate font-mono text-xs">{r.email ?? <span className="text-muted">—</span>}</div>,
+              phone: <div className="font-mono text-xs">{r.phone ?? <span className="text-muted">—</span>}</div>,
+              kind: <div className="flex gap-1"><Badge tone={r.isOrg ? "zinc" : "blue"}>{r.kindLabel}</Badge>{!showLicense && <LicenseTag r={r} />}</div>,
+              license: <div className="text-xs">{r.licenseType ? (r.licenseType === "sales_agent" ? <span className="text-muted">{t("licenseType.sales_agent")}</span> : <LicenseTag r={r} />) : <span className="text-muted">—</span>}</div>,
+              deals: <div className="font-mono text-sm">{r.deals}</div>,
+            } }))} />
         </Section>
       )}
     </div>

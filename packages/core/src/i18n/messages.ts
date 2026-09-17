@@ -59,6 +59,7 @@ const UI: Record<string, Message> = {
   'common.save': { zh: '保存', en: 'Save' },
   'common.search': { zh: '搜索', en: 'Search' },
   'common.searchAll': { zh: '- 所有 -', en: '- ALL -' },
+  'common.dragColumn': { zh: '拖动表头可以换列的顺序', en: 'Drag a header to reorder columns' },
   'common.reset': { zh: '恢复默认', en: 'Reset' },
   'common.delete': { zh: '删除', en: 'Delete' },
   'common.pages': { zh: '{n} 页', en: '{n} pages' },
