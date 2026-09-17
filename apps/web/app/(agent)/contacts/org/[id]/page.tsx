@@ -79,7 +79,7 @@ export default async function OrganizationPage({ params, searchParams }: { param
               ))}
             </dl>
           </Section>
-          <Section title={t("contact.peopleInOrg")} right={<span className="font-mono text-xs text-muted">{staff.length}</span>}>
+          <Section title={t("contact.peopleInOrg")} right={<span className="font-mono text-sm text-muted">{staff.length}</span>}>
             {staff.length === 0 ? <Empty>{t("contact.noPeople")}</Empty> : (
               <ul className="divide-y divide-line">
                 {staff.map((p) => (
@@ -95,7 +95,7 @@ export default async function OrganizationPage({ params, searchParams }: { param
               </ul>
             )}
           </Section>
-          <Section title={t("contact.tab.deals")} right={<span className="font-mono text-xs text-muted">{dealRows.length}</span>}>
+          <Section title={t("contact.tab.deals")} right={<span className="font-mono text-sm text-muted">{dealRows.length}</span>}>
             {dealRows.length === 0 ? <Empty>{t("contact.noDeals")}</Empty> : (
               <ul className="divide-y divide-line">
                 {dealRows.map((p) => (

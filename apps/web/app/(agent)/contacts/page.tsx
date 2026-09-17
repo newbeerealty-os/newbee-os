@@ -91,7 +91,7 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
           ))}
         </div>
       ) : (
-        <Section title={tabLabel} right={<span className="font-mono text-xs text-muted">{rows.length}</span>}>
+        <Section title={tabLabel} right={<span className="font-mono text-sm text-muted">{rows.length}</span>}>
           <div className="-mx-4 -my-4">
             <div className={`hidden gap-3 border-b border-line bg-chip/40 px-4 py-2 text-[11.5px] font-semibold text-muted md:grid ${cols}`}>
               <span>{t("contacts.col.name")}</span><span>{t("contacts.col.org")}</span><span>{t("contacts.col.email")}</span><span>{t("contacts.col.phone")}</span><span>{t("contacts.col.kind")}</span>{showLicense && <span>{t("contacts.col.licenseType")}</span>}<span className="text-right">{t("contacts.col.deals")}</span>

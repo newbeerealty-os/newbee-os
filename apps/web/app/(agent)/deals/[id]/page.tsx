@@ -128,7 +128,7 @@ export default async function DealPage({ params, searchParams }: { params: Promi
             <Stat label={t("deal.stat.closing")} value={closing?.due_date ? closing.due_date.slice(5) : "—"} sub={closing?.due_date ? relDays(closing.due_date, today, t) : undefined} />
             <Stat label={t("deal.stat.open")} value={openTasks.length} sub={`/ ${tasks.length}`} />
           </StatGrid>
-          <Section title={t("deal.next3")} right={<span className="font-mono text-xs text-muted">{upcoming.length}</span>}>
+          <Section title={t("deal.next3")} right={<span className="font-mono text-sm text-muted">{upcoming.length}</span>}>
             {upcoming.length === 0 ? <Empty>{t("deal.nothingNext")}</Empty> : (
               <ul className="divide-y divide-line">
                 {upcoming.map((u) => (
@@ -144,7 +144,7 @@ export default async function DealPage({ params, searchParams }: { params: Promi
       )}
 
       {tab === "parties" && (
-        <Section title={t("deal.tab.parties")} right={<span className="font-mono text-xs text-muted">{parties.length}</span>}>
+        <Section title={t("deal.tab.parties")} right={<span className="font-mono text-sm text-muted">{parties.length}</span>}>
           {parties.length === 0 ? <Empty>{t("parties.none")}</Empty> : (
             <div className="flex flex-col gap-4">
               {PARTY_SIDES.map((side) => {
@@ -226,7 +226,7 @@ export default async function DealPage({ params, searchParams }: { params: Promi
       )}
 
       {tab === "pending" && (
-        <Section title={t("deal.pending")} right={pending.length > 0 ? <Badge tone="amber">{t("deal.pendingHint")}</Badge> : undefined}>
+        <Section title={t("deal.pending")} right={pending.length > 0 ? <Badge tone="amber" size="md">{t("deal.pendingHint")}</Badge> : undefined}>
           {pending.length === 0 ? <Empty>{t("deal.noPending")}</Empty> : (
             <ul className="divide-y divide-line">
               {pending.map((f) => (
@@ -254,7 +254,7 @@ export default async function DealPage({ params, searchParams }: { params: Promi
       )}
 
       {tab === "fields" && (
-        <Section title={t("deal.fields")} right={<span className="font-mono text-xs text-muted">{confirmed.length}</span>}>
+        <Section title={t("deal.fields")} right={<span className="font-mono text-sm text-muted">{confirmed.length}</span>}>
           {confirmed.length === 0 ? <Empty>{t("deal.noFields")}</Empty> : (
             <div className="grid gap-4 sm:grid-cols-2">
               {GROUPS.map((g) => {
@@ -288,7 +288,7 @@ export default async function DealPage({ params, searchParams }: { params: Promi
       )}
 
       {tab === "milestones" && (
-        <Section title={t("deal.milestones")} right={<span className="font-mono text-xs text-muted">{milestones.length}</span>}>
+        <Section title={t("deal.milestones")} right={<span className="font-mono text-sm text-muted">{milestones.length}</span>}>
           {milestones.length === 0 ? <Empty>{t("deal.noMilestones")}</Empty> : (
             <ol className="relative ml-2 border-l border-line">
               {milestones.map((m) => (

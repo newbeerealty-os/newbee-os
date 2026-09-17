@@ -94,7 +94,7 @@ export default async function ThemeSettingsPage() {
           </div>
         </ThemeLivePreview>
 
-        <Section title={t("settings.location")} right={<span className="text-xs text-muted">{t("settings.sunToday", { rise: clock(sun.sunrise, tz), set: clock(sun.sunset, tz) })}</span>}>
+        <Section title={t("settings.location")} right={<span className="text-sm text-muted">{t("settings.sunToday", { rise: clock(sun.sunrise, tz), set: clock(sun.sunset, tz) })}</span>}>
           <p className="mb-3 text-xs text-muted">{t("settings.locationHint")}</p>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
             <label className="flex flex-1 flex-col gap-1 text-xs text-muted">{t("settings.lat")}

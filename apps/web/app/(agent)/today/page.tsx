@@ -42,7 +42,7 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
       ]} />
 
       {shown.map((b) => (
-        <Section key={b.id} title={t(b.key)} right={<span className="text-xs text-muted">{b.ms.length + b.ts.length}</span>}>
+        <Section key={b.id} title={t(b.key)} right={<span className="text-sm text-muted">{b.ms.length + b.ts.length}</span>}>
           {b.ms.length === 0 && b.ts.length === 0 ? (
             <Empty>{b.id === "overdue" ? t("today.noOverdue") : t("common.empty")}</Empty>
           ) : (

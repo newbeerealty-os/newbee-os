@@ -9,7 +9,8 @@ export function Section({ title, right, children }: { title: string; right?: Rea
     <section className="rounded-ui border border-line bg-surface">
       <header className="flex items-center justify-between border-b border-line px-4 py-3">
         <h2 className="text-sm font-semibold text-fg">{title}</h2>
-        {right}
+        {/* 规矩：卡片标题栏右侧的字号和左侧标题一样（text-sm） */}
+        {right && <div className="flex items-center gap-2 text-sm">{right}</div>}
       </header>
       <div className="p-4">{children}</div>
     </section>
@@ -35,9 +36,9 @@ export function Button({ children, variant = "primary", ...rest }: React.ButtonH
 
 export const inputCls = "h-10 w-full rounded-md border border-line-strong bg-surface px-3 text-sm";
 
-export function Badge({ children, tone = "zinc" }: { children: React.ReactNode; tone?: "zinc" | "blue" | "green" | "amber" | "red" }) {
+export function Badge({ children, tone = "zinc", size = "sm" }: { children: React.ReactNode; tone?: "zinc" | "blue" | "green" | "amber" | "red"; size?: "sm" | "md" }) {
   const cls = { zinc: "bg-chip text-fg", blue: "bg-info-bg text-info", green: "bg-ok-bg text-ok", amber: "bg-warn-bg text-warn", red: "bg-danger-bg text-danger" }[tone];
-  return <span className={`inline-block rounded px-1.5 py-0.5 text-xs font-medium ${cls}`}>{children}</span>;
+  return <span className={`inline-block rounded px-1.5 py-0.5 font-medium ${size === "md" ? "text-sm" : "text-xs"} ${cls}`}>{children}</span>;
 }
 
 export function dueTone(date: string | null, today: string): "zinc" | "amber" | "red" {

@@ -119,8 +119,8 @@ export default async function ContactPage({ params, searchParams }: { params: Pr
   // 首选联系方式：放在“联系方式”卡片标题右侧
   const pref = c.preferred_channel as string | null;
   const PrefTag = () => pref ? (
-    <span className="inline-flex items-center gap-1 rounded-full bg-accent-soft px-2 py-0.5 text-[11px] font-medium text-accent-strong">
-      {t("contact.preferred")} · <ChannelIcon kind={pref} className="h-3 w-3" />{t(`channel.${pref}`)} · {t(`language.${c.preferred_language}`)}
+    <span className="inline-flex items-center gap-1 rounded-full bg-accent-soft px-2 py-0.5 text-sm font-medium text-accent-strong">
+      {t("contact.preferred")} · <ChannelIcon kind={pref} className="h-3.5 w-3.5" />{t(`channel.${pref}`)} · {t(`language.${c.preferred_language}`)}
     </span>
   ) : null;
 
@@ -186,7 +186,7 @@ export default async function ContactPage({ params, searchParams }: { params: Pr
               </dl>
             </Section>
 
-            <Section title={t("contact.links")} right={<span className="font-mono text-xs text-muted">{links.length}</span>}>
+            <Section title={t("contact.links")} right={<span className="font-mono text-sm text-muted">{links.length}</span>}>
               {links.length === 0 ? <Empty>{t("contact.noLinks")}</Empty> : (
                 <ul className="divide-y divide-line">
                   {links.map((l) => (
@@ -220,7 +220,7 @@ export default async function ContactPage({ params, searchParams }: { params: Pr
 
           {/* 右栏 */}
           <div className="flex flex-col gap-4">
-            <Section title={t("contact.relatedDeals")} right={<span className="font-mono text-xs text-muted">{t("contact.relatedDealsCount", { n: rankedDeals.length })}</span>}>
+            <Section title={t("contact.relatedDeals")} right={<span className="font-mono text-sm text-muted">{t("contact.relatedDealsCount", { n: rankedDeals.length })}</span>}>
               {rankedDeals.length === 0 ? <Empty>{t("contact.noDeals")}</Empty> : (
                 <ul className="flex flex-col gap-2">
                   {rankedDeals.map((d) => { const nm = nextMs.get(d.id); return (
@@ -245,7 +245,7 @@ export default async function ContactPage({ params, searchParams }: { params: Pr
               )}
             </Section>
 
-            <Section title={t("contact.relatedContacts")} right={<span className="text-xs text-muted">{t("contact.relatedVia")}</span>}>
+            <Section title={t("contact.relatedContacts")} right={<span className="text-sm text-muted">{t("contact.relatedVia")}</span>}>
               {related.length === 0 ? <Empty>{t("contact.noRelated")}</Empty> : (
                 <ul className="grid gap-2 sm:grid-cols-2">
                   {related.map((r) => {

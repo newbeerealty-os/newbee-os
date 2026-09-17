@@ -89,7 +89,7 @@ export default async function DealsPage({ searchParams }: { searchParams: Promis
         <Stat label={t("deals.stat.open")} value={stats.open} />
       </StatGrid>
 
-      <Section title={title} right={<span className="font-mono text-xs text-muted">{deals.length}</span>}>
+      <Section title={title} right={<span className="font-mono text-sm text-muted">{deals.length}</span>}>
         {deals.length === 0 ? (
           <Empty>{needle ? t("common.noMatch") : stageFilter ? t("deals.noneInStage") : t("deals.none")}</Empty>
         ) : (
