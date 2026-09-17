@@ -48,9 +48,9 @@ export function PlanForm({ initial, l, action }: { initial: CommissionPlan; l: P
         <div className="grid gap-2 border-t border-line p-3 sm:grid-cols-2 lg:grid-cols-4">
           {PLAN_PRESET_IDS.map((id) => (
             <button key={id} type="button" onClick={() => { setPlan((p) => applyPreset(p, id)); setApplied(id); }}
-              className={`flex flex-col items-start gap-0.5 rounded-md border px-3 py-2 text-left hover:border-accent ${applied === id ? "border-accent bg-accent-soft" : "border-line-strong"}`}>
+              className={`flex min-w-0 flex-col items-start gap-0.5 whitespace-normal rounded-md border px-3 py-2 text-left hover:border-accent ${applied === id ? "border-accent bg-accent-soft" : "border-line-strong"}`}>
               <span className="text-sm font-medium text-fg">{l[`preset_${id}`]}</span>
-              <span className="text-xs text-muted">{l[`preset_${id}_desc`]}</span>
+              <span className="text-xs leading-snug text-muted">{l[`preset_${id}_desc`]}</span>
             </button>
           ))}
         </div>

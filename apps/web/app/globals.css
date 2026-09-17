@@ -51,10 +51,13 @@ body {
   font-family: var(--font-sans);
 }
 
-/* 按钮文字永不换行、不被 flex 压扁：空间不够就整个按钮换到下一排，而不是字竖排 */
-button, summary, a[role="button"] {
-  white-space: nowrap;
-  flex-shrink: 0;
+/* 按钮文字永不换行、不被 flex 压扁：空间不够就整个按钮换到下一排，而不是字竖排。
+   放在 base 层，个别要多行的按钮（比如预设卡片）可以用 whitespace-normal 覆盖 */
+@layer base {
+  button, summary, a[role="button"] {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
 }
 
 /* 手机上表单控件字号 ≥16px，避免 iOS 聚焦自动放大；桌面保持设计字号。.mobile-16 给需要和输入框对齐的覆盖层用 */
