@@ -57,6 +57,7 @@ const UI: Record<string, Message> = {
   'common.deal': { zh: '交易', en: 'Deal' },
   'common.empty': { zh: '空', en: 'Nothing here' },
   'common.save': { zh: '保存', en: 'Save' },
+  'common.search': { zh: '搜索', en: 'Search' },
   'common.reset': { zh: '恢复默认', en: 'Reset' },
   'common.delete': { zh: '删除', en: 'Delete' },
   'common.pages': { zh: '{n} 页', en: '{n} pages' },

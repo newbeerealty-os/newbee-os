@@ -10,6 +10,7 @@ import { Section, Empty, Badge, inputCls, Button } from "@/components/ui";
 import { PageHeader, Tabs } from "@/components/page";
 import { ContactAvatar } from "@/components/avatar";
 import { ContactCreator } from "@/components/contact-form-client";
+import { SearchBox } from "@/components/search-box";
 
 export const dynamic = "force-dynamic";
 
@@ -49,12 +50,7 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
               <Link href={qs({ view: null })} className={`px-3 py-2 ${view !== "cards" ? "bg-accent text-accent-ink" : "bg-surface text-muted hover:bg-chip"}`}>{t("contacts.viewTable")}</Link>
               <Link href={qs({ view: "cards" })} className={`px-3 py-2 ${view === "cards" ? "bg-accent text-accent-ink" : "bg-surface text-muted hover:bg-chip"}`}>{t("contacts.viewCards")}</Link>
             </div>
-            <form method="get" className="flex gap-1">
-              {tab && <input type="hidden" name="tab" value={tab} />}
-              {view === "cards" && <input type="hidden" name="view" value="cards" />}
-              <input name="q" defaultValue={q} placeholder={t("contacts.search")} className={`${inputCls} w-64`} />
-              <Button variant="ghost" type="submit">OK</Button>
-            </form>
+            <SearchBox placeholder={t("contacts.search")} label={t("common.search")} suggestions={[...new Set(filterRows(all, tab, "").flatMap((r) => [r.name, r.orgName ?? ""]).filter(Boolean))]} />
             <ContactCreator l={l}
               contact={{ l, ...opts, orgs, jobTitles: suggestions.jobTitles, tags: suggestions.tags, sources: suggestions.sources, defaultKind: defaults.contact, action: createContact, submitLabel: t("contacts.add"), compact: true, createOrg: createOrganizationInline }}
               org={{ l, orgKindOptions: opts.orgKindOptions, defaultKind: defaults.org, action: createOrganization, submitLabel: t("contacts.addOrg"), compact: true }} />

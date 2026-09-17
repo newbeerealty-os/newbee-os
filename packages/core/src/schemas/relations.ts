@@ -15,10 +15,17 @@ export const STAGE_COLORS: Record<DealStage, string> = {
   terminated: '#ef4444',
 };
 
+// ---------- 显示优先级 ----------
+/** deals.priority（0–100）：只由阶段决定，越初级越高；和 0007_deal_priority.sql 的触发器一致。同优先级按 sort_at 倒序。 */
+export const STAGE_PRIORITY: Record<DealStage, number> = { lead: 100, pre: 90, active: 80, offer: 70, under_contract: 60, closing: 50, closed: 20, terminated: 0 };
+export function dealPriority(stage: string): number {
+  return STAGE_PRIORITY[stage as DealStage] ?? 0;
+}
+
 // ---------- 强度：叠加式。阶段越初级越强；越近越强；（相关人再加出现次数） ----------
-const STAGE_WEIGHT: Record<DealStage, number> = { lead: 70, pre: 60, active: 50, offer: 40, under_contract: 30, closing: 20, closed: 5, terminated: 0 };
+/** 阶段分 = 优先级 × 0.7（0–70），时间分 0–10 叠加 */
 export function stageWeight(stage: string): number {
-  return STAGE_WEIGHT[stage as DealStage] ?? 0;
+  return dealPriority(stage) * 0.7;
 }
 
 const DAY = 86_400_000;

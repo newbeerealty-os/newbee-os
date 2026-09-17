@@ -6,6 +6,7 @@ import { getT } from "@/lib/i18n";
 import { Section, Button, Badge, inputCls } from "@/components/ui";
 import { SettingsTabs } from "@/components/settings-tabs";
 import { PageHeader } from "@/components/page";
+import { SearchBox } from "@/components/search-box";
 
 export const dynamic = "force-dynamic";
 
@@ -38,10 +39,7 @@ export default async function LanguageSettingsPage({ searchParams }: { searchPar
         <span className="text-xs text-muted">{t("settings.count", { n: keys.length })}</span>
       </div>
 
-      <form method="get" className="flex gap-2">
-        <input name="q" defaultValue={q} placeholder={t("settings.filter")} className={inputCls} />
-        <Button variant="ghost" type="submit">OK</Button>
-      </form>
+      <SearchBox placeholder={t("settings.filter")} label={t("common.search")} suggestions={Object.keys(MESSAGES)} widthClass="w-80" />
 
       {Array.from(byNs.entries()).map(([ns, list]) => (
         <Section key={ns} title={`${ns} · ${list.length}`}>

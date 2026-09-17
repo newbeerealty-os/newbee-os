@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { STAGE_COLORS, DEAL_STAGES, stageWeight, dealStrength, rankDeals, rankRelated, CONTACT_RELATIONS, inverseRelation, SOURCE_PRESETS } from '../src/schemas/relations';
+import { STAGE_COLORS, DEAL_STAGES, STAGE_PRIORITY, dealPriority, stageWeight, dealStrength, rankDeals, rankRelated, CONTACT_RELATIONS, inverseRelation, SOURCE_PRESETS } from '../src/schemas/relations';
 import { MESSAGES } from '../src/i18n';
 
 const now = new Date('2026-09-16T12:00:00Z');
@@ -10,6 +10,17 @@ describe('交易阶段颜色', () => {
     for (const s of DEAL_STAGES) expect(STAGE_COLORS[s]).toMatch(/^#[0-9a-f]{6}$/i);
     for (const r of CONTACT_RELATIONS) expect(MESSAGES[`relation.${r}`], r).toBeDefined();
     for (const s of SOURCE_PRESETS) expect(s.trim()).toBeTruthy();
+  });
+});
+
+describe('显示优先级', () => {
+  it('0–100，阶段越初级越高，closed 20、terminated 0，未知阶段 0', () => {
+    const p = DEAL_STAGES.map(dealPriority);
+    for (let i = 1; i < p.length; i++) expect(p[i]).toBeLessThan(p[i - 1]);
+    expect(STAGE_PRIORITY.lead).toBe(100);
+    expect(STAGE_PRIORITY.closed).toBe(20);
+    expect(STAGE_PRIORITY.terminated).toBe(0);
+    expect(dealPriority('bogus')).toBe(0);
   });
 });
 

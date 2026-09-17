@@ -464,7 +464,9 @@ export type Database = {
           playbook_id: string | null
           playbook_version: number | null
           primary_contact_id: string | null
+          priority: number
           property_id: string | null
+          sort_at: string
           stage: Database["public"]["Enums"]["deal_stage"]
           terminated_at: string | null
           title: string
@@ -482,7 +484,9 @@ export type Database = {
           playbook_id?: string | null
           playbook_version?: number | null
           primary_contact_id?: string | null
+          priority?: number
           property_id?: string | null
+          sort_at?: string
           stage?: Database["public"]["Enums"]["deal_stage"]
           terminated_at?: string | null
           title: string
@@ -500,7 +504,9 @@ export type Database = {
           playbook_id?: string | null
           playbook_version?: number | null
           primary_contact_id?: string | null
+          priority?: number
           property_id?: string | null
+          sort_at?: string
           stage?: Database["public"]["Enums"]["deal_stage"]
           terminated_at?: string | null
           title?: string

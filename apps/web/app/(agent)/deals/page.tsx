@@ -9,6 +9,7 @@ import { todayISO, relDays } from "@/lib/format";
 import { Section, Empty, Button, Badge, inputCls, dueTone } from "@/components/ui";
 import { PageHeader, Stat, StatGrid } from "@/components/page";
 import { StageBar, StageBadge } from "@/components/stage";
+import { SearchBox } from "@/components/search-box";
 
 export const dynamic = "force-dynamic";
 
@@ -23,8 +24,8 @@ export default async function DealsPage({ searchParams }: { searchParams: Promis
   const horizon = addCalendarDays(today, 7);
 
   const [{ data }, { data: fv }, { data: pv }] = await Promise.all([
-    supabase.from("deals").select("id,title,type,stage,addenda,created_at,milestones(key,label,due_date,status),tasks(id,done_at,deleted_at)").is("deleted_at", null).order("created_at", { ascending: false }),
-    supabase.from("deal_fields_current").select("deal_id,value_text,value_num").not("confirmed_at", "is", null),
+    supabase.from("deals").select("id,title,type,stage,addenda,created_at,priority,sort_at,milestones(key,label,due_date,status),tasks(id,done_at,deleted_at)").is("deleted_at", null).order("priority", { ascending: false }).order("sort_at", { ascending: false }),
+    supabase.from("deal_fields_current").select("deal_id,key,value_text,value_num").not("confirmed_at", "is", null),
     supabase.from("deal_parties").select("deal_id,contacts(first_name,last_name,name_zh),organizations(name)").is("deleted_at", null),
   ]);
   type Row = { id: string; title: string; type: string; stage: string; addenda: string[]; milestones: { key: string; label: string; due_date: string | null; status: string }[]; tasks: { id: string; done_at: string | null; deleted_at: string | null }[] };
@@ -33,7 +34,10 @@ export default async function DealsPage({ searchParams }: { searchParams: Promis
   const index = new Map<string, string[]>();
   const push = (id: string, ...xs: (string | number | null | undefined)[]) => index.set(id, [...(index.get(id) ?? []), ...xs.filter((x) => x !== null && x !== undefined && x !== "").map(String)]);
   for (const d of all) push(d.id, d.title, ...d.addenda);
-  for (const r of (fv ?? []) as { deal_id: string; value_text: string | null; value_num: number | null }[]) push(r.deal_id, r.value_text, r.value_num);
+  const fieldRows = (fv ?? []) as { deal_id: string; key: string; value_text: string | null; value_num: number | null }[];
+  for (const r of fieldRows) push(r.deal_id, r.value_text, r.value_num);
+  // 搜索候选：标题 + 房产地址
+  const suggestions = [...new Set([...all.map((d) => d.title), ...fieldRows.filter((r) => r.key === "property_address" && r.value_text).map((r) => r.value_text!)])];
   type One<T> = T | T[] | null;
   const one = <T,>(x: One<T>): T | null => (Array.isArray(x) ? x[0] ?? null : x);
   for (const p of (pv ?? []) as unknown as { deal_id: string; contacts: One<{ first_name: string; last_name: string; name_zh: string | null }>; organizations: One<{ name: string }> }[]) {
@@ -64,11 +68,7 @@ export default async function DealsPage({ searchParams }: { searchParams: Promis
       <PageHeader crumbs={[{ label: t("nav.deals"), href: "/deals" }, { label: stageFilter ? t(`stage.${stageFilter}`) : t("deals.stageAll") }]} title={title} subnav={subnav}
         actions={
           <>
-          <form method="get" className="flex gap-1">
-            {stageFilter && <input type="hidden" name="stage" value={stageFilter} />}
-            <input name="q" defaultValue={q} placeholder={t("deals.search")} className={`${inputCls} w-64`} />
-            <Button variant="ghost" type="submit">OK</Button>
-          </form>
+          <SearchBox placeholder={t("deals.search")} label={t("common.search")} suggestions={suggestions} />
           <details className="relative">
             <summary className="flex h-10 cursor-pointer list-none items-center rounded-md bg-accent px-3 text-sm font-medium text-accent-ink hover:bg-accent-strong">{t("deals.new")}</summary>
             <form action={createDeal} className="absolute right-0 z-10 mt-2 flex w-[min(90vw,380px)] flex-col gap-2 rounded-ui border border-line bg-surface p-3 shadow-xl">

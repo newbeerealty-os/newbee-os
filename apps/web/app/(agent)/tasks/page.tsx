@@ -5,6 +5,7 @@ import { getT } from "@/lib/i18n";
 import { todayISO } from "@/lib/format";
 import { Section, Empty, Button, inputCls, TaskItem, type TaskRow } from "@/components/ui";
 import { PageHeader } from "@/components/page";
+import { SearchBox } from "@/components/search-box";
 
 export const dynamic = "force-dynamic";
 
@@ -20,7 +21,9 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
   ]);
   type Raw = TaskRow & { deals: { title: string } | { title: string }[] | null };
   const needle = q.trim().toLowerCase();
-  const tasks: TaskRow[] = ((ts ?? []) as unknown as Raw[]).map((x) => ({ ...x, deal_title: Array.isArray(x.deals) ? x.deals[0]?.title : x.deals?.title }))
+  const allTasks: TaskRow[] = ((ts ?? []) as unknown as Raw[]).map((x) => ({ ...x, deal_title: Array.isArray(x.deals) ? x.deals[0]?.title : x.deals?.title }));
+  const suggestions = [...new Set(allTasks.flatMap((x) => [x.playbook_rule_id ? t.or(`task.${x.playbook_rule_id}`, x.title) : x.title, x.deal_title ?? ""]).filter(Boolean))];
+  const tasks: TaskRow[] = allTasks
     .filter((x) => !needle || [x.title, x.playbook_rule_id ? t.or(`task.${x.playbook_rule_id}`, x.title) : "", x.deal_title].join(" ").toLowerCase().includes(needle));
   const deals = (ds ?? []) as { id: string; title: string }[];
 
@@ -41,11 +44,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
         ]}
         actions={
           <>
-          <form method="get" className="flex gap-1">
-            {personalOnly && <input type="hidden" name="scope" value="personal" />}
-            <input name="q" defaultValue={q} placeholder={t("tasks.search")} className={`${inputCls} w-56`} />
-            <Button variant="ghost" type="submit">OK</Button>
-          </form>
+          <SearchBox placeholder={t("tasks.search")} label={t("common.search")} suggestions={suggestions} widthClass="w-56" />
           <details className="relative">
             <summary className="flex h-10 cursor-pointer list-none items-center rounded-md bg-accent px-3 text-sm font-medium text-accent-ink hover:bg-accent-strong">{t("tasks.add")}</summary>
             <form action={addTask} className="absolute right-0 z-10 mt-2 flex w-[min(90vw,380px)] flex-col gap-2 rounded-ui border border-line bg-surface p-3 shadow-xl">
