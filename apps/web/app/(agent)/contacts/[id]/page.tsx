@@ -116,15 +116,13 @@ export default async function ContactPage({ params, searchParams }: { params: Pr
   const Row = ({ k, icon, children }: { k: string; icon?: string; children: React.ReactNode }) => (
     <div className="flex items-start gap-2"><dt className="flex w-20 shrink-0 items-center gap-1 pt-0.5 text-xs text-muted">{icon && <ChannelIcon kind={icon} className="h-3.5 w-3.5" />}{k}</dt><dd className="flex min-w-0 flex-wrap items-center gap-1">{children}</dd></div>
   );
-  // 首选联系方式挂在对应那一行：短信 / WhatsApp 挂电话行
+  // 首选联系方式：放在“联系方式”卡片标题右侧
   const pref = c.preferred_channel as string | null;
-  const prefRow = pref === "email" ? "email" : pref === "wechat" ? "wechat" : pref ? "phone" : null;
   const PrefTag = () => pref ? (
-    <span className="ml-1 inline-flex items-center gap-1 rounded-full bg-accent-soft px-2 py-0.5 text-[11px] font-medium text-accent-strong">
+    <span className="inline-flex items-center gap-1 rounded-full bg-accent-soft px-2 py-0.5 text-[11px] font-medium text-accent-strong">
       {t("contact.preferred")} · <ChannelIcon kind={pref} className="h-3 w-3" />{t(`channel.${pref}`)} · {t(`language.${c.preferred_language}`)}
     </span>
   ) : null;
-  const hasPrefRow = (prefRow === "phone" && c.phone) || (prefRow === "email" && c.email) || (prefRow === "wechat" && c.wechat);
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-4">
@@ -174,12 +172,11 @@ export default async function ContactPage({ params, searchParams }: { params: Pr
               </div>
             </div>
 
-            <Section title={t("contact.details")}>
+            <Section title={t("contact.details")} right={<PrefTag />}>
               <dl className="flex flex-col gap-2 text-sm">
-                {c.phone && <Row k={t("contact.f.phone")} icon="phone"><a href={`tel:${c.phone}`} className="rounded bg-chip px-2 py-0.5 font-mono hover:text-accent">{c.phone}</a><CopyButton text={c.phone} label={t("contact.copy")} doneLabel={t("contact.copied")} />{prefRow === "phone" && <PrefTag />}</Row>}
-                {c.email && <Row k={t("contact.f.email")} icon="email"><a href={`mailto:${c.email}`} className="truncate rounded bg-chip px-2 py-0.5 font-mono hover:text-accent">{c.email}</a><CopyButton text={c.email} label={t("contact.copy")} doneLabel={t("contact.copied")} />{prefRow === "email" && <PrefTag />}</Row>}
-                {c.wechat && <Row k={t("contact.f.wechat")} icon="wechat"><span className="rounded bg-chip px-2 py-0.5 font-mono">{c.wechat}</span><CopyButton text={c.wechat} label={t("contact.copy")} doneLabel={t("contact.copied")} />{prefRow === "wechat" && <PrefTag />}</Row>}
-                {!hasPrefRow && pref && <Row k={t("contact.f.preferredChannel")}><PrefTag /></Row>}
+                {c.phone && <Row k={t("contact.f.phone")} icon="phone"><a href={`tel:${c.phone}`} className="rounded bg-chip px-2 py-0.5 font-mono hover:text-accent">{c.phone}</a><CopyButton text={c.phone} label={t("contact.copy")} doneLabel={t("contact.copied")} /></Row>}
+                {c.email && <Row k={t("contact.f.email")} icon="email"><a href={`mailto:${c.email}`} className="truncate rounded bg-chip px-2 py-0.5 font-mono hover:text-accent">{c.email}</a><CopyButton text={c.email} label={t("contact.copy")} doneLabel={t("contact.copied")} /></Row>}
+                {c.wechat && <Row k={t("contact.f.wechat")} icon="wechat"><span className="rounded bg-chip px-2 py-0.5 font-mono">{c.wechat}</span><CopyButton text={c.wechat} label={t("contact.copy")} doneLabel={t("contact.copied")} /></Row>}
                 {address && <Row k={t("contact.f.address")}><span>{address}</span></Row>}
                 {c.kind === "agent" && <Row k={t("contact.f.licenseType")}><span>{t(`licenseType.${c.license_type ?? "sales_agent"}`)}</span></Row>}
                 {c.license_no && <Row k={t("contact.f.licenseNo")}><span className="font-mono">{c.license_no}</span></Row>}
