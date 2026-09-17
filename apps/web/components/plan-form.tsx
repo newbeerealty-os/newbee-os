@@ -2,6 +2,7 @@
 // 设置 › 佣金方案：一键预设 + 六个模块开关（关掉的折叠、计算按 0）+ 固定周期费列表。保存走 server action。
 import { useState } from "react";
 import { Button } from "@/components/button";
+import { MoneyInput } from "@/components/money-input";
 import { applyPreset, recurringPerPeriod, PLAN_PRESET_IDS, PLAN_MODULES, RECURRING_PERIODS, type CommissionPlan, type PlanModule, type PlanPresetId, type RecurringFee } from "@newbee/core";
 
 export type PlanLabels = Record<string, string>;
@@ -42,6 +43,10 @@ export function PlanForm({ initial, l, action }: { initial: CommissionPlan; l: P
       onBlur={() => setDraft((d) => { const { [k]: _, ...rest } = d; return rest; })}
       className={`${inputCls} font-mono`} />
   );
+  // 钱：离开后显示 $ 格式 + "x 万"
+  const money = (k: keyof CommissionPlan) => (
+    <MoneyInput value={draft[k] ?? String(plan[k] ?? "")} onChange={(raw) => { setDraft((d) => ({ ...d, [k]: raw })); set(k, toNum(raw) as never); }} />
+  );
   const mod = (id: PlanModule) => ({ on: plan.modules[id], onLabel: l.on, offLabel: l.off, onToggle: () => toggle(id) });
 
   return (
@@ -67,13 +72,13 @@ export function PlanForm({ initial, l, action }: { initial: CommissionPlan; l: P
 
       <Mod {...mod("perDeal")} title={l.perDeal}>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <F label={l.perDealFee}>{num("perDealFee")}</F>
-          <F label={l.perDealFeeLease}>{num("perDealFeeLease")}</F>
-          {plan.modules.cap && <F label={l.perDealFeePostCap}>{num("perDealFeePostCap")}</F>}
-          <F label={l.perDealFeeCap}>{num("perDealFeeCap")}</F>
-          {plan.modules.perDeal && plan.perDealFeeCap > 0 && <F label={l.perDealFeeAfterCap}>{num("perDealFeeAfterCap")}</F>}
-          <F label={l.eoFee}>{num("eoFee")}</F>
-          <F label={l.eoCap}>{num("eoCap")}</F>
+          <F label={l.perDealFee}>{money("perDealFee")}</F>
+          <F label={l.perDealFeeLease}>{money("perDealFeeLease")}</F>
+          {plan.modules.cap && <F label={l.perDealFeePostCap}>{money("perDealFeePostCap")}</F>}
+          <F label={l.perDealFeeCap}>{money("perDealFeeCap")}</F>
+          {plan.modules.perDeal && plan.perDealFeeCap > 0 && <F label={l.perDealFeeAfterCap}>{money("perDealFeeAfterCap")}</F>}
+          <F label={l.eoFee}>{money("eoFee")}</F>
+          <F label={l.eoCap}>{money("eoCap")}</F>
         </div>
       </Mod>
       <Mod {...mod("recurring")} title={l.recurring}>
@@ -100,7 +105,7 @@ export function PlanForm({ initial, l, action }: { initial: CommissionPlan; l: P
       </Mod>
       <Mod {...mod("cap")} title={l.cap}>
         <div className="grid gap-3 sm:grid-cols-2">
-          <F label={l.capAmount} hint={l.capHint}>{num("capAmount")}</F>
+          <F label={l.capAmount} hint={l.capHint}>{money("capAmount")}</F>
           <F label={l.capYearStart}><input value={plan.capYearStart} onChange={(e) => set("capYearStart", e.target.value)} placeholder="01-01" className={`${inputCls} font-mono`} /></F>
         </div>
       </Mod>
@@ -108,13 +113,13 @@ export function PlanForm({ initial, l, action }: { initial: CommissionPlan; l: P
         <Mod {...mod("royalty")} title={l.royalty}>
           <div className="grid gap-3">
             <F label={l.royaltyPct}>{num("royaltyPct", "0.1")}</F>
-            <F label={l.royaltyCap}>{num("royaltyCap")}</F>
+            <F label={l.royaltyCap}>{money("royaltyCap")}</F>
           </div>
         </Mod>
         <Mod {...mod("team")} title={l.team}>
           <div className="grid gap-3">
             <F label={l.teamPct}>{num("teamPct", "0.5")}</F>
-            <F label={l.teamCap}>{num("teamCap")}</F>
+            <F label={l.teamCap}>{money("teamCap")}</F>
             <F label={l.teamBasis}>
               <select value={plan.teamBasis} onChange={(e) => set("teamBasis", e.target.value as CommissionPlan["teamBasis"])} className={inputCls}><option value="after_broker">{l.teamBasis_after_broker}</option><option value="gci">{l.teamBasis_gci}</option></select>
             </F>
@@ -137,7 +142,7 @@ function TiersEditor({ rows, onChange, l }: { rows: Tier[]; onChange: (rows: Tie
         <div key={i} className="grid grid-cols-[1.4fr_1fr_auto] items-center gap-2">
           {i === list.length - 1
             ? <span className="px-1 text-sm text-muted">{l["tiers.last"]}</span>
-            : <input value={r.upTo ?? ""} inputMode="decimal" onChange={(e) => upd(i, { upTo: toNum(e.target.value) })} className={`${inputCls} font-mono`} />}
+            : <MoneyInput value={String(r.upTo ?? "")} onChange={(raw) => upd(i, { upTo: toNum(raw) })} />}
           <input value={r.pct} inputMode="decimal" onChange={(e) => upd(i, { pct: toNum(e.target.value) })} className={`${inputCls} font-mono`} />
           <button type="button" disabled={list.length <= 1} onClick={() => onChange(list.filter((_, j) => j !== i).map((x, j, a) => (j === a.length - 1 ? { ...x, upTo: null } : x)))} className="w-5 text-muted hover:text-danger disabled:opacity-30">✕</button>
         </div>
@@ -158,7 +163,7 @@ function RecurringFeesEditor({ rows, onChange, l }: { rows: RecurringFee[]; onCh
       {rows.map((r, i) => (
         <div key={i} className="grid grid-cols-[1.5fr_1fr_1fr_auto] gap-2">
           <input value={r.name} placeholder={l.recurringName} onChange={(e) => upd(i, { name: e.target.value })} className={inputCls} />
-          <input value={r.amount} inputMode="decimal" placeholder={l.recurringAmount} onChange={(e) => upd(i, { amount: toNum(e.target.value) })} className={`${inputCls} font-mono`} />
+          <MoneyInput value={String(r.amount)} placeholder={l.recurringAmount} onChange={(raw) => upd(i, { amount: toNum(raw) })} />
           <select value={r.period} onChange={(e) => upd(i, { period: e.target.value as RecurringFee["period"] })} className={inputCls}>{RECURRING_PERIODS.map((p) => <option key={p} value={p}>{l[`period_${p}`]}</option>)}</select>
           <button type="button" onClick={() => onChange(rows.filter((_, j) => j !== i))} className="w-5 text-muted hover:text-danger" title={l.remove}>✕</button>
         </div>

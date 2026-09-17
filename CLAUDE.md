@@ -22,6 +22,7 @@ pnpm monorepo · TypeScript · Next.js App Router + Tailwind（shadcn/ui 按需 
 - 抽取结果里数值 / 日期字段、或 `confidence < 0.9` 的，必须进待确认队列，**不得自动派生**。
 - 失败必须落 `documents.status = 'failed'` + `error`，禁止静默吞错。
 - 界面文案一律走 `packages/core/src/i18n/messages.ts`（中英都要有），**并且必须放进"设置 › 语言 / 翻译"对应页面的复刻**（`apps/web/components/i18n-replicas.tsx`）——新增菜单、表格、按钮、提示都要在复刻里出现，`apps/web/test` 会检查每条文案都被放置，漏了 `pnpm test` 直接挂。
+- **钱的输入框一律用 `MoneyInput`**（`components/money-input.tsx`）：聚焦时裸数字，离开后显示 `$450,000`，一万以上右侧标"45 万"（英文 450K）；格式函数在 core `money.ts`。
 - **每个按钮按完必须有反馈**：server action 成功后调 `setFlash("saved" | "created" | "deleted" | …)`（`apps/web/lib/flash.ts`），右下角自动弹提示；要跳转就 redirect 到能看到结果的页面（同样先 setFlash）。提交按钮一律用 `Button`（`components/button.tsx`，提交中自带转圈 + 禁用），不要手写 `<button type="submit">`。出错直接 throw，(agent)/error.tsx 会显示原文 + 重试。客户端自己完成的动作用 `toast()`。提示要短，不啰嗦。
 - **永远不读、不打印、不复制 `.env*` 文件里的值**；需要新的环境变量就在 `.env.example` 加一行占位并告诉我去填。
 

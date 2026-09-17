@@ -2,6 +2,7 @@
 // 佣金表单：左边输入（$ / % 切换、推荐费付出、自定义扣费），右边实时明细（core computeCommission）。
 import { useMemo, useState } from "react";
 import { Button } from "@/components/button";
+import { MoneyInput } from "@/components/money-input";
 import { computeCommission, type CommissionPlan, type CommissionSide, type CustomFee, type YearToDate } from "@newbee/core";
 
 export type Opt = { value: string; label: string };
@@ -22,8 +23,10 @@ function AmountInput({ basis, onBasis, value, onValue, name, l }: { basis: "pct"
     <div className="flex gap-1">
       <input type="hidden" name={`${name}_basis`} value={basis} />
       <input type="hidden" name={basis === "pct" ? `${name}_pct` : `${name}_flat`} value={value} />
-      <input value={value} onChange={(e) => onValue(e.target.value)} inputMode="decimal" className={`${inputCls} font-mono`} />
-      <div className="flex overflow-hidden rounded-md border border-line-strong">
+      {basis === "flat"
+        ? <MoneyInput value={value} onChange={onValue} className="flex-1" />
+        : <input value={value} onChange={(e) => onValue(e.target.value)} inputMode="decimal" className={`${inputCls} font-mono`} />}
+      <div className="flex shrink-0 overflow-hidden rounded-md border border-line-strong">
         {(["flat", "pct"] as const).map((b) => <button key={b} type="button" onClick={() => onBasis(b)} className={`w-9 text-sm font-medium ${basis === b ? "bg-accent text-accent-ink" : "bg-surface text-muted hover:bg-chip"}`}>{b === "flat" ? "$" : "%"}</button>)}
       </div>
     </div>
@@ -85,7 +88,7 @@ export function CommissionForm(p: CommissionFormProps) {
           </>
         )}
         {p.prefillHint && <p className="text-xs text-muted">{p.prefillHint}</p>}
-        <F label={p.l.price}><input value={price} onChange={(e) => setPrice(e.target.value)} inputMode="decimal" className={`${inputCls} font-mono`} /></F>
+        <F label={p.l.price}><MoneyInput value={price} onChange={setPrice} /></F>
         <F label={p.l.amount}><AmountInput basis={basis} onBasis={(b) => { setBasis(b); }} value={amount} onValue={setAmount} name="x" l={p.l} /></F>
         <input type="hidden" name="basis" value={basis} /><input type="hidden" name="pct" value={basis === "pct" ? amount : ""} /><input type="hidden" name="flat" value={basis === "flat" ? amount : ""} />
         {p.kind === "deal" ? (
@@ -102,7 +105,9 @@ export function CommissionForm(p: CommissionFormProps) {
             <div key={i} className="grid grid-cols-[1.4fr_1fr_1fr_auto] gap-2">
               <input value={f.name} placeholder={p.l.feeName} onChange={(e) => setFees(fees.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))} className={inputCls} />
               <select value={f.basis} onChange={(e) => setFees(fees.map((x, j) => (j === i ? { ...x, basis: e.target.value as CustomFee["basis"] } : x)))} className={inputCls}>{(["flat", "pct_of_gci", "pct_of_price"] as const).map((b) => <option key={b} value={b}>{p.l[`feeBasis_${b}`]}</option>)}</select>
-              <input value={f.value} inputMode="decimal" onChange={(e) => setFees(fees.map((x, j) => (j === i ? { ...x, value: toNum(e.target.value) } : x)))} className={`${inputCls} font-mono`} />
+              {f.basis === "flat"
+                ? <MoneyInput value={String(f.value)} onChange={(raw) => setFees(fees.map((x, j) => (j === i ? { ...x, value: toNum(raw) } : x)))} />
+                : <input value={f.value} inputMode="decimal" onChange={(e) => setFees(fees.map((x, j) => (j === i ? { ...x, value: toNum(e.target.value) } : x)))} className={`${inputCls} font-mono`} />}
               <button type="button" onClick={() => setFees(fees.filter((_, j) => j !== i))} className="text-muted hover:text-danger">✕</button>
             </div>
           ))}
