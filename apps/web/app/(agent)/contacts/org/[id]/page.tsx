@@ -10,6 +10,7 @@ import { PageHeader } from "@/components/page";
 import { InitialsAvatar } from "@/components/contact-forms";
 import { ContactAvatar } from "@/components/avatar";
 import { avatarUrlsFor } from "@/lib/avatars";
+import { ChannelIcon } from "@/components/channel-icon";
 import { OrganizationFormClient } from "@/components/contact-form-client";
 import { contactFormLabels, contactFormOptions } from "@/lib/contact-form-props";
 
@@ -35,10 +36,10 @@ export default async function OrganizationPage({ params, searchParams }: { param
   const base = `/contacts/org/${id}`;
   const tabOf = CONTACT_TABS.find((x) => (x.orgKinds as string[]).includes(o.kind))?.id;
 
-  const rows: [string, React.ReactNode][] = [
+  const rows: [React.ReactNode, React.ReactNode][] = [
     [t("contact.f.kind"), <Badge key="k">{t(`orgKind.${o.kind}`)}</Badge>],
-    [t("contact.f.email"), o.email ? <a key="e" href={`mailto:${o.email}`} className="font-mono text-accent hover:underline">{o.email}</a> : null],
-    [t("contact.f.phone"), o.phone ? <a key="p" href={`tel:${o.phone}`} className="font-mono text-accent hover:underline">{o.phone}</a> : null],
+    [<span key="ke" className="inline-flex items-center gap-1"><ChannelIcon kind="email" className="h-3.5 w-3.5" />{t("contact.f.email")}</span>, o.email ? <a key="e" href={`mailto:${o.email}`} className="font-mono text-accent hover:underline">{o.email}</a> : null],
+    [<span key="kp" className="inline-flex items-center gap-1"><ChannelIcon kind="phone" className="h-3.5 w-3.5" />{t("contact.f.phone")}</span>, o.phone ? <a key="p" href={`tel:${o.phone}`} className="font-mono text-accent hover:underline">{o.phone}</a> : null],
     [t("contact.f.website"), o.website ? <a key="w" href={o.website.startsWith("http") ? o.website : `https://${o.website}`} target="_blank" rel="noreferrer" className="font-mono text-accent hover:underline">{o.website}</a> : null],
     [t("contact.f.licenseNo"), o.license_no ? <span key="l" className="font-mono">{o.license_no}</span> : null],
     [t("contact.f.address"), [o.address_line1, o.address_line2, [o.city, o.state, o.zip].filter(Boolean).join(" ")].filter(Boolean).join(", ") || null],
@@ -73,8 +74,8 @@ export default async function OrganizationPage({ params, searchParams }: { param
         <>
           <Section title={t("contact.tab.profile")}>
             <dl className="grid gap-x-6 gap-y-1 text-sm sm:grid-cols-2">
-              {rows.filter(([, val]) => val !== null && val !== undefined && val !== "").map(([k, val]) => (
-                <div key={k} className="flex justify-between gap-3 border-b border-line py-1.5"><dt className="text-muted">{k}</dt><dd className="text-right font-medium text-fg">{val}</dd></div>
+              {rows.filter(([, val]) => val !== null && val !== undefined && val !== "").map(([k, val], i) => (
+                <div key={i} className="flex justify-between gap-3 border-b border-line py-1.5"><dt className="text-muted">{k}</dt><dd className="text-right font-medium text-fg">{val}</dd></div>
               ))}
             </dl>
           </Section>

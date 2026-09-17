@@ -307,6 +307,7 @@ const UI: Record<string, Message> = {
   'relation.assistant': { zh: '助理', en: 'Assistant' },
   'relation.colleague': { zh: '同事', en: 'Colleague' },
   'relation.other': { zh: '其他', en: 'Other' },
+  'contact.preferred': { zh: '首选', en: 'Preferred' },
   'channel.phone': { zh: '电话', en: 'Phone' },
   'channel.sms': { zh: '短信', en: 'SMS' },
   'channel.email': { zh: '邮件', en: 'Email' },

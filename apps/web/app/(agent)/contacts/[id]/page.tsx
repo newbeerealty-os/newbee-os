@@ -15,6 +15,7 @@ import { PageHeader } from "@/components/page";
 import { ContactAvatar, PhotoGallery, type PhotoItem } from "@/components/avatar";
 import { StageBar, StageBadge } from "@/components/stage";
 import { CopyButton } from "@/components/copy-button";
+import { ChannelIcon } from "@/components/channel-icon";
 
 export const dynamic = "force-dynamic";
 
@@ -112,7 +113,18 @@ export default async function ContactPage({ params, searchParams }: { params: Pr
   const tabOf = CONTACT_TABS.find((x) => (x.kinds as string[]).includes(c.kind))?.id;
   const address = [c.address_line1, c.address_line2, [c.city, c.state, c.zip].filter(Boolean).join(" ")].filter(Boolean).join(", ");
   const pl = (p: Person) => `${contactName(p)}${p.name_zh ? ` · ${p.name_zh}` : ""}`;
-  const Row = ({ k, children }: { k: string; children: React.ReactNode }) => <div className="flex items-start gap-2"><dt className="w-20 shrink-0 pt-0.5 text-xs text-muted">{k}</dt><dd className="flex min-w-0 items-center">{children}</dd></div>;
+  const Row = ({ k, icon, children }: { k: string; icon?: string; children: React.ReactNode }) => (
+    <div className="flex items-start gap-2"><dt className="flex w-20 shrink-0 items-center gap-1 pt-0.5 text-xs text-muted">{icon && <ChannelIcon kind={icon} className="h-3.5 w-3.5" />}{k}</dt><dd className="flex min-w-0 flex-wrap items-center gap-1">{children}</dd></div>
+  );
+  // 首选联系方式挂在对应那一行：短信 / WhatsApp 挂电话行
+  const pref = c.preferred_channel as string | null;
+  const prefRow = pref === "email" ? "email" : pref === "wechat" ? "wechat" : pref ? "phone" : null;
+  const PrefTag = () => pref ? (
+    <span className="ml-1 inline-flex items-center gap-1 rounded-full bg-accent-soft px-2 py-0.5 text-[11px] font-medium text-accent-strong">
+      {t("contact.preferred")} · <ChannelIcon kind={pref} className="h-3 w-3" />{t(`channel.${pref}`)} · {t(`language.${c.preferred_language}`)}
+    </span>
+  ) : null;
+  const hasPrefRow = (prefRow === "phone" && c.phone) || (prefRow === "email" && c.email) || (prefRow === "wechat" && c.wechat);
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-4">
@@ -164,11 +176,11 @@ export default async function ContactPage({ params, searchParams }: { params: Pr
 
             <Section title={t("contact.details")}>
               <dl className="flex flex-col gap-2 text-sm">
-                {c.phone && <Row k={t("contact.f.phone")}><a href={`tel:${c.phone}`} className="rounded bg-chip px-2 py-0.5 font-mono hover:text-accent">{c.phone}</a><CopyButton text={c.phone} label={t("contact.copy")} doneLabel={t("contact.copied")} /></Row>}
-                {c.email && <Row k={t("contact.f.email")}><a href={`mailto:${c.email}`} className="truncate rounded bg-chip px-2 py-0.5 font-mono hover:text-accent">{c.email}</a><CopyButton text={c.email} label={t("contact.copy")} doneLabel={t("contact.copied")} /></Row>}
-                {c.wechat && <Row k={t("contact.f.wechat")}><span className="rounded bg-chip px-2 py-0.5 font-mono">{c.wechat}</span><CopyButton text={c.wechat} label={t("contact.copy")} doneLabel={t("contact.copied")} /></Row>}
+                {c.phone && <Row k={t("contact.f.phone")} icon="phone"><a href={`tel:${c.phone}`} className="rounded bg-chip px-2 py-0.5 font-mono hover:text-accent">{c.phone}</a><CopyButton text={c.phone} label={t("contact.copy")} doneLabel={t("contact.copied")} />{prefRow === "phone" && <PrefTag />}</Row>}
+                {c.email && <Row k={t("contact.f.email")} icon="email"><a href={`mailto:${c.email}`} className="truncate rounded bg-chip px-2 py-0.5 font-mono hover:text-accent">{c.email}</a><CopyButton text={c.email} label={t("contact.copy")} doneLabel={t("contact.copied")} />{prefRow === "email" && <PrefTag />}</Row>}
+                {c.wechat && <Row k={t("contact.f.wechat")} icon="wechat"><span className="rounded bg-chip px-2 py-0.5 font-mono">{c.wechat}</span><CopyButton text={c.wechat} label={t("contact.copy")} doneLabel={t("contact.copied")} />{prefRow === "wechat" && <PrefTag />}</Row>}
+                {!hasPrefRow && pref && <Row k={t("contact.f.preferredChannel")}><PrefTag /></Row>}
                 {address && <Row k={t("contact.f.address")}><span>{address}</span></Row>}
-                <Row k={t("contact.f.preferredChannel")}><span className="text-muted">{c.preferred_channel ? t(`channel.${c.preferred_channel}`) : "—"} · {t(`language.${c.preferred_language}`)}</span></Row>
                 {c.kind === "agent" && <Row k={t("contact.f.licenseType")}><span>{t(`licenseType.${c.license_type ?? "sales_agent"}`)}</span></Row>}
                 {c.license_no && <Row k={t("contact.f.licenseNo")}><span className="font-mono">{c.license_no}</span></Row>}
                 {c.source && <Row k={t("contact.f.source")}><span>{c.source}</span></Row>}

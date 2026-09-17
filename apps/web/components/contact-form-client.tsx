@@ -4,6 +4,7 @@
 import { useMemo, useRef, useState } from "react";
 import { ORG_KINDS_FOR, formatUsPhone, capitalizeName, type ContactKind } from "@newbee/core";
 import { EmailInput } from "@/components/email-input";
+import { ChannelIcon } from "@/components/channel-icon";
 
 export type Opt = { value: string; label: string };
 export type OrgOpt = { id: string; name: string; kind: string };
@@ -13,6 +14,10 @@ const inputCls = "h-10 w-full rounded-md border border-line-strong bg-surface px
 const F = ({ label, children, className = "" }: { label: string; children: React.ReactNode; className?: string }) => (
   <label className={`flex flex-col gap-1 text-xs text-muted ${className}`}>{label}{children}</label>
 );
+/** 带图标的字段标签 */
+const FI = ({ icon, label, children, className = "" }: { icon: string; label: string; children: React.ReactNode; className?: string }) => (
+  <label className={`flex flex-col gap-1 text-xs text-muted ${className}`}><span className="flex items-center gap-1"><ChannelIcon kind={icon} className="h-3.5 w-3.5" />{label}</span>{children}</label>
+);
 const Btn = ({ children, variant = "primary", ...rest }: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "primary" | "ghost" | "danger" }) => (
   <button {...rest} className={`h-10 rounded-md px-3 text-sm font-medium disabled:opacity-50 ${variant === "primary" ? "bg-accent text-accent-ink hover:bg-accent-strong" : variant === "danger" ? "border border-danger/40 text-danger hover:bg-danger-bg" : "border border-line-strong text-fg hover:bg-chip"} ${rest.className ?? ""}`}>{children}</button>
 );
@@ -20,6 +25,33 @@ const Btn = ({ children, variant = "primary", ...rest }: React.ButtonHTMLAttribu
 /** 电话：10 位美国号码自动 3-3-4 */
 export function PhoneInput({ name, value, onChange }: { name: string; value: string; onChange: (v: string) => void }) {
   return <input name={name} type="tel" value={value} onChange={(e) => onChange(formatUsPhone(e.target.value))} autoComplete="off" className={`${inputCls} font-mono`} />;
+}
+
+/** 联系方式下拉：图标 + 文字（原生 select 放不了图标） */
+export function ChannelSelect({ name, options, defaultValue, onChange }: { name: string; options: Opt[]; defaultValue: string; onChange?: () => void }) {
+  const [value, setValue] = useState(defaultValue);
+  const [open, setOpen] = useState(false);
+  const cur = options.find((o) => o.value === value);
+  return (
+    <div className="relative">
+      <input type="hidden" name={name} value={value} />
+      <button type="button" onClick={() => setOpen(!open)} onBlur={() => setTimeout(() => setOpen(false), 120)} aria-haspopup="listbox" aria-expanded={open}
+        className={`${inputCls} flex items-center gap-2 text-left`}>
+        {cur ? <><ChannelIcon kind={cur.value} className="h-4 w-4 text-accent" /><span className="flex-1 truncate">{cur.label}</span></> : <span className="flex-1 text-muted">—</span>}
+        <span className="text-[10px] text-muted">▼</span>
+      </button>
+      {open && (
+        <ul role="listbox" className="absolute left-0 right-0 z-20 mt-1 rounded-md border border-line bg-surface py-1 shadow-xl">
+          {options.map((o) => (
+            <li key={o.value} role="option" aria-selected={o.value === value} onMouseDown={(e) => { e.preventDefault(); setValue(o.value); setOpen(false); onChange?.(); }}
+              className={`flex cursor-pointer items-center gap-2 px-3 py-1.5 text-sm hover:bg-chip ${o.value === value ? "font-semibold text-accent" : "text-fg"}`}>
+              <ChannelIcon kind={o.value} className={`h-4 w-4 ${o.value === value ? "text-accent" : "text-muted"}`} />{o.label}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
 }
 
 /** 可选可输：候选层用网站主题色；↑↓ 选，Enter 确认，Esc 关 */
@@ -152,11 +184,11 @@ export function ContactFormClient(p: ContactFormProps) {
       ) : (
         <F label={p.l.jobTitle}><SuggestInput key={kind} name="job_title" defaultValue={v("job_title")} options={p.jobTitles[kind] ?? []} onChange={dirty} /></F>
       )}
-      <F label={p.l.email}><EmailInput name="email" value={email} onChange={setEmail} hint={p.l.emailTabHint} inputClassName={`${inputCls} font-mono`} textClassName="font-mono text-sm" /></F>
-      <F label={p.l.phone}><PhoneInput name="phone" value={phone} onChange={setPhone} /></F>
-      <F label={p.l.wechat}><input name="wechat" defaultValue={v("wechat")} className={`${inputCls} font-mono`} /></F>
+      <FI icon="email" label={p.l.email}><EmailInput name="email" value={email} onChange={setEmail} hint={p.l.emailTabHint} inputClassName={`${inputCls} font-mono`} textClassName="font-mono text-sm" /></FI>
+      <FI icon="phone" label={p.l.phone}><PhoneInput name="phone" value={phone} onChange={setPhone} /></FI>
+      <FI icon="wechat" label={p.l.wechat}><input name="wechat" defaultValue={v("wechat")} className={`${inputCls} font-mono`} /></FI>
       <div className="grid grid-cols-2 gap-3">
-        <F label={p.l.preferredChannel}><select name="preferred_channel" defaultValue={v("preferred_channel") || "wechat"} className={inputCls}>{p.channelOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></F>
+        <F label={p.l.preferredChannel}><ChannelSelect name="preferred_channel" options={p.channelOptions} defaultValue={v("preferred_channel") || "wechat"} onChange={dirty} /></F>
         <F label={p.l.preferredLanguage}><select name="preferred_language" defaultValue={v("preferred_language") || "zh"} className={inputCls}>{p.languageOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></F>
       </div>
       {p.compact && <F label={p.l.source} className="sm:col-span-2"><SuggestInput name="source" defaultValue={v("source")} options={p.sources} onChange={dirty} /></F>}
@@ -205,8 +237,8 @@ export function OrganizationFormClient(p: OrganizationFormProps) {
     <form ref={p.formRef} id={p.formId} action={p.action} onChange={() => p.onDirty?.()} className="grid gap-3 sm:grid-cols-2">
       <F label={p.l.kind}><select name="kind" defaultValue={v("kind") || p.defaultKind || "brokerage"} className={inputCls}>{p.orgKindOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></F>
       <F label={p.l.name}><input name="name" required defaultValue={v("name")} className={inputCls} /></F>
-      <F label={p.l.email}><EmailInput name="email" value={email} onChange={setEmail} hint={p.l.emailTabHint} inputClassName={`${inputCls} font-mono`} textClassName="font-mono text-sm" /></F>
-      <F label={p.l.phone}><PhoneInput name="phone" value={phone} onChange={setPhone} /></F>
+      <FI icon="email" label={p.l.email}><EmailInput name="email" value={email} onChange={setEmail} hint={p.l.emailTabHint} inputClassName={`${inputCls} font-mono`} textClassName="font-mono text-sm" /></FI>
+      <FI icon="phone" label={p.l.phone}><PhoneInput name="phone" value={phone} onChange={setPhone} /></FI>
       {!p.compact && (
         <>
           <F label={p.l.website}><input name="website" defaultValue={v("website")} className={`${inputCls} font-mono`} /></F>
