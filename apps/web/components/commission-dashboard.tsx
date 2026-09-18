@@ -158,7 +158,7 @@ export function CommissionDashboard(p: CommissionDashboardProps) {
         </div>
         <div className="flex flex-wrap gap-1.5">
           {SIDE_ORDER.map((s) => { const on = sides.includes(s); return (
-            <button key={s} type="button" aria-pressed={on} onClick={() => setSides(on ? (sides.length > 1 ? sides.filter((x) => x !== s) : sides) : [...sides, s])} className={`flex items-center gap-1.5 rounded-full border border-line-strong bg-surface px-2.5 py-1 text-xs font-semibold ${on ? "" : "opacity-40"}`}>
+            <button key={s} type="button" aria-pressed={on} onClick={() => setSides(on ? sides.filter((x) => x !== s) : [...sides, s])} className={`flex items-center gap-1.5 rounded-full border border-line-strong bg-surface px-2.5 py-1 text-xs font-semibold ${on ? "" : "opacity-40"}`}>
               <i className="h-2 w-2 rounded-full" style={{ background: sideColor(s) }} />{sideLabel(s)}
             </button>); })}
         </div>
@@ -206,7 +206,7 @@ export function CommissionDashboard(p: CommissionDashboardProps) {
               )}
               <div className="mt-1.5 flex flex-wrap gap-x-2 gap-y-1 text-xs">
                 {sides.map((s) => { const on = !hidden.includes(s); return (
-                  <button key={s} type="button" aria-pressed={on} onClick={() => setHidden(on ? (chartSides.length > 1 ? [...hidden, s] : hidden) : hidden.filter((x) => x !== s))}
+                  <button key={s} type="button" aria-pressed={on} onClick={() => setHidden(on ? [...hidden, s] : hidden.filter((x) => x !== s))}
                     className={`flex items-center gap-1.5 rounded-md px-1.5 py-0.5 hover:bg-chip ${on ? "text-muted" : "text-muted/50 line-through"}`}>
                     <i className="inline-block h-2.5 w-2.5 rounded-sm" style={{ background: sideColor(s), opacity: on ? 1 : 0.35 }} />{sideLabel(s)}
                   </button>); })}
