@@ -105,7 +105,7 @@ export async function prefillFromDeal(supabase: SupabaseClient, dealId: string, 
 // ---------- 总览图用的精简行 ----------
 export function toReportRows(rows: CommissionRow[], t: Translator): ReportRow[] {
   return rows.map((r) => ({
-    id: r.id, kind: r.kind, side: r.side as CommissionSide, status: r.status as ReportRow["status"], date: effectiveDate(r),
+    id: r.id, dealId: r.deal_id, kind: r.kind, side: r.side as CommissionSide, status: r.status as ReportRow["status"], date: effectiveDate(r),
     title: r.deal?.title ?? (r.contact ? contactName(r.contact) : t("commKind.referral")),
     price: r.price, gci: r.computed?.gci ?? 0, nci: r.computed?.nci ?? 0,
     lines: (r.computed?.lines ?? []).map((ln) => ({ id: ln.id, amount: ln.amount })),
@@ -115,7 +115,7 @@ export function toReportRows(rows: CommissionRow[], t: Translator): ReportRow[] 
 /** 总览组件的全部文案（客户端组件拿不到 t） */
 export function dashboardLabels(t: Translator): Record<string, string> {
   const l: Record<string, string> = {};
-  for (const k of ["title", "ring_count", "ring_gci", "ring_nci", "ring_cap", "ring_volume", "vol_sell", "vol_buy", "vol_lease", "cap", "closedCount", "paidRate", "share", "vsPrev", "bd_take", "bd_fees", "capRemain", "monthly", "m_nci", "m_gci", "m_n", "total", "month", "count", "pending", "noPending", "none", "viewAll"]) l[k] = t(`dash.${k.replace("_", ".")}`);
+  for (const k of ["title", "ring_count", "ring_gci", "ring_nci", "ring_cap", "ring_volume", "vol_sell", "vol_buy", "vol_both", "cap", "closedCount", "paidRate", "share", "vsPrev", "bd_take", "bd_fees", "capRemain", "monthly", "m_nci", "m_gci", "m_n", "total", "month", "count", "pending", "noPending", "none", "viewAll"]) l[k] = t(`dash.${k.replace("_", ".")}`);
   for (const x of ["month", "quarter", "year", "m12", "period"]) l[`period_${x}`] = t(`dash.period.${x}`);
   for (const s of ["listing", "buyer", "landlord", "tenant", "management", "referral"]) l[`side_${s}`] = t(`commSide.${s}`);
   for (const s of ["paid", "closed", "pending", "projected"]) l[`status_${s}`] = t(`commStatus.${s}`);

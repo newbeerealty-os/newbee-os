@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { buildCommissionReport, periodRange, type ReportRow } from '../src/engines/commission-report';
 import { THEMES, themeCss } from '../src/themes';
 
-const row = (o: Partial<ReportRow>): ReportRow => ({ id: 'x', kind: 'deal', side: 'listing', status: 'paid', date: '2026-03-10', title: '1 Main St', price: 400000, gci: 12000, nci: 9000, lines: [{ id: 'brokerSplit', amount: 2400 }, { id: 'perDealFee', amount: 540 }, { id: 'eoFee', amount: 60 }], ...o });
+const row = (o: Partial<ReportRow>): ReportRow => ({ id: 'x', dealId: null, kind: 'deal', side: 'listing', status: 'paid', date: '2026-03-10', title: '1 Main St', price: 400000, gci: 12000, nci: 9000, lines: [{ id: 'brokerSplit', amount: 2400 }, { id: 'perDealFee', amount: 540 }, { id: 'eoFee', amount: 60 }], ...o });
 const rows: ReportRow[] = [
   row({ id: 'a' }),
   row({ id: 'b', side: 'buyer', status: 'closed', date: '2026-05-02', gci: 9000, nci: 7000, lines: [{ id: 'referralOut', amount: 2000 }] }),
@@ -71,8 +71,11 @@ describe('每个主题都预设了图表颜色', () => {
 });
 
 describe('交易额合计', () => {
-  it('按买 / 卖 / 租赁（放租 + 寻租 + 托管）分；推荐费不算（那是别人的交易）', () => {
+  it('只算买卖：卖 / 买 / 买卖同时（同一交易两边都有，售价只算一次）；租赁和推荐费不算', () => {
     const r = buildCommissionReport(rows, { from: '2026-01-01', to: '2026-12-31', sides: ['listing', 'buyer', 'landlord', 'tenant', 'referral'] });
-    expect(r.volume).toEqual({ total: 400000 + 400000 + 2400, sell: 400000, buy: 400000, lease: 2400 });
+    expect(r.volume).toEqual({ total: 800000, sell: 400000, buy: 400000, both: 0 });
+    const dual = [row({ id: 'a', dealId: 'D1', side: 'listing', price: 500000 }), row({ id: 'b', dealId: 'D1', side: 'buyer', price: 500000 }), row({ id: 'c', dealId: 'D2', side: 'buyer', price: 300000 })];
+    const d = buildCommissionReport(dual, { from: '2026-01-01', to: '2026-12-31', sides: ['listing', 'buyer'] });
+    expect(d.volume).toEqual({ total: 800000, sell: 0, buy: 300000, both: 500000 });
   });
 });

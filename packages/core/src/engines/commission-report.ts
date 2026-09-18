@@ -4,6 +4,8 @@ import { capYearOf } from './commission';
 
 export interface ReportRow {
   id: string;
+  /** 交易 id（推荐费没有）——判断"买卖同时"用 */
+  dealId: string | null;
   kind: CommissionKind;
   side: CommissionSide;
   status: CommissionStatus;
@@ -29,8 +31,8 @@ export interface CommissionReport {
   /** GCI 去哪儿了 */
   breakdown: { nci: number; brokerSplit: number; referralOut: number; perDeal: number; royalty: number; team: number; other: number };
   paidRate: number;
-  /** 交易额（售价 / 租金合计）：卖 = 卖方，买 = 买方，租赁 = 放租 + 寻租 + 托管；推荐费不算 */
-  volume: { total: number; sell: number; buy: number; lease: number };
+  /** 交易额（售价合计，只算买卖）：卖 = 只有卖方；买 = 只有买方；both = 同一交易两边都是我（双方代理，售价只算一次） */
+  volume: { total: number; sell: number; buy: number; both: number };
   monthly: { month: string; bySide: Partial<Record<CommissionSide, MonthCell>>; total: MonthCell }[];
   /** 该收还没收的：签约中 + 已成交未收，按日期先后 */
   pending: ReportRow[];
@@ -80,11 +82,17 @@ export function buildCommissionReport(rows: ReportRow[], f: ReportFilter): Commi
     monthly.push(cell);
   }
 
-  const volume = { total: 0, sell: 0, buy: 0, lease: 0 };
+  const volume = { total: 0, sell: 0, buy: 0, both: 0 };
+  const byDeal = new Map<string, { price: number; sides: Set<CommissionSide> }>();
   for (const r of inRange) {
-    if (r.kind !== 'deal' || !r.price) continue;
-    const k = r.side === 'listing' ? 'sell' : r.side === 'buyer' ? 'buy' : 'lease';
-    volume[k] = r2(volume[k] + r.price); volume.total = r2(volume.total + r.price);
+    if (r.kind !== 'deal' || !r.price || (r.side !== 'listing' && r.side !== 'buyer')) continue;
+    const g = byDeal.get(r.dealId ?? r.id) ?? { price: r.price, sides: new Set<CommissionSide>() };
+    g.sides.add(r.side); g.price = Math.max(g.price, r.price);
+    byDeal.set(r.dealId ?? r.id, g);
+  }
+  for (const g of byDeal.values()) {
+    const k = g.sides.size === 2 ? 'both' : g.sides.has('listing') ? 'sell' : 'buy';
+    volume[k] = r2(volume[k] + g.price); volume.total = r2(volume.total + g.price);
   }
   const pending = inRange.filter((r) => r.status === 'pending' || r.status === 'closed').sort((a, b) => a.date.localeCompare(b.date));
   return { count, gci, nci, breakdown, paidRate: gci.total ? nci.total / gci.total : 0, volume, monthly, pending, pendingTotal: r2(pending.reduce((s, r) => s + r.nci, 0)) };
