@@ -1,5 +1,5 @@
 "use client";
-// 佣金总览：过滤行（时间 + 类型）→ 四个环（笔数 / GCI / NCI 去哪儿了 / Cap）→ 每月柱状 + 待收清单。
+// 佣金总览：过滤行（时间 + 类型）→ 四张卡（笔数 / GCI / NCI 去哪儿了 / Cap；三行文字 + 分段横条 + 图例）→ 每月柱状 + 待收清单。
 // 数据算法在 core（buildCommissionReport），这里只画。颜色走主题的 --viz-* 变量。compact = 门户首页版（不放月度柱）。
 import { useMemo, useState, useRef, useEffect } from "react";
 import Link from "next/link";
@@ -56,36 +56,27 @@ function Tooltip({ tip }: { tip: Tip | null }) {
 // ---------- 环 ----------
 interface Part { label: string; color: string; value: number }
 type SetTip = React.Dispatch<React.SetStateAction<Tip | null>>;
-function Ring({ label, value, sub, parts, center, centerSub, fmt, meter, onTip, href, share }: { label: string; value: string; sub?: React.ReactNode; parts: Part[]; center: string; centerSub?: string; fmt: (n: number) => string; meter?: number; onTip: SetTip; href?: string; share: string }) {
+function Ring({ label, value, sub, parts, center, centerSub, fmt, onTip, href, share }: { label: string; value: string; sub?: React.ReactNode; parts: Part[]; center: string; centerSub?: string; fmt: (n: number) => string; onTip: SetTip; href?: string; share: string }) {
   const [hot, setHot] = useState<number | null>(null);
   const total = parts.reduce((s, p) => s + p.value, 0);
-  const r = 42, C = 2 * Math.PI * r;
-  let off = 0;
-  const arcs = parts.map((p, i) => { const len = total ? (C * p.value) / total : 0; const a = { i, p, len, off }; off += len; return a; });
   const enter = (i: number, e: React.PointerEvent) => { setHot(i); onTip({ x: e.clientX, y: e.clientY, title: label, rows: [{ color: parts[i].color, label: parts[i].label, value: fmt(parts[i].value) }], total: [share, pct(parts[i].value, total)] }); };
   const move = (e: React.PointerEvent) => onTip((t) => (t ? { ...t, x: e.clientX, y: e.clientY } : t));
   const leave = () => { setHot(null); onTip(null); };
   const cls = "flex min-w-0 flex-col gap-2 rounded-ui border border-line bg-surface p-3";
   const inner = (
     <>
-      <div className="flex items-center gap-3">
-        <svg viewBox="0 0 104 104" className="h-[84px] w-[84px] shrink-0">
-          <circle cx="52" cy="52" r={r} fill="none" stroke="var(--chip)" strokeWidth="12" />
-          {arcs.map(({ i, p, len, off }) => len > 0 && (
-            <circle key={i} cx="52" cy="52" r={r} fill="none" stroke={p.color} strokeWidth="12" strokeDasharray={`${Math.max(0, len - 2)} ${C - Math.max(0, len - 2) + 2}`} strokeDashoffset={-off} transform="rotate(-90 52 52)"
-              className="cursor-pointer transition-opacity" style={{ opacity: hot !== null && hot !== i ? 0.35 : 1 }}
-              onPointerEnter={(e) => enter(i, e)} onPointerMove={move} onPointerLeave={leave} />
-          ))}
-          <text x="52" y={centerSub ? 50 : 56} textAnchor="middle" fontFamily="var(--font-mono)" fontSize={center.length > 7 ? 13 : 15} fontWeight="500" fill="var(--text)">{center}</text>
-          {centerSub && <text x="52" y="65" textAnchor="middle" fontSize="10" fill="var(--muted)">{centerSub}</text>}
-        </svg>
-        <div className="flex min-w-0 flex-col gap-0.5">
-          <div className="text-[11px] font-semibold uppercase tracking-wide text-muted">{label}</div>
-          <div className="truncate font-mono text-xl leading-tight">{value}</div>
-          {sub && <div className="truncate text-[11.5px] text-muted">{sub}</div>}
-        </div>
+      <div className="flex min-w-0 flex-col gap-0.5">
+        <div className="flex items-baseline justify-between gap-2"><span className="text-[11px] font-semibold uppercase tracking-wide text-muted">{label}</span>{centerSub && <span className="shrink-0 font-mono text-[11.5px] text-muted">{center} {centerSub}</span>}</div>
+        <div className="truncate font-mono text-xl leading-tight">{value}</div>
+        {sub && <div className="truncate text-[11.5px] text-muted">{sub}</div>}
       </div>
-      {meter !== undefined && <div className="h-2.5 overflow-hidden rounded-full bg-chip"><div className="h-full rounded-full bg-accent" style={{ width: `${Math.min(100, meter * 100)}%` }} /></div>}
+      {/* 分段横条：按占比着色，段间 2px 留白；悬停一段显示金额 + 占比 */}
+      <div className="flex h-3 w-full overflow-hidden rounded-full bg-chip">
+        {parts.map((p, i) => total > 0 && p.value > 0 && (
+          <div key={i} style={{ width: `${(p.value / total) * 100}%`, background: p.color, opacity: hot !== null && hot !== i ? 0.35 : 1 }} className="h-full min-w-[3px] cursor-pointer border-r-2 border-surface transition-opacity last:border-r-0"
+            onPointerEnter={(e) => enter(i, e)} onPointerMove={move} onPointerLeave={leave} />
+        ))}
+      </div>
       <div className="grid grid-cols-[1fr_auto] gap-x-2 text-[11.5px]">
         {parts.map((p, i) => (
           <div key={i} className="contents">
@@ -169,13 +160,13 @@ export function CommissionDashboard(p: CommissionDashboardProps) {
         </div>
       </div>
 
-      {/* 四个环 */}
+      {/* 四张卡 */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Ring label={l.ring_count} value={l.count.replace("{n}", String(report.count.total))} sub={delta(report.count.total, prev.count.total, (n) => l.count.replace("{n}", String(n)))} parts={statusParts(report.count.byStatus)} center={String(report.count.byStatus.paid + report.count.byStatus.closed)} centerSub={l.closedCount} fmt={(n) => l.count.replace("{n}", String(n))} onTip={setTip} share={l.share} href={p.compact ? hrefFor() : undefined} />
         <Ring label={l.ring_gci} value={money(report.gci.total)} sub={delta(report.gci.total, prev.gci.total, money)} parts={statusParts(report.gci.byStatus)} center={short(report.gci.total)} fmt={money} onTip={setTip} share={l.share} href={p.compact ? hrefFor() : undefined} />
         <Ring label={l.ring_nci} value={money(report.nci.total)} sub={<>{pct(report.nci.total, report.gci.total)} {l.paidRate}</>} parts={nciParts} center={pct(report.nci.total, report.gci.total)} centerSub={l.paidRate} fmt={money} onTip={setTip} share={l.share} href={p.compact ? hrefFor("paid") : undefined} />
         {p.plan.capOn && p.plan.capAmount > 0 ? (
-          <Ring label={l.ring_cap} value={`${money(p.capPaid)} / ${money(p.plan.capAmount)}`} sub={capLeft > 0 ? l.capRemain.replace("{amount}", money(capLeft)) : l.capHit} parts={[{ label: l.capPaid, color: "var(--accent)", value: p.capPaid }, { label: l.capLeft, color: "var(--chip)", value: capLeft }]} center={pct(p.capPaid, p.plan.capAmount)} centerSub="cap" fmt={money} meter={p.capPaid / p.plan.capAmount} onTip={setTip} share={l.share} />
+          <Ring label={l.ring_cap} value={`${money(p.capPaid)} / ${money(p.plan.capAmount)}`} sub={capLeft > 0 ? l.capRemain.replace("{amount}", money(capLeft)) : l.capHit} parts={[{ label: l.capPaid, color: "var(--accent)", value: p.capPaid }, { label: l.capLeft, color: "var(--chip)", value: capLeft }]} center={pct(p.capPaid, p.plan.capAmount)} centerSub="cap" fmt={money} onTip={setTip} share={l.share} />
         ) : (
           <Ring label={l.ring_fixed} value={money(p.plan.fixed)} sub={l.fixedHint} parts={[{ label: l.bd_take, color: STATUS_VAR(0), value: report.nci.byStatus.paid }, { label: l.ring_fixed, color: "var(--viz-ded-2)", value: p.plan.fixed }]} center={pct(report.nci.byStatus.paid, report.nci.byStatus.paid + p.plan.fixed)} centerSub={l.status_paid} fmt={money} onTip={setTip} share={l.share} />
         )}

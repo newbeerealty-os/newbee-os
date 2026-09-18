@@ -33,7 +33,8 @@ const side = (T: TFn, active: string) => (
 const dash = (T: TFn, compact: boolean) => {
   const ring = (label: React.ReactNode, big: string, center: string, rows: [string, string, string][]) => (
     <W className="flex flex-col gap-2 p-3">
-      <div className="flex items-center gap-3"><div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-[7px] border-accent text-xs font-mono">{center}</div><div><div className="text-[10px] font-semibold uppercase tracking-wide text-muted">{label}</div><div className="font-mono text-lg">{big}</div><div className="text-[11px] text-muted"><b className="text-ok">+12%</b> {T("dash.vsPrev")}</div></div></div>
+      <div className="flex items-baseline justify-between"><span className="text-[10px] font-semibold uppercase tracking-wide text-muted">{label}</span><span className="font-mono text-[11px] text-muted">{center}</span></div><div className="font-mono text-lg">{big}</div><div className="text-[11px] text-muted"><b className="text-ok">+12%</b> {T("dash.vsPrev")}</div>
+      <div className="flex h-3 overflow-hidden rounded-full bg-chip">{rows.map(([c], i) => <div key={i} className="h-full border-r-2 border-surface last:border-r-0" style={{ width: `${[55, 20, 18, 7][i] ?? 10}%`, background: c }} />)}</div>
       <div className="grid grid-cols-[1fr_auto] gap-x-2 text-[11px]">{rows.map(([c, l, v], i) => <div key={i} className="contents"><span className="flex items-center gap-1 text-muted"><i className="inline-block h-2 w-2 rounded-sm" style={{ background: c }} />{l}</span><span className="text-right font-mono">{v}</span></div>)}</div>
     </W>
   );
