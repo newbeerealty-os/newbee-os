@@ -69,3 +69,10 @@ describe('每个主题都预设了图表颜色', () => {
     expect(css).toContain('--viz-ded-3:');
   });
 });
+
+describe('交易额合计', () => {
+  it('按买 / 卖 / 租赁（放租 + 寻租 + 托管）分；推荐费不算（那是别人的交易）', () => {
+    const r = buildCommissionReport(rows, { from: '2026-01-01', to: '2026-12-31', sides: ['listing', 'buyer', 'landlord', 'tenant', 'referral'] });
+    expect(r.volume).toEqual({ total: 400000 + 400000 + 2400, sell: 400000, buy: 400000, lease: 2400 });
+  });
+});

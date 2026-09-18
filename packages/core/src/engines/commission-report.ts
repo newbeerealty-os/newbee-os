@@ -29,6 +29,8 @@ export interface CommissionReport {
   /** GCI 去哪儿了 */
   breakdown: { nci: number; brokerSplit: number; referralOut: number; perDeal: number; royalty: number; team: number; other: number };
   paidRate: number;
+  /** 交易额（售价 / 租金合计）：卖 = 卖方，买 = 买方，租赁 = 放租 + 寻租 + 托管；推荐费不算 */
+  volume: { total: number; sell: number; buy: number; lease: number };
   monthly: { month: string; bySide: Partial<Record<CommissionSide, MonthCell>>; total: MonthCell }[];
   /** 该收还没收的：签约中 + 已成交未收，按日期先后 */
   pending: ReportRow[];
@@ -78,8 +80,14 @@ export function buildCommissionReport(rows: ReportRow[], f: ReportFilter): Commi
     monthly.push(cell);
   }
 
+  const volume = { total: 0, sell: 0, buy: 0, lease: 0 };
+  for (const r of inRange) {
+    if (r.kind !== 'deal' || !r.price) continue;
+    const k = r.side === 'listing' ? 'sell' : r.side === 'buyer' ? 'buy' : 'lease';
+    volume[k] = r2(volume[k] + r.price); volume.total = r2(volume.total + r.price);
+  }
   const pending = inRange.filter((r) => r.status === 'pending' || r.status === 'closed').sort((a, b) => a.date.localeCompare(b.date));
-  return { count, gci, nci, breakdown, paidRate: gci.total ? nci.total / gci.total : 0, monthly, pending, pendingTotal: r2(pending.reduce((s, r) => s + r.nci, 0)) };
+  return { count, gci, nci, breakdown, paidRate: gci.total ? nci.total / gci.total : 0, volume, monthly, pending, pendingTotal: r2(pending.reduce((s, r) => s + r.nci, 0)) };
 }
 
 export const PERIOD_PRESETS = ['month', 'quarter', 'year', 'm12', 'period'] as const;

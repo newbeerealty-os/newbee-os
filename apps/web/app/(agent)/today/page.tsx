@@ -1,6 +1,6 @@
 // /today —— 每天打开的第一页：逾期 / 今天 / 未来 7 天 的里程碑与任务（选项卡：全部 / 逾期 / 今天 / 7 天）
 import Link from "next/link";
-import { addCalendarDays, recurringPerPeriod } from "@newbee/core";
+import { addCalendarDays } from "@newbee/core";
 import { getPlan, loadCommissions, ytdFor, toReportRows, dashboardLabels } from "@/lib/commissions";
 import { CommissionDashboard } from "@/components/commission-dashboard";
 import { createClient } from "@/lib/supabase/server";
@@ -41,7 +41,7 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
       <PageHeader crumbs={[{ label: t("nav.today") }]} title={`${t("today.title")} · ${today}`}
         actions={<span className="text-xs text-muted">{t("today.summary", { ms: milestones.length, tasks: tasks.length })}</span>} />
       <Section title={t("dash.title")} right={<Link href="/commissions" className="text-sm text-accent hover:underline">{t("dash.viewAll")}</Link>}>
-        <CommissionDashboard compact rows={toReportRows(commissions, t)} today={today} plan={{ capAmount: plan.capAmount, capOn: plan.modules.cap, capYearStart: plan.capYearStart, fixed: recurringPerPeriod(plan) }} capPaid={ytd.brokerPaid} l={dashboardLabels(t)} />
+        <CommissionDashboard compact rows={toReportRows(commissions, t)} today={today} plan={{ capAmount: plan.capAmount, capOn: plan.modules.cap, capYearStart: plan.capYearStart }} capPaid={ytd.brokerPaid} l={dashboardLabels(t)} />
       </Section>
 
       <Tabs base="/today" active={tab} tabs={[

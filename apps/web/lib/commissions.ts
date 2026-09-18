@@ -115,7 +115,7 @@ export function toReportRows(rows: CommissionRow[], t: Translator): ReportRow[] 
 /** 总览组件的全部文案（客户端组件拿不到 t） */
 export function dashboardLabels(t: Translator): Record<string, string> {
   const l: Record<string, string> = {};
-  for (const k of ["title", "ring_count", "ring_gci", "ring_nci", "ring_cap", "ring_fixed", "closedCount", "paidRate", "share", "vsPrev", "bd_take", "bd_fees", "capPaid", "capLeft", "capRemain", "fixedHint", "monthly", "m_nci", "m_gci", "m_n", "total", "month", "count", "pending", "noPending", "none", "viewAll"]) l[k] = t(`dash.${k.replace("_", ".")}`);
+  for (const k of ["title", "ring_count", "ring_gci", "ring_nci", "ring_cap", "ring_volume", "vol_sell", "vol_buy", "vol_lease", "cap", "closedCount", "paidRate", "share", "vsPrev", "bd_take", "bd_fees", "capRemain", "monthly", "m_nci", "m_gci", "m_n", "total", "month", "count", "pending", "noPending", "none", "viewAll"]) l[k] = t(`dash.${k.replace("_", ".")}`);
   for (const x of ["month", "quarter", "year", "m12", "period"]) l[`period_${x}`] = t(`dash.period.${x}`);
   for (const s of ["listing", "buyer", "landlord", "tenant", "management", "referral"]) l[`side_${s}`] = t(`commSide.${s}`);
   for (const s of ["paid", "closed", "pending", "projected"]) l[`status_${s}`] = t(`commStatus.${s}`);

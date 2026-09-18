@@ -10,7 +10,7 @@ export type DashLabels = Record<string, string>;
 export interface CommissionDashboardProps {
   rows: ReportRow[];
   today: string;
-  plan: { capAmount: number; capOn: boolean; capYearStart: string; fixed: number };
+  plan: { capAmount: number; capOn: boolean; capYearStart: string };
   capPaid: number;
   l: DashLabels;
   compact?: boolean;
@@ -66,7 +66,7 @@ function Ring({ label, value, sub, parts, center, centerSub, fmt, onTip, href, s
   const inner = (
     <>
       <div className="flex min-w-0 flex-col gap-0.5">
-        <div className="flex items-baseline justify-between gap-2"><span className="text-[11px] font-semibold uppercase tracking-wide text-muted">{label}</span>{centerSub && <span className="shrink-0 font-mono text-[11.5px] text-muted">{center} {centerSub}</span>}</div>
+        <div className="flex items-baseline justify-between gap-2"><span className="text-[11px] font-semibold uppercase tracking-wide text-muted">{label}</span>{centerSub !== undefined && <span className="shrink-0 font-mono text-[11.5px] text-muted">{center} {centerSub}</span>}</div>
         <div className="truncate font-mono text-xl leading-tight">{value}</div>
         {sub && <div className="truncate text-[11.5px] text-muted">{sub}</div>}
       </div>
@@ -126,7 +126,6 @@ export function CommissionDashboard(p: CommissionDashboardProps) {
     { label: l.r_referralOut, color: "var(--viz-ded-2)", value: bd.referralOut },
     { label: l.bd_fees, color: "var(--viz-ded-3)", value: bd.perDeal + bd.royalty + bd.team + bd.other },
   ].filter((x) => x.value > 0 || x.label === l.bd_take);
-  const capLeft = Math.max(0, p.plan.capAmount - p.capPaid);
   const monthLabel = (m: string) => l.month.replace("{m}", String(Number(m.slice(5))));
   const hrefFor = (f?: string) => (f ? `/commissions?f=${f}&from=${range.from}&to=${range.to}` : `/commissions?from=${range.from}&to=${range.to}`);
 
@@ -168,12 +167,8 @@ export function CommissionDashboard(p: CommissionDashboardProps) {
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Ring label={l.ring_count} value={l.count.replace("{n}", String(report.count.total))} sub={delta(report.count.total, prev.count.total, (n) => l.count.replace("{n}", String(n)))} parts={statusParts(report.count.byStatus)} center={String(report.count.byStatus.paid + report.count.byStatus.closed)} centerSub={l.closedCount} fmt={(n) => l.count.replace("{n}", String(n))} onTip={setTip} share={l.share} href={p.compact ? hrefFor() : undefined} />
         <Ring label={l.ring_gci} value={money(report.gci.total)} sub={delta(report.gci.total, prev.gci.total, money)} parts={statusParts(report.gci.byStatus)} center={short(report.gci.total)} fmt={money} onTip={setTip} share={l.share} href={p.compact ? hrefFor() : undefined} />
-        <Ring label={l.ring_nci} value={money(report.nci.total)} sub={<>{pct(report.nci.total, report.gci.total)} {l.paidRate}</>} parts={nciParts} center={pct(report.nci.total, report.gci.total)} centerSub={l.paidRate} fmt={money} onTip={setTip} share={l.share} href={p.compact ? hrefFor("paid") : undefined} />
-        {p.plan.capOn && p.plan.capAmount > 0 ? (
-          <Ring label={l.ring_cap} value={`${money(p.capPaid)} / ${money(p.plan.capAmount)}`} sub={capLeft > 0 ? l.capRemain.replace("{amount}", money(capLeft)) : l.capHit} parts={[{ label: l.capPaid, color: "var(--accent)", value: p.capPaid }, { label: l.capLeft, color: "var(--chip)", value: capLeft }]} center={pct(p.capPaid, p.plan.capAmount)} centerSub="cap" fmt={money} onTip={setTip} share={l.share} />
-        ) : (
-          <Ring label={l.ring_fixed} value={money(p.plan.fixed)} sub={l.fixedHint} parts={[{ label: l.bd_take, color: STATUS_VAR(0), value: report.nci.byStatus.paid }, { label: l.ring_fixed, color: "var(--viz-ded-2)", value: p.plan.fixed }]} center={pct(report.nci.byStatus.paid, report.nci.byStatus.paid + p.plan.fixed)} centerSub={l.status_paid} fmt={money} onTip={setTip} share={l.share} />
-        )}
+        <Ring label={l.ring_nci} value={money(report.nci.total)} sub={<>{pct(report.nci.total, report.gci.total)} {l.paidRate}{p.plan.capOn && p.plan.capAmount > 0 && <> · {l.cap.replace("{pct}", pct(p.capPaid, p.plan.capAmount))}{p.capPaid >= p.plan.capAmount && ` · ${l.capHit}`}</>}</>} parts={nciParts} center={pct(report.nci.total, report.gci.total)} centerSub={l.paidRate} fmt={money} onTip={setTip} share={l.share} href={p.compact ? hrefFor("paid") : undefined} />
+        <Ring label={l.ring_volume} value={money(report.volume.total)} sub={delta(report.volume.total, prev.volume.total, money)} center={l.count.replace("{n}", String(report.count.total))} centerSub="" parts={[{ label: l.vol_sell, color: SIDE_VAR("listing"), value: report.volume.sell }, { label: l.vol_buy, color: SIDE_VAR("buyer"), value: report.volume.buy }, { label: l.vol_lease, color: SIDE_VAR("landlord"), value: report.volume.lease }]} fmt={money} onTip={setTip} share={l.share} href={p.compact ? hrefFor() : undefined} />
       </div>
 
       {/* 月度 + 待收 */}

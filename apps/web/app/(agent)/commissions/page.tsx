@@ -1,6 +1,6 @@
 // /commissions —— 佣金列表：统计卡 + cap 进度 + 可拖可排的表；?f= 过滤（all / listing / buyer / both / lease / referral / pending / paid）；?from=&to=
 import Link from "next/link";
-import { matchesQuery, sortRows, compareText, compareNumber, compareDate, recurringPerPeriod } from "@newbee/core";
+import { matchesQuery, sortRows, compareText, compareNumber, compareDate } from "@newbee/core";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n";
 import { money } from "@/lib/format";
@@ -76,7 +76,7 @@ export default async function CommissionsPage({ searchParams }: { searchParams: 
           </>
         } />
 
-      <CommissionDashboard rows={toReportRows(all, t)} today={todayISO()} plan={{ capAmount: plan.capAmount, capOn: plan.modules.cap, capYearStart: plan.capYearStart, fixed: recurringPerPeriod(plan) }} capPaid={ytd.brokerPaid} l={dashboardLabels(t)} syncUrl
+      <CommissionDashboard rows={toReportRows(all, t)} today={todayISO()} plan={{ capAmount: plan.capAmount, capOn: plan.modules.cap, capYearStart: plan.capYearStart }} capPaid={ytd.brokerPaid} l={dashboardLabels(t)} syncUrl
         initial={sp.from && sp.to ? { from: sp.from, to: sp.to } : undefined} />
 
       <div className="hidden md:block">

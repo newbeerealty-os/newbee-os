@@ -53,9 +53,9 @@ const dash = (T: TFn, compact: boolean) => {
         {ring(T("dash.ring.count"), n(24), "17", statusRows(n, [14, 3, 4, 3]))}
         {ring(T("dash.ring.gci"), $(153863), "$154K", statusRows($, [94200, 24800, 29800, 5000]))}
         {ring(<>{T("dash.ring.nci")} · {T("dash.paidRate")}</>, $(112400), "73%", [[st(1), T("dash.bd.take") as string, $(112400)], ["var(--viz-ded-1)", T("comm.r.brokerSplit") as string, $(22800)], ["var(--viz-ded-2)", T("comm.r.referralOut") as string, $(11600)], ["var(--viz-ded-3)", T("dash.bd.fees") as string, $(7060)]])}
-        {ring(<>{T("dash.ring.cap")} · {T("dash.ring.fixed")}</>, "$9,420 / $16,000", "59%", [["var(--accent)", T("dash.capPaid") as string, $(9420)], ["var(--chip)", T("dash.capLeft") as string, $(6580)]])}
+        {ring(T("dash.ring.volume"), $(7355580), n(24), [["var(--viz-side-1)", T("dash.vol.sell") as string, $(3900000)], ["var(--viz-side-2)", T("dash.vol.buy") as string, $(3400000)], ["var(--viz-side-3)", T("dash.vol.lease") as string, $(55580)]])}
       </div>
-      <div className="text-[11px] text-muted">{T("dash.capRemain", { amount: "$6,580" })} · {T("dash.fixedHint")} · {T("dash.share")} 34% · {T("dash.closedCount")}</div>
+      <div className="text-[11px] text-muted">{T("dash.ring.cap")} · {T("dash.cap", { pct: "59%" })} · {T("dash.capRemain", { amount: "$6,580" })} · {T("dash.share")} 34% · {T("dash.closedCount")}</div>
       <div className={`grid gap-2 ${compact ? "" : "lg:grid-cols-[2fr_1fr]"}`}>
         {!compact && (
           <Card title={T("dash.monthly")} right={<span className="flex gap-1"><Chip tone="info">{T("dash.m.nci")}</Chip><Chip>{T("dash.m.gci")}</Chip><Chip>{T("dash.m.n")}</Chip></span>}>
