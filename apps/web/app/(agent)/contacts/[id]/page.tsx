@@ -266,7 +266,7 @@ export default async function ContactPage({ params, searchParams }: { params: Pr
                             <div className="mt-1.5 flex flex-wrap gap-1">{roles.map((x) => <Badge key={x} tone="blue">{t(`partyRole.${x}`)}</Badge>)}<Badge>{t(`contactKind.${p.kind}`)}</Badge></div>
                             <div className="mt-1 truncate text-xs text-muted">{top.title}</div>
                             <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[11.5px] text-muted"><StageBadge stage={top.stage} label={t(`stage.${top.stage}`)} />{r.count > 1 && <span>{t("contact.sharedDeals", { n: r.count })}</span>}</div>
-                            {close.length > 0 && <div className="mt-1 truncate text-[11.5px] text-muted">{close.map((x) => `${t(`relation.${x.relation}`)}：${contactName(x.person)}`).join(" · ")}</div>}
+                            {close.length > 0 && <div className="mt-1 truncate text-[11.5px] text-muted">{close.map((x) => `${t(`relation.${x.relation}`)}：${contactName(x.person)}${x.person.name_zh ? ` · ${x.person.name_zh}` : ""}`).join(" · ")}</div>}
                           </div>
                         </Link>
                       </li>
