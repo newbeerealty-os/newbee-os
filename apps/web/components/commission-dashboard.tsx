@@ -131,6 +131,10 @@ export function CommissionDashboard(p: CommissionDashboardProps) {
   const hrefFor = (f?: string) => (f ? `/commissions?f=${f}&from=${range.from}&to=${range.to}` : `/commissions?from=${range.from}&to=${range.to}`);
 
   // 月度柱
+  const [hotBar, setHotBar] = useState<number | null>(null);
+  // 柱状图自己的类型开关（图例可点）：只影响这张图，不影响上面的卡和待收；顶部胶囊关掉的类型这里也不出现
+  const [hidden, setHidden] = useState<CommissionSide[]>([]);
+  const chartSides = sides.filter((x) => !hidden.includes(x));
   const W = 640, H = 220, L = 44, B = 26, T = 10;
   const key = (c: { n: number; gci: number; nci: number }) => (metric === "n" ? c.n : metric === "gci" ? c.gci : c.nci);
   const fmtM = metric === "n" ? (v: number) => l.count.replace("{n}", String(v)) : money;
@@ -139,10 +143,6 @@ export function CommissionDashboard(p: CommissionDashboardProps) {
   const top = (() => { const p10 = Math.pow(10, Math.floor(Math.log10(max))); return Math.ceil(max / p10) * p10; })();
   const y = (v: number) => T + (H - T - B) * (1 - v / top);
   const bw = (W - L - 8) / Math.max(1, report.monthly.length);
-  const [hotBar, setHotBar] = useState<number | null>(null);
-  // 柱状图自己的类型开关（图例可点）：只影响这张图，不影响上面的卡和待收；顶部胶囊关掉的类型这里也不出现
-  const [hidden, setHidden] = useState<CommissionSide[]>([]);
-  const chartSides = sides.filter((x) => !hidden.includes(x));
 
   return (
     <div className="flex flex-col gap-3">
