@@ -307,7 +307,7 @@ const UI: Record<string, Message> = {
   'contact.links': { zh: '紧密关系', en: 'Close relationships' },
   'contact.addLink': { zh: '添加关系', en: 'Add relationship' },
   'contact.linkWho': { zh: '联系人', en: 'Person' },
-  'contact.linkRelation': { zh: '关系（对方是我的…）', en: 'Relation (they are my…)' },
+  'contact.linkRelation': { zh: '关系', en: 'Relation' },
   'contact.noLinks': { zh: '还没有设置紧密关系。', en: 'No close relationships yet.' },
   'contact.removeLink': { zh: '移除', en: 'Remove' },
   'contact.notesSave': { zh: '保存备注', en: 'Save notes' },
