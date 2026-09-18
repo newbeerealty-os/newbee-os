@@ -65,11 +65,11 @@ function Ring({ label, value, sub, parts, center, centerSub, fmt, meter, onTip, 
   const enter = (i: number, e: React.PointerEvent) => { setHot(i); onTip({ x: e.clientX, y: e.clientY, title: label, rows: [{ color: parts[i].color, label: parts[i].label, value: fmt(parts[i].value) }], total: [share, pct(parts[i].value, total)] }); };
   const move = (e: React.PointerEvent) => onTip((t) => (t ? { ...t, x: e.clientX, y: e.clientY } : t));
   const leave = () => { setHot(null); onTip(null); };
-  const cls = "flex flex-col gap-2.5 rounded-ui border border-line bg-surface p-3.5";
+  const cls = "flex min-w-0 flex-col gap-2 rounded-ui border border-line bg-surface p-3";
   const inner = (
     <>
-      <div className="flex items-center gap-3.5">
-        <svg viewBox="0 0 104 104" className="h-[104px] w-[104px] shrink-0">
+      <div className="flex items-center gap-3">
+        <svg viewBox="0 0 104 104" className="h-[84px] w-[84px] shrink-0">
           <circle cx="52" cy="52" r={r} fill="none" stroke="var(--chip)" strokeWidth="12" />
           {arcs.map(({ i, p, len, off }) => len > 0 && (
             <circle key={i} cx="52" cy="52" r={r} fill="none" stroke={p.color} strokeWidth="12" strokeDasharray={`${Math.max(0, len - 2)} ${C - Math.max(0, len - 2) + 2}`} strokeDashoffset={-off} transform="rotate(-90 52 52)"
@@ -81,15 +81,15 @@ function Ring({ label, value, sub, parts, center, centerSub, fmt, meter, onTip, 
         </svg>
         <div className="flex min-w-0 flex-col gap-0.5">
           <div className="text-[11px] font-semibold uppercase tracking-wide text-muted">{label}</div>
-          <div className="font-mono text-2xl leading-tight">{value}</div>
-          {sub && <div className="text-xs text-muted">{sub}</div>}
+          <div className="truncate font-mono text-xl leading-tight">{value}</div>
+          {sub && <div className="truncate text-[11.5px] text-muted">{sub}</div>}
         </div>
       </div>
       {meter !== undefined && <div className="h-2.5 overflow-hidden rounded-full bg-chip"><div className="h-full rounded-full bg-accent" style={{ width: `${Math.min(100, meter * 100)}%` }} /></div>}
-      <div className="grid grid-cols-[1fr_auto] gap-x-2.5 gap-y-0.5 text-xs">
+      <div className="grid grid-cols-[1fr_auto] gap-x-2 text-[11.5px]">
         {parts.map((p, i) => (
           <div key={i} className="contents">
-            <span className={`flex items-center gap-1.5 rounded px-1 py-0.5 ${hot === i ? "bg-chip text-fg" : "text-muted"}`} onPointerEnter={(e) => enter(i, e)} onPointerMove={move} onPointerLeave={leave}><i className="inline-block h-2.5 w-2.5 shrink-0 rounded-sm" style={{ background: p.color }} />{p.label}</span>
+            <span className={`flex min-w-0 items-center gap-1.5 truncate rounded px-1 py-px ${hot === i ? "bg-chip text-fg" : "text-muted"}`} onPointerEnter={(e) => enter(i, e)} onPointerMove={move} onPointerLeave={leave}><i className="inline-block h-2.5 w-2.5 shrink-0 rounded-sm" style={{ background: p.color }} />{p.label}</span>
             <span className="text-right font-mono text-fg">{fmt(p.value)}</span>
           </div>
         ))}
@@ -170,7 +170,7 @@ export function CommissionDashboard(p: CommissionDashboardProps) {
       </div>
 
       {/* 四个环 */}
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Ring label={l.ring_count} value={l.count.replace("{n}", String(report.count.total))} sub={delta(report.count.total, prev.count.total, (n) => l.count.replace("{n}", String(n)))} parts={statusParts(report.count.byStatus)} center={String(report.count.byStatus.paid + report.count.byStatus.closed)} centerSub={l.closedCount} fmt={(n) => l.count.replace("{n}", String(n))} onTip={setTip} share={l.share} href={p.compact ? hrefFor() : undefined} />
         <Ring label={l.ring_gci} value={money(report.gci.total)} sub={delta(report.gci.total, prev.gci.total, money)} parts={statusParts(report.gci.byStatus)} center={short(report.gci.total)} fmt={money} onTip={setTip} share={l.share} href={p.compact ? hrefFor() : undefined} />
         <Ring label={l.ring_nci} value={money(report.nci.total)} sub={<>{pct(report.nci.total, report.gci.total)} {l.paidRate}</>} parts={nciParts} center={pct(report.nci.total, report.gci.total)} centerSub={l.paidRate} fmt={money} onTip={setTip} share={l.share} href={p.compact ? hrefFor("paid") : undefined} />
