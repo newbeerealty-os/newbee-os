@@ -134,11 +134,15 @@ export function CommissionDashboard(p: CommissionDashboardProps) {
   const W = 640, H = 220, L = 44, B = 26, T = 10;
   const key = (c: { n: number; gci: number; nci: number }) => (metric === "n" ? c.n : metric === "gci" ? c.gci : c.nci);
   const fmtM = metric === "n" ? (v: number) => l.count.replace("{n}", String(v)) : money;
-  const max = Math.max(1, ...report.monthly.map((m) => key(m.total)));
+  const monthTotal = (m: (typeof report.monthly)[number]) => chartSides.reduce((a, x) => a + (m.bySide[x] ? key(m.bySide[x]!) : 0), 0);
+  const max = Math.max(1, ...report.monthly.map(monthTotal));
   const top = (() => { const p10 = Math.pow(10, Math.floor(Math.log10(max))); return Math.ceil(max / p10) * p10; })();
   const y = (v: number) => T + (H - T - B) * (1 - v / top);
   const bw = (W - L - 8) / Math.max(1, report.monthly.length);
   const [hotBar, setHotBar] = useState<number | null>(null);
+  // 柱状图自己的类型开关（图例可点）：只影响这张图，不影响上面的卡和待收；顶部胶囊关掉的类型这里也不出现
+  const [hidden, setHidden] = useState<CommissionSide[]>([]);
+  const chartSides = sides.filter((x) => !hidden.includes(x));
 
   return (
     <div className="flex flex-col gap-3">
@@ -185,8 +189,8 @@ export function CommissionDashboard(p: CommissionDashboardProps) {
                 <svg viewBox={`0 0 ${W} ${H}`} className="block h-auto w-full">
                   {[0, 1, 2, 3, 4].map((i) => { const v = (top * i) / 4; return <g key={i}><line x1={L} x2={W - 8} y1={y(v)} y2={y(v)} stroke="var(--line)" /><text x={L - 6} y={y(v) + 4} textAnchor="end" fontFamily="var(--font-mono)" fontSize="11" fill="var(--muted)">{metric === "n" ? v : short(v)}</text></g>; })}
                   {report.monthly.map((m, i) => {
-                    const x = L + i * bw + bw * 0.2, w = bw * 0.6; let acc = 0; const total = key(m.total);
-                    const segs = sides.filter((s) => m.bySide[s]).map((s) => { const v = key(m.bySide[s]!); const y1 = y(acc + v), y0 = y(acc); acc += v; return { s, v, y1, h: Math.max(0, y0 - y1 - 2), last: acc >= total - 0.001 }; });
+                    const x = L + i * bw + bw * 0.2, w = bw * 0.6; let acc = 0; const total = monthTotal(m);
+                    const segs = chartSides.filter((s) => m.bySide[s]).map((s) => { const v = key(m.bySide[s]!); const y1 = y(acc + v), y0 = y(acc); acc += v; return { s, v, y1, h: Math.max(0, y0 - y1 - 2), last: acc >= total - 0.001 }; });
                     return (
                       <g key={m.month} style={{ opacity: hotBar !== null && hotBar !== i ? 0.35 : 1 }} className="cursor-pointer transition-opacity"
                         onPointerEnter={(e) => { setHotBar(i); setTip({ x: e.clientX, y: e.clientY, title: monthLabel(m.month), rows: segs.map((g) => ({ color: sideColor(g.s), label: sideLabel(g.s), value: fmtM(g.v) })), total: [l.total, fmtM(total)] }); }}
@@ -200,7 +204,13 @@ export function CommissionDashboard(p: CommissionDashboardProps) {
                   })}
                 </svg>
               )}
-              <div className="mt-1.5 flex flex-wrap gap-x-3.5 gap-y-1 text-xs text-muted">{sides.map((s) => <span key={s} className="flex items-center gap-1.5"><i className="inline-block h-2.5 w-2.5 rounded-sm" style={{ background: sideColor(s) }} />{sideLabel(s)}</span>)}</div>
+              <div className="mt-1.5 flex flex-wrap gap-x-2 gap-y-1 text-xs">
+                {sides.map((s) => { const on = !hidden.includes(s); return (
+                  <button key={s} type="button" aria-pressed={on} onClick={() => setHidden(on ? (chartSides.length > 1 ? [...hidden, s] : hidden) : hidden.filter((x) => x !== s))}
+                    className={`flex items-center gap-1.5 rounded-md px-1.5 py-0.5 hover:bg-chip ${on ? "text-muted" : "text-muted/50 line-through"}`}>
+                    <i className="inline-block h-2.5 w-2.5 rounded-sm" style={{ background: sideColor(s), opacity: on ? 1 : 0.35 }} />{sideLabel(s)}
+                  </button>); })}
+              </div>
             </div>
           </section>
         )}
