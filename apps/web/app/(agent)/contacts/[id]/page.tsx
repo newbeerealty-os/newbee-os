@@ -253,7 +253,7 @@ export default async function ContactPage({ params, searchParams }: { params: Pr
                     const p = personById.get(r.contactId)!;
                     const top = rankDeals(r.dealIds.map((did) => ({ ...dealsById[did], updatedAt: dealsById[did].updated_at })), now)[0];
                     const roles = rolesOf.get(r.contactId)?.get(top.id) ?? [];
-                    const close = linksFor(r.contactId);
+                    const close = linksFor(r.contactId).filter((x) => x.relation === "spouse" || x.relation === "partner"); // 卡片下面只标配偶 / 伴侣
                     return (
                       <li key={r.contactId}>
                         <Link href={`/contacts/${p.id}`} className="flex h-full gap-3 rounded-ui border border-line bg-surface p-3 hover:border-accent">
