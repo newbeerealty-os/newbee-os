@@ -20,8 +20,9 @@ export async function proxy(request: NextRequest) {
     },
   });
 
-  // 不要在这里加任何逻辑；getUser() 本身就会刷新 token
-  const { data: { user } } = await supabase.auth.getUser();
+  // 不要在这里加任何逻辑；getClaims() 本地验签（JWKS 缓存），token 快过期时才去 Auth 服务器刷新——比每个请求都 getUser() 省一次往返
+  const { data } = await supabase.auth.getClaims();
+  const user = data?.claims ?? null;
 
   const path = request.nextUrl.pathname;
   const isPublic = path === "/login" || path.startsWith("/auth/") || path.startsWith("/api/");

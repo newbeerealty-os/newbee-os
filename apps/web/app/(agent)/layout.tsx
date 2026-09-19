@@ -1,7 +1,8 @@
 import { Suspense } from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { getUserId } from "@/lib/supabase/server";
+import { getBootstrap } from "@/lib/bootstrap";
 import { getT } from "@/lib/i18n";
 import { loadNavCounts, buildNav } from "@/lib/nav";
 import { Sidebar, SIDEBAR_COOKIE } from "@/components/sidebar";
@@ -10,15 +11,9 @@ import { Toaster } from "@/components/toaster";
 import { readFlash, FLASH_COOKIE } from "@/lib/flash";
 
 export default async function AgentLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
-  const [t, counts, cookieStore, { data: agent }] = await Promise.all([
-    getT(),
-    loadNavCounts(supabase),
-    cookies(),
-    supabase.from("agents").select("name").eq("id", user.id).single(),
-  ]);
+  const userId = await getUserId();
+  if (!userId) redirect("/login");
+  const [t, counts, cookieStore, boot] = await Promise.all([getT(), loadNavCounts(), cookies(), getBootstrap()]);
   const collapsed = cookieStore.get(SIDEBAR_COOKIE)?.value === "1";
   const flash = await readFlash();
 
@@ -29,8 +24,8 @@ export default async function AgentLayout({ children }: { children: React.ReactN
           items={buildNav(t, counts)}
           initialCollapsed={collapsed}
           labels={{ collapse: t("nav.collapse"), expand: t("nav.expand"), toggle: t("nav.toggleGroup") }}
-          userName={agent?.name ?? user.email ?? ""}
-          avatarUrl={(user.user_metadata as { avatar_url?: string } | null)?.avatar_url ?? null}
+          userName={boot.name ?? ""}
+          avatarUrl={null}
           localeRow={<LocaleSwitch />}
           localeIcon={<LocaleSwitch compact />}
           footer={<form action="/auth/signout" method="post"><button className="shrink-0 text-xs text-side-muted hover:text-side-text">{t("nav.signout")}</button></form>}

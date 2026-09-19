@@ -3,14 +3,13 @@
 import { setFlash } from "@/lib/flash";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getUserId } from "@/lib/supabase/server";
 import { PHOTO_BUCKET } from "@/lib/avatars";
 
 async function me() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
-  return { supabase, userId: user.id };
+  const [supabase, userId] = await Promise.all([createClient(), getUserId()]);
+  if (!userId) redirect("/login");
+  return { supabase, userId };
 }
 const ext = (f: File) => (f.type === "image/png" ? "png" : f.type === "image/webp" ? "webp" : "jpg");
 

@@ -3,8 +3,8 @@
 import { cache } from "react";
 import { cookies } from "next/headers";
 import { makeT, isLocale, DEFAULT_LOCALE, type Locale, type Overrides, type Translator } from "@newbee/core";
-import { createClient } from "@/lib/supabase/server";
 import { getAgentSettings } from "@/lib/settings";
+import { getBootstrap } from "@/lib/bootstrap";
 
 export const LOCALE_COOKIE = "locale";
 
@@ -17,12 +17,8 @@ export const getLocale = cache(async (): Promise<Locale> => {
 
 /** 未登录时 ui_strings 查不到行（RLS），自然回到代码默认值 */
 export const getT = cache(async (): Promise<Translator> => {
-  const locale = await getLocale();
-  const supabase = await createClient();
-  const { data } = await supabase.from("ui_strings").select("key,zh,en").is("deleted_at", null);
+  const [locale, b] = await Promise.all([getLocale(), getBootstrap()]);
   const overrides: Overrides = {};
-  for (const r of (data ?? []) as { key: string; zh: string | null; en: string | null }[]) {
-    overrides[r.key] = { zh: r.zh ?? undefined, en: r.en ?? undefined };
-  }
+  for (const r of b.ui_strings) overrides[r.key] = { zh: r.zh ?? undefined, en: r.en ?? undefined };
   return makeT(locale, overrides);
 });

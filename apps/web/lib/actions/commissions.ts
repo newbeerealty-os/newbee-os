@@ -4,15 +4,14 @@ import { setFlash } from "@/lib/flash";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { CommissionInputSchema, CommissionPlanSchema } from "@newbee/core";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getUserId } from "@/lib/supabase/server";
 import { patchAgentSettings } from "@/lib/settings";
 import { getPlan, loadCommissions, recompute, ytdBefore, effectiveDate, type CommissionRow } from "@/lib/commissions";
 
 async function me() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
-  return { supabase, userId: user.id };
+  const [supabase, userId] = await Promise.all([createClient(), getUserId()]);
+  if (!userId) redirect("/login");
+  return { supabase, userId };
 }
 export async function saveCommission(id: string | null, formData: FormData) {
   const { supabase, userId } = await me();

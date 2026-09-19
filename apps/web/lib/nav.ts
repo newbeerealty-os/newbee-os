@@ -1,8 +1,7 @@
-// 侧栏的数据：菜单树 + 红圈计数。服务端算好，传给 client 侧栏。
+// 侧栏的数据：菜单树 + 红圈计数。服务端算好，传给 client 侧栏。计数来自 bootstrap（一次 RPC）。
 // 红圈定义：今天 = 今天到期的里程碑 + 未完成任务；交易 = 未删除的全部交易；任务 = 挂在交易上的未完成任务。
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { CONTACT_TABS, type Translator } from "@newbee/core";
-import { todayISO } from "@/lib/format";
+import { navCountsFromBootstrap } from "@/lib/bootstrap";
 
 export const COMMISSION_FILTERS = ["all", "listing", "buyer", "both", "landlord", "tenant", "referral", "pending", "paid"] as const;
 export const DEAL_STAGES = ["lead", "pre", "active", "offer", "under_contract", "closing", "closed", "terminated"] as const;
@@ -20,32 +19,9 @@ export interface NavCounts {
   contactsByTab: Record<string, number>;
 }
 
-export async function loadNavCounts(supabase: SupabaseClient): Promise<NavCounts> {
-  const today = todayISO();
-  const [{ data: deals }, { data: tasks }, { count: msToday }, { data: contacts }, { data: orgs }] = await Promise.all([
-    supabase.from("deals").select("stage").is("deleted_at", null),
-    supabase.from("tasks").select("deal_id,due_date").is("done_at", null).is("deleted_at", null),
-    supabase.from("milestones").select("id", { count: "exact", head: true }).eq("status", "pending").eq("due_date", today),
-    supabase.from("contacts").select("kind").is("deleted_at", null),
-    supabase.from("organizations").select("kind").is("deleted_at", null),
-  ]);
-  const contactsByTab: Record<string, number> = {};
-  for (const tab of CONTACT_TABS) {
-    contactsByTab[tab.id] = ((contacts ?? []) as { kind: string }[]).filter((c) => (tab.kinds as string[]).includes(c.kind)).length
-      + ((orgs ?? []) as { kind: string }[]).filter((o) => (tab.orgKinds as string[]).includes(o.kind)).length;
-  }
-  const byStage: Record<string, number> = {};
-  for (const d of (deals ?? []) as { stage: string }[]) byStage[d.stage] = (byStage[d.stage] ?? 0) + 1;
-  const ts = (tasks ?? []) as { deal_id: string | null; due_date: string | null }[];
-  return {
-    today: (msToday ?? 0) + ts.filter((t) => t.due_date === today).length,
-    deals: (deals ?? []).length,
-    byStage,
-    dealTasks: ts.filter((t) => t.deal_id).length,
-    personalTasks: ts.filter((t) => !t.deal_id).length,
-    contacts: (contacts ?? []).length + (orgs ?? []).length,
-    contactsByTab,
-  };
+/** 计数全部来自每请求一次的 bootstrap RPC（数据库里 count，不把行拉回来数） */
+export async function loadNavCounts(): Promise<NavCounts> {
+  return navCountsFromBootstrap();
 }
 
 export function buildNav(t: Translator, c: NavCounts): NavItem[] {

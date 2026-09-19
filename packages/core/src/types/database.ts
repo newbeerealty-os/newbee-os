@@ -1079,7 +1079,7 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      app_bootstrap: { Args: { p_today: string }; Returns: Json }
     }
     Enums: {
       amount_basis: "pct" | "flat"
