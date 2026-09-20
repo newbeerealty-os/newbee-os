@@ -1,7 +1,7 @@
 // 第 1 个月的"设计系统"：几个最小组件，够用就行。shadcn 等真需要时再装。
 import Link from "next/link";
 import type { Translator } from "@newbee/core";
-import { toggleTask } from "@/lib/actions/deals";
+import { toggleTask, setMilestoneStatus } from "@/lib/actions/deals";
 import { relDays } from "@/lib/format";
 
 export function Section({ title, right, children }: { title: string; right?: React.ReactNode; children: React.ReactNode }) {
@@ -29,6 +29,25 @@ export const inputCls = "h-10 w-full rounded-md border border-line-strong bg-sur
 export function Badge({ children, tone = "zinc", size = "sm" }: { children: React.ReactNode; tone?: "zinc" | "blue" | "green" | "amber" | "red"; size?: "sm" | "md" }) {
   const cls = { zinc: "bg-chip text-fg", blue: "bg-info-bg text-info", green: "bg-ok-bg text-ok", amber: "bg-warn-bg text-warn", red: "bg-danger-bg text-danger" }[tone];
   return <span className={`inline-block rounded px-1.5 py-0.5 font-medium ${size === "md" ? "text-sm" : "text-xs"} ${cls}`}>{children}</span>;
+}
+
+/** 里程碑的状态操作：pending → "完成 / 不适用" 两个小按钮；done / na → 状态标签 + "恢复"。和 TaskItem 一样，每个按钮一个 form 绑 server action */
+export function MilestoneActions({ dealId, milestoneId, status, backTo, t }: { dealId: string; milestoneId: string; status: string; backTo: string; t: Translator }) {
+  const btn = "h-7 rounded-md border border-line-strong bg-surface px-2 text-xs font-medium text-muted hover:bg-chip hover:text-fg";
+  if (status === "done" || status === "na") {
+    return (
+      <span className="flex shrink-0 items-center gap-2">
+        <Badge tone={status === "done" ? "green" : "zinc"}>{t(`msStatus.${status}`)}</Badge>
+        <form action={setMilestoneStatus.bind(null, dealId, milestoneId, "pending", backTo)}><button className="text-xs text-muted hover:text-accent">{t("msAction.restore")}</button></form>
+      </span>
+    );
+  }
+  return (
+    <span className="flex shrink-0 items-center gap-1">
+      <form action={setMilestoneStatus.bind(null, dealId, milestoneId, "done", backTo)}><button className={btn}>{t("msAction.done")}</button></form>
+      <form action={setMilestoneStatus.bind(null, dealId, milestoneId, "na", backTo)}><button className={btn}>{t("msAction.na")}</button></form>
+    </span>
+  );
 }
 
 /** 事件型里程碑过了日期 = 已发生（灰），不是逾期 */

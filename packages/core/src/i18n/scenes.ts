@@ -11,7 +11,7 @@ export const SCENES: Scene[] = [
     s('feedback', '操作反馈', 'Feedback', ['flash.', 'error.'], '按钮按完右下角弹的"已保存 / 已删除"，以及出错页', 'The "Saved / Deleted" toast after a button press, and the error page'),
   ] },
   { id: 'today', zh: '今天', en: 'Today', where: { zh: '"今天"页面', en: 'The Today page' }, sections: [
-    s('page', '页面文字', 'Page text', ['today.'], '标题、选项卡、空状态', 'Title, tabs, empty states'),
+    s('page', '页面文字', 'Page text', ['today.', 'msAction.', 'msStatus.'], '标题、选项卡、空状态、里程碑的"完成 / 不适用 / 恢复"', 'Title, tabs, empty states, milestone "Done / N/A / Restore"'),
     s('rel', '相对日期', 'Relative dates', ['rel.'], '"3 天后 / 逾期 2 天 / 今天"这类日期标签，全站通用', '"in 3 days / 2 days overdue / today" labels, used everywhere'),
   ] },
   { id: 'deals', zh: '交易列表', en: 'Deals list', where: { zh: '"交易"列表页', en: 'The Deals list page' }, sections: [

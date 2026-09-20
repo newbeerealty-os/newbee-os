@@ -148,12 +148,31 @@ export async function setStage(dealId: string, formData: FormData) {
   if (!stage) return;
   const { error } = await supabase.from("deals").update({ stage, ...(stage === "closed" ? { closed_at: new Date().toISOString() } : stage === "terminated" ? { terminated_at: new Date().toISOString() } : {}) }).eq("id", dealId);
   if (error) throw new Error(error.message);
+  // 成交 / 终止以后，剩下没处理的里程碑都不用管了 → 不适用
+  if (stage === "closed" || stage === "terminated") {
+    const { error: mErr } = await supabase.from("milestones").update({ status: "na" }).eq("deal_id", dealId).eq("status", "pending");
+    if (mErr) throw new Error(mErr.message);
+  }
   // 佣金状态跟阶段走
   const { recomputeAll } = await import("@/lib/actions/commissions");
   await recomputeAll(dealId);
   await setFlash("saved");
   revalidatePath(`/deals/${dealId}`);
   revalidatePath("/deals");
+  revalidatePath("/today");
+}
+
+const MS_STATUSES = ["done", "na", "pending"] as const;
+/** 里程碑标完成 / 不适用 / 恢复。只能改自己交易下的那一条 */
+export async function setMilestoneStatus(dealId: string, milestoneId: string, status: (typeof MS_STATUSES)[number], backTo?: string) {
+  const { supabase } = await me();
+  if (!(MS_STATUSES as readonly string[]).includes(status)) throw new Error(`bad milestone status: ${status}`);
+  const { error } = await supabase.from("milestones").update({ status }).eq("id", milestoneId).eq("deal_id", dealId);
+  if (error) throw new Error(error.message);
+  await setFlash("saved");
+  revalidatePath(backTo ?? `/deals/${dealId}`);
+  revalidatePath(`/deals/${dealId}`);
+  revalidatePath("/today");
 }
 
 export async function toggleTask(taskId: string, done: boolean, backTo = "/today") {

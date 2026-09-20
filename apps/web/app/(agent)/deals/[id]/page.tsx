@@ -11,7 +11,7 @@ import { avatarUrlsFor } from "@/lib/avatars";
 import { getT } from "@/lib/i18n";
 import { DEAL_STAGES } from "@/lib/nav";
 import { todayISO, relDays, money } from "@/lib/format";
-import { Section, Empty, Button, Badge, inputCls, TaskItem, dueTone, msHappened, type TaskRow } from "@/components/ui";
+import { Section, Empty, Button, Badge, inputCls, TaskItem, MilestoneActions, dueTone, msHappened, type TaskRow } from "@/components/ui";
 import { PageHeader, Tabs, Stat, StatGrid } from "@/components/page";
 import { StageBadge } from "@/components/stage";
 import { getPlan, loadCommissions, loadCommissionOptions, prefillFromDeal, ytdFor, ytdBefore } from "@/lib/commissions";
@@ -332,21 +332,29 @@ export default async function DealPage({ params, searchParams }: { params: Promi
         <Section title={t("deal.milestones")} right={<span className="font-mono text-sm text-muted">{milestones.length}</span>}>
           {milestones.length === 0 ? <Empty>{t("deal.noMilestones")}</Empty> : (
             <ol className="relative ml-2 border-l border-line">
-              {milestones.map((m) => (
+              {milestones.map((m) => {
+                const closed = m.status === "done" || m.status === "na"; // 已完成 / 不适用：整行灰，日期不再红黄
+                return (
                 <li key={m.id} className="mb-3 ml-4">
-                  <span className={`absolute -left-[5px] mt-1.5 h-2.5 w-2.5 rounded-full ${m.due_date && m.due_date < today ? "bg-muted" : "bg-accent"}`} />
+                  <span className={`absolute -left-[5px] mt-1.5 h-2.5 w-2.5 rounded-full ${closed || (m.due_date && m.due_date < today) ? "bg-muted" : "bg-accent"}`} />
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="text-sm text-fg">{msLabel(m)}{m.client_visible ? "" : <span className="ml-1 text-xs text-muted">{t("common.internal")}</span>}</div>
-                    {msHappened(m, today) ? (
-                      <Badge>{t("deal.happened")} · {m.due_date}</Badge>
-                    ) : m.due_date ? (
-                      <Badge tone={dueTone(m.due_date, today)}>{m.due_date}{m.due_time ? ` ${m.due_time.slice(0, 5)}` : ""} · {relDays(m.due_date, today, t)}</Badge>
-                    ) : (
-                      <Badge>{t("deal.missingAnchor")}</Badge>
-                    )}
+                    <div className={`text-sm ${closed ? "text-muted" : "text-fg"}`}>{msLabel(m)}{m.client_visible ? "" : <span className="ml-1 text-xs text-muted">{t("common.internal")}</span>}</div>
+                    <span className="flex flex-wrap items-center gap-2">
+                      {closed ? (
+                        m.due_date && <Badge>{m.due_date}</Badge>
+                      ) : msHappened(m, today) ? (
+                        <Badge>{t("deal.happened")} · {m.due_date}</Badge>
+                      ) : m.due_date ? (
+                        <Badge tone={dueTone(m.due_date, today)}>{m.due_date}{m.due_time ? ` ${m.due_time.slice(0, 5)}` : ""} · {relDays(m.due_date, today, t)}</Badge>
+                      ) : (
+                        <Badge>{t("deal.missingAnchor")}</Badge>
+                      )}
+                      <MilestoneActions dealId={id} milestoneId={m.id} status={m.status} backTo={`${base}?tab=milestones`} t={t} />
+                    </span>
                   </div>
                 </li>
-              ))}
+                );
+              })}
             </ol>
           )}
         </Section>

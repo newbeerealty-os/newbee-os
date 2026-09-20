@@ -93,6 +93,7 @@ export const REPLICAS: Record<string, (T: TFn, hidden: string) => React.ReactNod
         <div className="flex items-center justify-between py-1"><span>◆ {T("ms.option_period_end")} <span className="text-xs text-accent">{T("common.deal")}</span></span><Chip tone="warn">09-19 · {T("rel.inDays", { n: 2 })}</Chip></div>
         <div className="flex items-center justify-between py-1"><span>◆ {T("ms.title_commitment_due")}</span><Chip>09-29 · {T("rel.tomorrow")}</Chip></div>
         <div className="flex items-center justify-between py-1"><span>◆ {T("ms.effective_date")}</span><Chip>{T("deal.happened")} · 09-01</Chip></div>
+        <div className="flex items-center justify-between py-1"><span>◆ {T("ms.em_due")}</span><span className="flex items-center gap-1"><Chip tone="bad">09-04 · {T("rel.overdue", { n: 15 })}</Chip><Btn ghost>{T("msAction.done")}</Btn><Btn ghost>{T("msAction.na")}</Btn></span></div>
         <div className="flex items-center justify-between py-1"><span>☐ {T("task.uc-03")}</span><Chip tone="bad">09-15 · {T("rel.overdue", { n: 2 })}</Chip></div>
         <div className="flex items-center justify-between py-1"><span>☐ {T("task.uc-06")}</span><Chip tone="warn">{T("rel.today")}</Chip></div>
         <div className="flex items-center justify-between py-1"><span>☐ {T("task.cl-02")}</span><Chip>{T("rel.tbd")}</Chip></div>
@@ -140,6 +141,9 @@ export const REPLICAS: Record<string, (T: TFn, hidden: string) => React.ReactNod
         </Card>
         <Card title={T("deal.milestones")} right="8">
           <div className="flex justify-between py-1"><span>{T("ms.effective_date")}</span><Chip>{T("deal.happened")} · 2026-09-01</Chip></div>
+          <div className="flex justify-between py-1 text-muted"><span>{T("ms.em_due")}</span><span className="flex items-center gap-1"><Chip>2026-09-04</Chip><Chip tone="ok">{T("msStatus.done")}</Chip><span className="text-xs">{T("msAction.restore")}</span></span></div>
+          <div className="flex justify-between py-1 text-muted"><span>{T("ms.survey_due")}</span><span className="flex items-center gap-1"><Chip>2026-09-06</Chip><Chip>{T("msStatus.na")}</Chip><span className="text-xs">{T("msAction.restore")}</span></span></div>
+          <div className="flex justify-between py-1"><span>{T("ms.option_period_end")}</span><span className="flex items-center gap-1"><Chip tone="bad">2026-09-11 17:00 · {T("rel.overdue", { n: 8 })}</Chip><Btn ghost>{T("msAction.done")}</Btn><Btn ghost>{T("msAction.na")}</Btn></span></div>
           <div className="flex justify-between py-1"><span>{T("ms.closing")} <span className="text-xs text-muted">{T("common.internal")}</span></span><Chip>{T("deal.missingAnchor")}</Chip></div>
           <div className="text-center text-muted">{T("deal.noMilestones")}</div>
         </Card>

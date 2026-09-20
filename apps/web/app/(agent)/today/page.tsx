@@ -6,7 +6,7 @@ import { CommissionDashboard } from "@/components/commission-dashboard";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n";
 import { todayISO, relDays } from "@/lib/format";
-import { Section, Empty, Badge, TaskItem, dueTone, msHappened, type TaskRow } from "@/components/ui";
+import { Section, Empty, Badge, TaskItem, MilestoneActions, dueTone, msHappened, type TaskRow } from "@/components/ui";
 import { PageHeader, Tabs } from "@/components/page";
 
 export const dynamic = "force-dynamic";
@@ -64,7 +64,10 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
                         <div className="truncate text-sm font-medium text-fg">◆ {t.or(`ms.${m.key}`, m.label)}</div>
                         <Link href={`/deals/${m.deal_id}`} className="text-xs text-accent hover:underline">{dealTitle(m.deals) ?? t("common.deal")}</Link>
                       </div>
-                      <Badge tone={dueTone(m.due_date, today)}>{m.due_date}{m.due_time ? ` ${m.due_time.slice(0, 5)}` : ""} · {relDays(m.due_date, today, t)}</Badge>
+                      <span className="flex shrink-0 items-center gap-2">
+                        <Badge tone={dueTone(m.due_date, today)}>{m.due_date}{m.due_time ? ` ${m.due_time.slice(0, 5)}` : ""} · {relDays(m.due_date, today, t)}</Badge>
+                        <MilestoneActions dealId={m.deal_id} milestoneId={m.id} status="pending" backTo="/today" t={t} />
+                      </span>
                     </li>
                   ))}
                 </ul>
