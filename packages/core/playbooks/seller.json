@@ -10,7 +10,7 @@
     { "key": "offer_received", "label": "Offer Received", "kind": "event", "from": "field:offer_received_date" },
     { "key": "effective_date", "label": "Effective Date (Contract)", "kind": "event", "from": "field:effective_date" },
     { "key": "em_due", "label": "Option Fee & Earnest Money Due", "from": "effective_date", "offset": "field:earnest_money_due_days|3", "unit": "calendar", "rollForward": true },
-    { "key": "option_period_end", "label": "Option Period Expires", "from": "effective_date", "offset": "field:option_period_days", "unit": "calendar", "rollForward": true, "time": "17:00" },
+    { "key": "option_period_end", "label": "Option Period Expires", "kind": "event", "from": "effective_date", "offset": "field:option_period_days", "unit": "calendar", "rollForward": true, "time": "17:00" },
     { "key": "financing_deadline", "label": "Buyer Approval Deadline (Financing)", "from": "effective_date", "offset": "field:buyer_approval_days", "unit": "calendar", "requires": "financing_addendum" },
     { "key": "survey_due", "label": "Existing Survey & T-47 Due", "from": "effective_date", "offset": "field:survey_days", "unit": "calendar" },
     { "key": "title_commitment_due", "label": "Title Commitment Due", "from": "effective_date", "offset": 20, "unit": "calendar" },
