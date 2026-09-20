@@ -10,9 +10,15 @@ export type FieldValue = string | number | boolean | ISODate | null;
 export type FieldMap = Record<string, FieldValue>;
 
 /** 里程碑规则（Playbook 里定义） */
+/** 里程碑两种：event = 已经 / 将要发生的事（过期只是"已发生"）；deadline = 要赶的期限（过期 = 逾期） */
+export const MILESTONE_KINDS = ['event', 'deadline'] as const;
+export type MilestoneKind = (typeof MILESTONE_KINDS)[number];
+
 export interface MilestoneRule {
   key: string;
   label: string;
+  /** 缺省 deadline */
+  kind?: MilestoneKind;
   /** 'field:closing_date' 直接取字段；或另一个里程碑的 key */
   from: string;
   /** 数字，或 'field:option_period_days|10'（取字段，缺省 10） */
@@ -30,6 +36,7 @@ export interface MilestoneRule {
 export interface Milestone {
   key: string;
   label: string;
+  kind: MilestoneKind;
   date: ISODate | null;
   time?: string;
   derivedFrom: { from: string; offset: number; unit: 'calendar' | 'business'; rollForward: boolean };

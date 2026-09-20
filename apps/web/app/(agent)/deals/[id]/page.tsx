@@ -11,7 +11,7 @@ import { avatarUrlsFor } from "@/lib/avatars";
 import { getT } from "@/lib/i18n";
 import { DEAL_STAGES } from "@/lib/nav";
 import { todayISO, relDays, money } from "@/lib/format";
-import { Section, Empty, Button, Badge, inputCls, TaskItem, dueTone, type TaskRow } from "@/components/ui";
+import { Section, Empty, Button, Badge, inputCls, TaskItem, dueTone, msHappened, type TaskRow } from "@/components/ui";
 import { PageHeader, Tabs, Stat, StatGrid } from "@/components/page";
 import { StageBadge } from "@/components/stage";
 import { getPlan, loadCommissions, loadCommissionOptions, prefillFromDeal, ytdFor, ytdBefore } from "@/lib/commissions";
@@ -28,7 +28,7 @@ const TABS = ["overview", "parties", "files", "pending", "fields", "milestones",
 
 type FieldRow = { id: string; key: string; value_text: string | null; value_num: number | null; value_date: string | null; source_page: number | null; source_quote: string | null; confidence: number | null; confirmed_at: string | null; source_doc_id: string | null };
 type DocRow = { id: string; file_name: string | null; doc_type: string | null; status: string; error: string | null; uploaded_at: string; page_count: number | null };
-type MsRow = { id: string; key: string; label: string; due_date: string | null; due_time: string | null; status: string; client_visible: boolean };
+type MsRow = { id: string; key: string; label: string; kind: string; due_date: string | null; due_time: string | null; status: string; client_visible: boolean };
 
 function show(f: FieldRow): string {
   const def = FIELD_BY_KEY[f.key];
@@ -50,7 +50,7 @@ export default async function DealPage({ params, searchParams }: { params: Promi
   const [{ data: docs }, { data: fields }, { data: ms }, { data: ts }, { data: ps }, { data: cs }, { data: os }, commissions] = await Promise.all([
     supabase.from("documents").select("id,file_name,doc_type,status,error,uploaded_at,page_count").eq("deal_id", id).is("deleted_at", null).order("uploaded_at", { ascending: false }),
     supabase.from("deal_fields_current").select("id,key,value_text,value_num,value_date,source_page,source_quote,confidence,confirmed_at,source_doc_id").eq("deal_id", id),
-    supabase.from("milestones").select("id,key,label,due_date,due_time,status,client_visible").eq("deal_id", id).order("due_date", { ascending: true, nullsFirst: false }),
+    supabase.from("milestones").select("id,key,label,kind,due_date,due_time,status,client_visible").eq("deal_id", id).order("due_date", { ascending: true, nullsFirst: false }),
     supabase.from("tasks").select("id,title,due_date,done_at,deal_id,stage,playbook_rule_id").eq("deal_id", id).is("deleted_at", null).order("due_date", { ascending: true, nullsFirst: false }),
     supabase.from("deal_parties").select("id,role,side,is_primary,notes,contact_id,organization_id,contacts(id,first_name,last_name,name_zh,email,phone,job_title,avatar_path,avatar_photo_id,organizations!contacts_organization_id_fkey(name)),organizations(id,name,email,phone)").eq("deal_id", id).is("deleted_at", null).order("created_at"),
     supabase.from("contacts").select("id,first_name,last_name,name_zh,kind").is("deleted_at", null).order("first_name"),
@@ -121,7 +121,7 @@ export default async function DealPage({ params, searchParams }: { params: Promi
 
   // 概览："接下来" = 未过期的待办里程碑 + 未完成任务，按日期取前 5
   const upcoming = [
-    ...milestones.filter((m) => m.status === "pending" && m.due_date).map((m) => ({ kind: "ms" as const, id: m.id, label: msLabel(m), date: m.due_date!, time: m.due_time })),
+    ...milestones.filter((m) => m.status === "pending" && m.due_date && !msHappened(m, today)).map((m) => ({ kind: "ms" as const, id: m.id, label: msLabel(m), date: m.due_date!, time: m.due_time })),
     ...openTasks.filter((x) => x.due_date).map((x) => ({ kind: "task" as const, id: x.id, label: x.playbook_rule_id ? t.or(`task.${x.playbook_rule_id}`, x.title) : x.title, date: x.due_date!, time: null })),
   ].sort((a, b) => a.date.localeCompare(b.date)).slice(0, 5);
 
@@ -337,7 +337,9 @@ export default async function DealPage({ params, searchParams }: { params: Promi
                   <span className={`absolute -left-[5px] mt-1.5 h-2.5 w-2.5 rounded-full ${m.due_date && m.due_date < today ? "bg-muted" : "bg-accent"}`} />
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="text-sm text-fg">{msLabel(m)}{m.client_visible ? "" : <span className="ml-1 text-xs text-muted">{t("common.internal")}</span>}</div>
-                    {m.due_date ? (
+                    {msHappened(m, today) ? (
+                      <Badge>{t("deal.happened")} · {m.due_date}</Badge>
+                    ) : m.due_date ? (
                       <Badge tone={dueTone(m.due_date, today)}>{m.due_date}{m.due_time ? ` ${m.due_time.slice(0, 5)}` : ""} · {relDays(m.due_date, today, t)}</Badge>
                     ) : (
                       <Badge>{t("deal.missingAnchor")}</Badge>

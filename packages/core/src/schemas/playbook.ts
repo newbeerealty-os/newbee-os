@@ -3,6 +3,7 @@ import { z } from 'zod';
 export const MilestoneRuleSchema = z.object({
   key: z.string().regex(/^[a-z][a-z0-9_]*$/),
   label: z.string(),
+  kind: z.enum(['event', 'deadline']).optional(),
   from: z.string(),
   offset: z.union([z.number().int(), z.string()]).optional(),
   unit: z.enum(['calendar', 'business']).optional(),

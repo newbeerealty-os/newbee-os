@@ -143,6 +143,7 @@ const UI: Record<string, Message> = {
   'deal.manualWrite': { zh: '手动写入', en: 'Set by hand' },
   'deal.addendaHint': { zh: '附加协议（决定 HOA / 贷款等节点是否生成）：{list}。抽取会自动写入 deals.addenda。', en: 'Addenda (decide whether HOA / financing milestones exist): {list}. Extraction writes deals.addenda automatically.' },
   'deal.milestones': { zh: '里程碑', en: 'Milestones' },
+  'deal.happened': { zh: '已发生', en: 'Happened' },
   'deal.noMilestones': { zh: '确认字段后点「派生里程碑与任务」', en: 'Confirm fields, then click "Derive milestones & tasks"' },
   'deal.missingAnchor': { zh: '缺少锚点字段', en: 'Missing anchor field' },
   'deal.tasks': { zh: '任务 · 未完成 {open} / {total}', en: 'Tasks · {open} open / {total}' },

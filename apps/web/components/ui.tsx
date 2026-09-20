@@ -31,6 +31,9 @@ export function Badge({ children, tone = "zinc", size = "sm" }: { children: Reac
   return <span className={`inline-block rounded px-1.5 py-0.5 font-medium ${size === "md" ? "text-sm" : "text-xs"} ${cls}`}>{children}</span>;
 }
 
+/** 事件型里程碑过了日期 = 已发生（灰），不是逾期 */
+export const msHappened = (m: { kind?: string | null; due_date: string | null }, today: string) => m.kind === "event" && !!m.due_date && m.due_date < today;
+
 export function dueTone(date: string | null, today: string): "zinc" | "amber" | "red" {
   if (!date) return "zinc";
   if (date < today) return "red";

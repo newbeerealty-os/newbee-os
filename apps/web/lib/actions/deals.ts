@@ -77,7 +77,7 @@ export async function deriveDeal(dealId: string) {
   const milestones = computeMilestones(fields, playbook.milestones, { addenda });
 
   // milestones：upsert by (deal_id, key)
-  const msRows = milestones.map((m) => ({ deal_id: dealId, agent_id: userId, key: m.key, label: m.label, due_date: m.date, due_time: m.time ?? null, derived_from: m.derivedFrom, client_visible: m.clientVisible }));
+  const msRows = milestones.map((m) => ({ deal_id: dealId, agent_id: userId, key: m.key, label: m.label, kind: m.kind, due_date: m.date, due_time: m.time ?? null, derived_from: m.derivedFrom, client_visible: m.clientVisible }));
   const { error: mErr } = await supabase.from("milestones").upsert(msRows, { onConflict: "deal_id,key" });
   if (mErr) throw mErr;
 

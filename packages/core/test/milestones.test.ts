@@ -59,3 +59,17 @@ describe('milestones (Seller playbook)', () => {
     expect(diff.removed).toHaveLength(0);
   });
 });
+
+describe('里程碑分事件型 / 截止型', () => {
+  it('规则写了 kind: event 就透传（seller playbook 的 effective_date 是事件）', () => {
+    const ms = computeMilestones(base, SELLER_PLAYBOOK.milestones);
+    expect(ms.find((m) => m.key === 'effective_date')?.kind).toBe('event');
+    for (const k of ['first_met', 'view_house', 'listing_date', 'offer_received']) expect(ms.find((m) => m.key === k)?.kind, k).toBe('event');
+  });
+  it('没写 kind 的缺省 deadline', () => {
+    const ms = computeMilestones(base, SELLER_PLAYBOOK.milestones);
+    expect(ms.find((m) => m.key === 'option_period_end')?.kind).toBe('deadline');
+    const one = computeMilestones({ closing_date: '2026-11-30' }, [{ key: 'x', label: 'X', from: 'field:closing_date' }]);
+    expect(one[0].kind).toBe('deadline');
+  });
+});

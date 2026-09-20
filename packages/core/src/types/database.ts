@@ -745,6 +745,7 @@ export type Database = {
           due_time: string | null
           id: string
           key: string
+          kind: string
           label: string
           manual_override: boolean
           status: Database["public"]["Enums"]["ms_status"]
@@ -761,6 +762,7 @@ export type Database = {
           due_time?: string | null
           id?: string
           key: string
+          kind?: string
           label: string
           manual_override?: boolean
           status?: Database["public"]["Enums"]["ms_status"]
@@ -777,6 +779,7 @@ export type Database = {
           due_time?: string | null
           id?: string
           key?: string
+          kind?: string
           label?: string
           manual_override?: boolean
           status?: Database["public"]["Enums"]["ms_status"]

@@ -6,7 +6,7 @@ import { CommissionDashboard } from "@/components/commission-dashboard";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n";
 import { todayISO, relDays } from "@/lib/format";
-import { Section, Empty, Badge, TaskItem, dueTone, type TaskRow } from "@/components/ui";
+import { Section, Empty, Badge, TaskItem, dueTone, msHappened, type TaskRow } from "@/components/ui";
 import { PageHeader, Tabs } from "@/components/page";
 
 export const dynamic = "force-dynamic";
@@ -21,12 +21,13 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
   const horizon = addCalendarDays(today, 7);
 
   const [{ data: ms }, { data: ts }] = await Promise.all([
-    supabase.from("milestones").select("id,key,label,due_date,due_time,deal_id,deals(title)").eq("status", "pending").not("due_date", "is", null).lte("due_date", horizon).order("due_date"),
+    supabase.from("milestones").select("id,key,label,kind,due_date,due_time,deal_id,deals(title)").eq("status", "pending").not("due_date", "is", null).lte("due_date", horizon).order("due_date"),
     supabase.from("tasks").select("id,title,due_date,done_at,deal_id,playbook_rule_id,deals(title)").is("done_at", null).is("deleted_at", null).not("due_date", "is", null).lte("due_date", horizon).order("due_date"),
   ]);
 
-  type MsRow = { id: string; key: string; label: string; due_date: string; due_time: string | null; deal_id: string; deals: { title: string } | { title: string }[] | null };
-  const milestones = (ms ?? []) as unknown as MsRow[];
+  type MsRow = { id: string; key: string; label: string; kind: string; due_date: string; due_time: string | null; deal_id: string; deals: { title: string } | { title: string }[] | null };
+  // 事件型（Effective Date、看房…）过了日期就是"已发生"，不进 Today（既不逾期也不"接下来"）
+  const milestones = ((ms ?? []) as unknown as MsRow[]).filter((m) => !msHappened(m, today));
   const tasks: TaskRow[] = ((ts ?? []) as unknown as (TaskRow & { deals: { title: string } | { title: string }[] | null })[]).map((x) => ({ ...x, deal_title: dealTitle(x.deals) }));
 
   const buckets = [

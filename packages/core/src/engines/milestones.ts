@@ -61,6 +61,7 @@ export function computeMilestones(fields: FieldMap, rules: MilestoneRule[], opts
     const ms: Milestone = {
       key: rule.key,
       label: rule.label,
+      kind: rule.kind ?? 'deadline',
       date,
       time: rule.time,
       derivedFrom: { from: rule.from, offset: offset ?? 0, unit, rollForward: roll },
