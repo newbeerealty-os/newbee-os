@@ -25,7 +25,7 @@ export interface ExtractOutcome {
 export async function extractContract(pdf: Uint8Array | Buffer, opts: ExtractOptions = {}): Promise<ExtractOutcome> {
   const apiKey = opts.apiKey ?? process.env.ANTHROPIC_API_KEY;
   if (!apiKey) throw new Error('ANTHROPIC_API_KEY missing');
-  const model = opts.model ?? process.env.ANTHROPIC_MODEL_EXTRACT ?? 'claude-sonnet-4-5';
+  const model = opts.model ?? process.env.ANTHROPIC_MODEL_EXTRACT ?? 'claude-sonnet-5';
   const client = new Anthropic({ apiKey });
   const data = Buffer.from(pdf).toString('base64');
 

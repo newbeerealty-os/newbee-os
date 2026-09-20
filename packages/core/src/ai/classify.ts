@@ -7,7 +7,7 @@ export type DocType = (typeof DOC_TYPES)[number];
 export async function classifyDocument(firstPagesText: string, opts: { apiKey?: string; model?: string } = {}): Promise<DocType> {
   const apiKey = opts.apiKey ?? process.env.ANTHROPIC_API_KEY;
   if (!apiKey) throw new Error('ANTHROPIC_API_KEY missing');
-  const model = opts.model ?? process.env.ANTHROPIC_MODEL_FAST ?? 'claude-haiku-4-5';
+  const model = opts.model ?? process.env.ANTHROPIC_MODEL_FAST ?? 'claude-haiku-4-5-20251001';
   const client = new Anthropic({ apiKey });
   const res = await client.messages.create({
     model,
