@@ -89,3 +89,52 @@ export const ADDENDA = [
   'environmental_addendum',
 ] as const;
 export type AddendumKey = (typeof ADDENDA)[number];
+
+// ---------- 人工输入 → deal_fields 三列（text / num / date）----------
+// 规矩：按注册表里的 type 解析；类型对不上就 error，绝不静默变 null（UI 层不再自己猜类型）。
+import { parseMoney } from '../money';
+
+export type FieldColumns = { value_text: string | null; value_num: number | null; value_date: string | null };
+export type ParsedFieldInput = { ok: true; columns: FieldColumns } | { ok: false; error: string };
+
+const isRealDate = (s: string) => {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+  if (!m) return false;
+  const d = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])));
+  return d.getUTCFullYear() === Number(m[1]) && d.getUTCMonth() === Number(m[2]) - 1 && d.getUTCDate() === Number(m[3]);
+};
+const TRUE_WORDS = ['yes', 'y', 'true', '是', '有', '对'];
+const FALSE_WORDS = ['no', 'n', 'false', '否', '无', '没有', '不'];
+
+export function parseFieldInput(key: string, rawInput: string): ParsedFieldInput {
+  const type: FieldType = FIELD_BY_KEY[key]?.type ?? 'text';
+  const raw = String(rawInput ?? '').trim();
+  const fail = (): ParsedFieldInput => ({ ok: false, error: `${key} expects ${type}, got "${raw}"` });
+  const cols = (c: Partial<FieldColumns>): ParsedFieldInput => ({ ok: true, columns: { value_text: null, value_num: null, value_date: null, ...c } });
+  if (raw === '') return { ok: false, error: `${key} is empty` };
+  switch (type) {
+    case 'date':
+      return isRealDate(raw) ? cols({ value_date: raw }) : fail();
+    case 'money':
+    case 'number': {
+      const n = parseMoney(raw);
+      return n === null || !/^[$\d.,\s万-]+$/.test(raw) ? fail() : cols({ value_num: n });
+    }
+    case 'days': {
+      const m = /^(\d+)\s*(days?|天|日)?$/i.exec(raw);
+      return m ? cols({ value_num: Number(m[1]) }) : fail();
+    }
+    case 'boolean': {
+      const w = raw.toLowerCase();
+      if (TRUE_WORDS.includes(w)) return cols({ value_text: 'true' });
+      if (FALSE_WORDS.includes(w)) return cols({ value_text: 'false' });
+      return fail();
+    }
+    case 'list': {
+      const items = [...new Set(raw.split(/[,，、;；]/).map((s) => s.trim()).filter(Boolean))];
+      return items.length ? cols({ value_text: items.join(', ') }) : { ok: false, error: `${key} expects a list, got "${raw}"` };
+    }
+    default:
+      return cols({ value_text: raw });
+  }
+}

@@ -2,10 +2,11 @@
 export function parseMoney(s: string | number | null | undefined): number | null {
   if (s === null || s === undefined) return null;
   if (typeof s === 'number') return Number.isFinite(s) ? s : null;
+  const wan = /万$/.test(s.trim()); // "45万" / "1.5 万" → ×10000
   const t = s.replace(/[$,\s]/g, '').replace(/万$/, '');
   if (t === '' || t === '-' || t === '.') return null;
   const n = Number(t);
-  return Number.isFinite(n) ? n : null;
+  return Number.isFinite(n) ? (wan ? Math.round(n * 10000 * 100) / 100 : n) : null;
 }
 
 /** $450,000；有小数才带两位 */

@@ -3,7 +3,7 @@
 import { setFlash } from "@/lib/flash";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { computeMilestones, instantiate, reconcile, BUILTIN_PLAYBOOKS, type FieldMap, type DealType } from "@newbee/core";
+import { computeMilestones, instantiate, reconcile, parseFieldInput, BUILTIN_PLAYBOOKS, type FieldMap, type DealType } from "@newbee/core";
 import { createClient, getUserId } from "@/lib/supabase/server";
 
 async function me() {
@@ -42,16 +42,14 @@ export async function uploadDocument(dealId: string, formData: FormData) {
 export async function setField(dealId: string, formData: FormData) {
   const { supabase, userId } = await me();
   const key = String(formData.get("key"));
-  const raw = String(formData.get("value") ?? "").trim();
-  const isDate = /^\d{4}-\d{2}-\d{2}$/.test(raw);
-  const num = Number(raw.replace(/[^0-9.-]/g, ""));
+  // 类型判断在 core：按注册表的 type 解析，对不上直接报错（error.tsx 显示原文）
+  const parsed = parseFieldInput(key, String(formData.get("value") ?? ""));
+  if (!parsed.ok) throw new Error(parsed.error);
   const row = {
     deal_id: dealId,
     agent_id: userId,
     key,
-    value_text: isDate || Number.isFinite(num) && raw !== "" && /^[\d.,$-]+$/.test(raw) ? null : raw,
-    value_num: !isDate && raw !== "" && /^[\d.,$-]+$/.test(raw) && Number.isFinite(num) ? num : null,
-    value_date: isDate ? raw : null,
+    ...parsed.columns,
     confidence: 1,
     confirmed_at: new Date().toISOString(),
     confirmed_by: userId,
@@ -118,12 +116,9 @@ export async function confirmField(dealId: string, fieldId: string, formData: Fo
   if (!f) throw new Error("field not found");
   const patch: Record<string, unknown> = { confirmed_at: new Date().toISOString(), confirmed_by: userId };
   if (edited) {
-    const isDate = /^\d{4}-\d{2}-\d{2}$/.test(edited);
-    const isNum = /^[\d.,$-]+$/.test(edited) && Number.isFinite(Number(edited.replace(/[^0-9.-]/g, "")));
-    patch.value_date = isDate ? edited : null;
-    patch.value_num = !isDate && isNum ? Number(edited.replace(/[^0-9.-]/g, "")) : null;
-    patch.value_text = isDate || isNum ? null : edited;
-    patch.confidence = 1;
+    const parsed = parseFieldInput(f.key, edited);
+    if (!parsed.ok) throw new Error(parsed.error);
+    Object.assign(patch, parsed.columns, { confidence: 1 });
   }
   // 同 key 其他"已确认"的旧行作废
   await supabase.from("deal_fields").update({ superseded_at: new Date().toISOString() }).eq("deal_id", dealId).eq("key", f.key).neq("id", fieldId).is("superseded_at", null);

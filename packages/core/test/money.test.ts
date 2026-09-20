@@ -27,3 +27,11 @@ describe('金额输入框格式', () => {
     expect(describeAmount(1_350_000, 'en')).toBe('1.35M');
   });
 });
+
+describe('parseMoney 认"万"', () => {
+  it('45万 → 450000，1.5 万 → 15000', () => {
+    expect(parseMoney('45万')).toBe(450000);
+    expect(parseMoney('1.5 万')).toBe(15000);
+    expect(parseMoney('$45万')).toBe(450000);
+  });
+});
