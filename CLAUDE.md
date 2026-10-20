@@ -31,6 +31,9 @@ pnpm monorepo · TypeScript · Next.js App Router + Tailwind（shadcn/ui 按需 
 - 开工第一件事：`git status` 确认干净；结束前 `pnpm test && pnpm typecheck`，然后写 `docs/log.md`（做了什么 · 卡在哪 · 明天第一件事）并 commit。
 - 引擎先写测试再实现（`pnpm test` 跑 core + web 两套）；UI 手测。
 - 一次一个交付物；大任务先列步骤给我看。
+- **每次 commit 之后，打印五行《影子同步摘要》**（不贴客户数据）：
+  1. 页面：涉及哪些页面 / 路由 · 2. 状态：数据层变化（表 / 列 / migration / playbook 规则）· 3. 界面：用户看得见的变化（按钮 / 文案 / 布局）· 4. 流程：操作顺序或业务规则的变化 · 5. 编号：commit 号 · 开工手册步骤号 · 影子里对应的文件或 `SCREENS.xxx`。
+  没有的那行写"无"；影子里找不到对应的写"影子没有"。
 - 每天结束 `main` 必须可运行、可部署（`pnpm build` 通过）。
 - 不确定的业务规则就问，不要猜；Texas 合同规则以 `docs/spec.html` 第 2 节为准。
 - 提议装新库前先说明"不装能不能做"。
