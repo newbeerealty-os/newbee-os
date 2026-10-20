@@ -1,0 +1,76 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>NewBee OS 三端影子</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&display=swap">
+<style>
+/* 壳：三端合一（网站 OS · 经纪人 App · 客户 App），一个数据库 */
+.nb-launch{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px;background:#F3F4F0;color:#16201B;font-family:"IBM Plex Sans","Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif}
+.nb-launch .box{max-width:900px;width:100%}
+.nb-launch .k{font:600 11px/1 "IBM Plex Mono",monospace;letter-spacing:.14em;color:#0F7A5A;text-transform:uppercase}
+.nb-launch h1{font-size:26px;margin:8px 0 6px;letter-spacing:-.01em}
+.nb-launch p{color:#3B4640;margin:0 0 18px;max-width:64ch;line-height:1.6}
+.nb-launch .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.nb-launch .c{display:block;text-align:left;background:#fff;border:1px solid #E1E4DC;border-radius:16px;padding:16px 18px;cursor:pointer;font:inherit;color:inherit;box-shadow:0 1px 2px rgba(16,24,20,.05),0 10px 30px -18px rgba(16,24,20,.25);transition:transform .12s}
+.nb-launch .c:hover{transform:translateY(-2px);border-color:#0F7A5A}
+.nb-launch .c b{display:block;font-size:17px;margin-bottom:4px}
+.nb-launch .c span{display:block;font-size:13px;color:#6A756E;line-height:1.5}
+.nb-launch .c .go{display:inline-block;margin-top:10px;font-weight:600;color:#0F7A5A;font-size:13px}
+.nb-launch .tip{margin-top:16px;font-size:12.5px;color:#6A756E;line-height:1.6}
+.nb-launch .tip b{color:#16201B}
+.nb-switch{position:fixed;right:8px;top:3px;z-index:95;font-family:"IBM Plex Sans","Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif}
+.nb-switch>button{border:1px solid #C5CCC2;background:#fff;color:#16201B;font:600 11px/1 inherit;padding:5px 9px;border-radius:999px;box-shadow:0 1px 4px rgba(0,0,0,.15);cursor:pointer;display:inline-flex;gap:5px;align-items:center}
+.nb-switch>button i{font-style:normal;color:#0F7A5A}
+.nb-switch .menu{display:none;position:absolute;right:0;top:calc(100% + 6px);min-width:230px;background:#fff;border:1px solid #E1E4DC;border-radius:12px;box-shadow:0 8px 28px -12px rgba(0,0,0,.35);padding:6px}
+.nb-switch.open .menu{display:block}
+.nb-switch .menu .row{display:grid;grid-template-columns:1fr auto;gap:4px;align-items:center}
+.nb-switch .menu button{border:0;background:transparent;font:inherit;color:#16201B;text-align:left;padding:8px 10px;border-radius:8px;cursor:pointer;font-size:13px}
+.nb-switch .menu button:hover{background:#EEF0EA}
+.nb-switch .menu button.on{background:#E0EDE6;color:#1C3A31;font-weight:600}
+.nb-switch .menu button.nt{color:#0F7A5A;font-size:12px}
+.nb-switch .menu .hint{font-size:11px;color:#6A756E;padding:6px 10px 4px;border-top:1px solid #E1E4DC;margin-top:4px;line-height:1.5}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .nb-switch>button{background:#1A2320;color:#E6EBE7;border-color:#3A463F}:root:not([data-theme="light"]) .nb-switch .menu{background:#1A2320;border-color:#3A463F}:root:not([data-theme="light"]) .nb-switch .menu button{color:#E6EBE7}:root:not([data-theme="light"]) .nb-switch .menu button:hover{background:#243029}:root:not([data-theme="light"]) .nb-switch .menu button.on{background:#264135;color:#E6EBE7}}
+:root[data-theme="dark"] .nb-switch>button{background:#1A2320;color:#E6EBE7;border-color:#3A463F}:root[data-theme="dark"] .nb-switch .menu{background:#1A2320;border-color:#3A463F}:root[data-theme="dark"] .nb-switch .menu button{color:#E6EBE7}:root[data-theme="dark"] .nb-switch .menu button:hover{background:#243029}:root[data-theme="dark"] .nb-switch .menu button.on{background:#264135;color:#E6EBE7}
+</style>
+<script>
+(function () {
+  var NAMES = { web: "网站 OS", agent: "经纪人 App", client: "客户 App" };
+  var m = location.hash.match(/^#(web|agent|client)(?:\/(.*))?$/);
+  var s = m ? m[1] : null;
+  try { if (!s) s = sessionStorage.getItem("nb_surface"); } catch (e) { /* ignore */ }
+  if (m) { try { sessionStorage.setItem("nb_surface", s); } catch (e) { /* ignore */ } history.replaceState(null, "", location.pathname + location.search + (m[2] ? "#/" + m[2] : "")); }
+  window.NB_SURFACE = s;
+  window.NBShell = {
+    names: NAMES,
+    go: function (to, newTab, path) {
+      var h = "#" + to + (path ? "/" + String(path).replace(/^#?\/?/, "") : "");
+      if (newTab) { window.open(location.pathname + location.search + h, "_blank"); return; }
+      try { sessionStorage.setItem("nb_surface", to); } catch (e) { /* ignore */ }
+      location.hash = h; location.reload();
+    },
+    toggle: function () { var n = document.getElementById("nb-switch"); if (n) n.classList.toggle("open"); },
+  };
+  function launcher() {
+    document.write('<div class="nb-launch"><div class="box"><div class="k">NewBee OS · 三端影子 · 一个数据库</div><h1>你要打开哪一端？</h1><p>三个影子（网站 OS · 经纪人 App · 客户 App）共用同一份示例数据：在一端做的事，另一端立刻看到。想模拟客户和经纪人互相发消息，就开两个标签页，一边选经纪人 App，一边选客户 App。</p><div class="cards">' +
+      '<button class="c" onclick="NBShell.go(\'web\')"><b>网站 OS</b><span>经纪人 / Broker 的深度工作站：今天 · 交易 · 消息 · 合同进件 · 看房（v1.7 两个 tab：我带客户看 · 别人看我的挂牌——谁批 · 记一场 · 去要反馈 · 定价信号）· 租赁运营 · Broker 后台 · v1.6 房源页（＋ 房源 · Matrix PDF 建档 · 历史时间线 · 产权人 · 目标房源 · 建卖方交易）· v1.5 摘要语句 · 邮件待归档 + 沟通时间线 · 扫描件 / 手写 / 裁图 / 交叉校验（含 v1.4 今天页五块 · v1.3 路线图 · Tour · 多 Offer）</span><em class="go">打开 →</em></button>' +
+      '<button class="c" onclick="NBShell.go(\'agent\')"><b>经纪人 App</b><span>手机上的行动台：今日五块 · 记一下 · 看房日 NOW / NEXT · v1.7 看房两段（别人看我的挂牌 · 放行反馈）· 阶段包 · 在等对方 · 打电话前一张卡 · 通知四级 · v1.6 房源页（加房源 · 记业主 · 标目标房源 · 建卖方交易 · 拍照 / 上传）· v1.5 摘要卡 · 沟通时间线 · 拍照进件（含 v1.3 竖版路线图 · 看房历史 · 目标房 · Offer）</span><em class="go">打开 →</em></button>' +
+      '<button class="c" onclick="NBShell.go(\'client\')"><b>客户 App</b><span>客户看到的投影：找房 / 买房 / 卖房 / 租客 / 房东 · 看房日（现在这套 / 下一套）· v1.7 卖家 / 房东看得到约好的看房时段· 决定卡（两边并排 · 二位各自答）· 人话路线图 · 我的目标房 · 消息 · v1.5 几句话摘要（只用已确认的值）</span><em class="go">打开 →</em></button>' +
+      '</div><div class="tip"><b>提示</b>：这个标签页会记住你选的端（右上角「⇄」随时切换）。链接后面加 <b>#agent</b> / <b>#client</b> 可直接打开对应的端。所有数据均为示例。</div></div></div>');
+  }
+  function switcher() {
+    var cur = s;
+    var rows = ["web", "agent", "client"].map(function (k) { return '<div class="row"><button class="' + (k === cur ? "on" : "") + '" onclick="NBShell.go(\'' + k + '\')">' + NAMES[k] + (k === cur ? " · 当前" : "") + '</button><button class="nt" title="在新标签页打开" onclick="NBShell.go(\'' + k + '\',true)">新标签页 ↗</button></div>'; }).join("");
+    document.write('<div class="nb-switch" id="nb-switch"><button onclick="NBShell.toggle()" title="切换端：三端共用同一份数据"><i>⇄</i>' + NAMES[cur] + '</button><div class="menu">' + rows + '<div class="hint">三端一个数据库：开两个标签页就能模拟客户 ↔ 经纪人互发消息、确认、上传。</div></div></div>');
+  }
+  if (!s) { launcher(); return; }
+  var base = { web: "web/", agent: "agent/", client: "client/" }[s];
+  var W = function (x) { document.write(x); };
+  W('<link rel="stylesheet" href="' + base + 'styles.css">');
+  W('<div id="root"><div style="padding:40px;text-align:center;color:#66727A;font-family:system-ui">正在加载 ' + NAMES[s] + ' 影子…</div></div>');
+  var sc = function (f) { W('<script src="' + f + '"><\/script>'); };
+  sc("data.js"); sc("shared.js"); sc("score.js"); sc("roadmap.js"); sc("tours.js"); sc("offers.js"); sc("work.js"); sc("phrases.js"); sc("comms.js"); sc("extract.js"); sc("propfile.js"); sc("lshow.js");
+  if (s === "web") { W('<script>window.NB_SURFACE="web";<\/script>'); ["core.js", "screens-deals.js", "screens-crm.js", "screens-vendors.js", "screens-lease.js", "screens-admin.js", "screens-v1.js", "messages.js", "portal.js", "ai.js"].forEach(function (f) { sc(base + f); }); sc("msgui.js"); sc("pinui.js"); }
+  else { W('<script>window.APP_ID="' + s + '";window.NB_SURFACE="' + s + '";<\/script>'); sc("mcore.js"); sc("msgui.js"); sc("pinui.js"); sc(base + "app.js"); }
+  switcher();
+})();
+</script>
+
+</body></html>
