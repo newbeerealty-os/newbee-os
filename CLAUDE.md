@@ -36,6 +36,11 @@ pnpm monorepo · TypeScript · Next.js App Router + Tailwind（shadcn/ui 按需 
   没有的那行写"无"；影子里找不到对应的写"影子没有"。
   - **步骤号**：开工手册在 claude.ai 上，不在仓库里。Jason 的 prompt 第一行写「手册 步骤 X」就用它；没写就填"待补"。`docs/devplan.html` 是 Day 1 的旧计划，不作数。
   - **影子**：`docs/ref/shadow/`（根目录有 `VERSION.txt`、`README.txt`；网站页面在 `web/screens-*.js` 的 `SCREENS.xxx` 函数里）。这个目录还不存在时编号行写"影子副本未装"；装好后按 `docs/ref/shadow/README.md` 的路由表对文件名和函数名。
+
+### 影子副本（`docs/ref/shadow`）
+1. **开工手册的任何一步，动手前先读 `docs/ref/shadow/VERSION.txt` 第一行**（影子副本版本）。Jason 的 prompt 开头写了「影子 ≥ vX」而本地版本更低、或 `VERSION.txt` 不存在 → 停下，只回一句："影子副本是 vY，这一步要 vX——先按开工手册「收尾同步 ② 更新本地影子副本」做"，不要往下做。
+2. **影子从 v1.0 起是三端结构。** 根目录是三端共用的文件：`score.js` 排序 · `roadmap.js` 路线图 · `tours.js` 看房 · `offers.js` Offer · `work.js` 今天页与工作流 · `phrases.js` 摘要语句 · `comms.js` 沟通时间线 · `extract.js` 抽取与交叉校验 · `propfile.js` 房源建档（＋房源 · 产权人 · 历史时间线 · Matrix 文件待确认 · 目标房源 · 手动建交易）· `lshow.js` Listing 端看房（谁批 · 约看申请 / 确认 / 拒绝 / 过期 · 升级 · 记一场 · 去要反馈 · 定价信号 · 给卖家看的投影）——**这十个就是 `packages/core` 该有的样子**，移植时照它们的行为写纯函数和测试；`data.js` 是示例数据（`SCORE_CONFIG` 这类配置也在里面）；`shared.js` 是三端同步和消息的数据层；`pinui.js` · `msgui.js` · `mcore.js` 是共用的界面零件。`web/` 是网站 OS（`core.js` · `screens-*.js` · `messages.js` · `portal.js` · `ai.js` · `styles.css`），`agent/` 是经纪人 App，`client/` 是客户 App；每个文件干什么见 `docs/ref/shadow/README.txt`。手册里说的 `screens-deals.js`、`portal.js`、`ai.js` 都在 `web/` 下面。真实仓库现在只有网站：**经纪人 App 的样子 = 网站在手机宽度下的布局，客户 App 的样子 = 客户视图**。
+3. **路由表要全。** `docs/ref/shadow` 里出现 `README.md` 路由表没列到的 `web/screens-*.js` 文件或 `SCREENS.xxx` 页面时，**先把路由表补上**（页面 · 文件 · 函数），再开始那一步。
 - 每天结束 `main` 必须可运行、可部署（`pnpm build` 通过）。
 - 不确定的业务规则就问，不要猜；Texas 合同规则以 `docs/spec.html` 第 2 节为准。
 - 提议装新库前先说明"不装能不能做"。
