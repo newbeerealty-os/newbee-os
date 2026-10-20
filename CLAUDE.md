@@ -18,6 +18,7 @@ pnpm monorepo · TypeScript · Next.js App Router + Tailwind（shadcn/ui 按需 
 - 所有表：`id uuid`、`agent_id`、`created_at`、`updated_at`、`deleted_at`（软删）。
 - 时间 `timestamptz`（UTC）；日期型字段用 `date`；金额 `numeric(14,2)`。
 - 业务日期计算只在 `packages/core/src/engines/dates.ts`；UI 不算天数。
+- **Option 期截止不顺延**（TREC 20-19 ¶5B：落在周末 / 假日也是那天 17:00）；`rollForward` 只用在递交类期限（`em_due`，¶5A(2)）。
 - AI 只在服务端调用（`apps/web/app/api/**/route.ts`）；用 tool_use 强制 JSON；system prompt 加 `cache_control`。
 - 抽取结果里数值 / 日期字段、或 `confidence < 0.9` 的，必须进待确认队列，**不得自动派生**。
 - 失败必须落 `documents.status = 'failed'` + `error`，禁止静默吞错。

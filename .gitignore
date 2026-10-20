@@ -10,4 +10,5 @@ supabase/.temp/
 *.log
 .DS_Store
 coverage/
-test/golden/*.pdf
+packages/core/test/golden/*
+!packages/core/test/golden/README.md

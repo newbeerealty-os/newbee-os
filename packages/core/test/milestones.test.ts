@@ -45,9 +45,17 @@ describe('milestones (Seller playbook)', () => {
     expect(ms.find((m) => m.key === 'option_period_end')?.date).toBe('2026-09-08');
   });
 
-  it('Option 期落在周日顺延到周一 5PM', () => {
+  it('Option 期落在周日不顺延（TREC 20-19 ¶5B）', () => {
     const ms = computeMilestones({ effective_date: '2026-09-03', option_period_days: 10 }, SELLER_PLAYBOOK.milestones, {});
-    expect(ms.find((m) => m.key === 'option_period_end')?.date).toBe('2026-09-14');
+    const opt = ms.find((m) => m.key === 'option_period_end');
+    expect(opt?.date).toBe('2026-09-13'); // 周日，照样是这天 5PM
+    expect(opt?.time).toBe('17:00');
+  });
+
+  it('递交类期限照样顺延：em_due 落在周六 → 跳过周末和劳动节到周二（¶5A(2)）', () => {
+    const ms = computeMilestones({ effective_date: '2026-09-02', earnest_money_due_days: 3 }, SELLER_PLAYBOOK.milestones, {});
+    // 09-02 周三 + 3 = 09-05 周六 → 09-07 是劳动节 → 09-08 周二
+    expect(ms.find((m) => m.key === 'em_due')?.date).toBe('2026-09-08');
   });
 
   it('改 closing_date 只有 closing 相关的里程碑变化', () => {

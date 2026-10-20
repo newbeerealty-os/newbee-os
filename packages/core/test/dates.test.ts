@@ -30,7 +30,7 @@ describe('dates engine', () => {
   it('负工作日：9/9 − 3 个工作日 = 9/3', () => {
     expect(addBusinessDays('2026-09-09', -3, H)).toBe('2026-09-03');
   });
-  it('applyRule：Option 期 10 天落在周五则不动；落在周六则顺延', () => {
+  it('带 rollForward 的规则：落在周六则顺延', () => {
     expect(applyRule('2026-09-01', { offset: 10, unit: 'calendar', rollForward: true }, H)).toBe('2026-09-11');
     expect(applyRule('2026-09-02', { offset: 10, unit: 'calendar', rollForward: true }, H)).toBe('2026-09-14');
   });
