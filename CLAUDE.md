@@ -34,6 +34,8 @@ pnpm monorepo · TypeScript · Next.js App Router + Tailwind（shadcn/ui 按需 
 - **每次 commit 之后，打印五行《影子同步摘要》**（不贴客户数据）：
   1. 页面：涉及哪些页面 / 路由 · 2. 状态：数据层变化（表 / 列 / migration / playbook 规则）· 3. 界面：用户看得见的变化（按钮 / 文案 / 布局）· 4. 流程：操作顺序或业务规则的变化 · 5. 编号：commit 号 · 开工手册步骤号 · 影子里对应的文件或 `SCREENS.xxx`。
   没有的那行写"无"；影子里找不到对应的写"影子没有"。
+  - **步骤号**：开工手册在 claude.ai 上，不在仓库里。Jason 的 prompt 第一行写「手册 步骤 X」就用它；没写就填"待补"。`docs/devplan.html` 是 Day 1 的旧计划，不作数。
+  - **影子**：`docs/ref/shadow/`（根目录有 `VERSION.txt`、`README.txt`；网站页面在 `web/screens-*.js` 的 `SCREENS.xxx` 函数里）。这个目录还不存在时编号行写"影子副本未装"；装好后按 `docs/ref/shadow/README.md` 的路由表对文件名和函数名。
 - 每天结束 `main` 必须可运行、可部署（`pnpm build` 通过）。
 - 不确定的业务规则就问，不要猜；Texas 合同规则以 `docs/spec.html` 第 2 节为准。
 - 提议装新库前先说明"不装能不能做"。
